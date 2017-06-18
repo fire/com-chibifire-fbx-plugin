@@ -4,6 +4,8 @@
 #include <core/Godot.hpp>
 #include <core/GodotGlobal.hpp>
 #include <Reference.hpp>
+#include <fbxsdk.h>
+
 #include "EditorImportPlugin.hpp"
 
 using godot::GodotScript;
@@ -17,6 +19,8 @@ using godot::Array;
 using godot::Dictionary;
 
 class ResourceImporterFBX : public GodotScript<EditorImportPlugin> {
+private:
+	void InitializeSdkObjects(FbxManager *& pManager, FbxScene *& pScene);
 	GODOT_CLASS(ResourceImporterFBX);
 public:
 	ResourceImporterFBX() { }
@@ -38,3 +42,4 @@ public:
 GODOT_NATIVE_INIT(godot_native_init_options *options) {
 	register_class<ResourceImporterFBX>();
 }
+
