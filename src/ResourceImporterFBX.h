@@ -6,7 +6,8 @@
 #include <Reference.hpp>
 #include "EditorImportPlugin.hpp"
 
-using namespace godot;
+using godot::GodotScript;
+using godot::register_class;
 using godot::Reference;
 using godot::Variant;
 using godot::EditorImportPlugin;
