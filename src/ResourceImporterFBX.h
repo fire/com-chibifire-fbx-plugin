@@ -1,9 +1,12 @@
 #pragma once
 
+#include "ResourceImporter.hpp"
+
 using godot::register_class;
 using godot::GodotScript;
 using godot::Reference;
 using godot::Variant;
+using godot::ResourceImporter;
 
 class ResourceImporterFBX : public GodotScript<Reference> {
 	GODOT_CLASS(ResourceImporterFBX);
