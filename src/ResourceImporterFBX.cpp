@@ -2,6 +2,11 @@
 
 #include <core/Godot.hpp>
 #include <core/GodotGlobal.hpp>
+
+#include <ResourceSaver.hpp>
+#include <Mesh.hpp>
+#include <SurfaceTool.hpp>
+
 #include <Reference.hpp>
 
 using namespace godot;
