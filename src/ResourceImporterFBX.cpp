@@ -11,6 +11,8 @@
 #include <SurfaceTool.hpp>
 #include <fbxsdk.h>
 
+#include <stdio.h>
+
 #include <Reference.hpp>
 
 using namespace godot;
@@ -64,19 +66,68 @@ bool ResourceImporterFBX::get_option_visibility(const String option, const Dicti
 
 int ResourceImporterFBX::import(const String p_source_file, const String p_save_path, const Dictionary p_options, const Array p_r_platform_variants, const Array p_r_gen_files)
 {
-	File* source = (File *)(Object *)ClassDB::instance("File");
-	source->open(p_source_file, File::READ);
-	String content = source->get_as_text();
-	source->close();
+	FILE * pFile;
+	long lSize;
+	char * buffer;
+	size_t result;
 
-	File* save = (File *)(Object *)ClassDB::instance("File");
-	String save_path;
-	save_path += ".mesh";
-	save->open(save_path, File::WRITE);
-	save->store_string(content);
-	save->close();
+	pFile = fopen("D:/Hobby/ResourceImporterFBX/sample/main.gd", "rb");
+	if (pFile == NULL) 
+	{
+		fputs("File error", stderr);
+		exit(1); 
+	}
+
+	// obtain file size:
+	fseek(pFile, 0, SEEK_END);
+	lSize = ftell(pFile);
+	rewind(pFile);
+
+	// allocate memory to contain the whole file:
+	buffer = (char*)malloc(sizeof(char)*lSize);
+	if (buffer == NULL) 
+	{ 
+		fputs("Memory error", stderr); exit(2); 
+	}
+
+	// copy the file into the buffer:
+	result = fread(buffer, 1, lSize, pFile);
+	if (result != lSize)
+	{ 
+		fputs("Reading error", stderr); 
+		exit(3); 
+	}
+
+	/* the whole file is now loaded in the memory buffer. */
+
+	FILE * pSave;
+	pSave = fopen("D:/Hobby/ResourceImporterFBX/sample/main.mesh", "w");
+	if (pFile != NULL)
+	{
+		fputs(buffer, pSave);
+		fclose(pSave);
+	}
+
+	// terminate
+	fclose(pFile);
+	fclose(pSave);
+	free(buffer);
 
 	return 0;
+
+	//File* source = (File *)(Object *)ClassDB::instance("_File");
+	//source->open(p_source_file, File::READ);
+	//String content = source->get_as_text();
+	//source->close();
+
+	//File* save = (File *)(Object *)ClassDB::instance("_File");
+	//String save_path;
+	//save_path += ".mesh";
+	//save->open(save_path, File::WRITE);
+	//save->store_string(content);
+	//save->close();
+
+	//return 0;
 
 	//FileAccessRef f = File::open(p_source_file, File::READ);
 	//ERR_FAIL_COND_V(!f, ERR_CANT_OPEN);
