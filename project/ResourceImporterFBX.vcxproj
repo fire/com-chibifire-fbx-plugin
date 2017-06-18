@@ -21,6 +21,9 @@
   <ItemGroup>
     <ClCompile Include="..\src\ResourceImporterFBX.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\src\ResourceImporterFBX.h" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{D85C46D0-4334-499B-855C-B36E8D2AF659}</ProjectGuid>
