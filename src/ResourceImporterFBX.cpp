@@ -46,17 +46,17 @@ Array ResourceImporterFBX::get_import_options(const int preset) const
 
 String ResourceImporterFBX::get_save_extension() const
 {
-	return String();
+	return "mesh";
 }
 
 String ResourceImporterFBX::get_resource_type() const
 {
-	return String();
+	return "ArrayMesh";
 }
 
 bool ResourceImporterFBX::get_option_visibility(const String option, const Dictionary options) const
 {
-	return false;
+	return true;
 }
 
 int ResourceImporterFBX::import(const String source_file, const String save_path, const Dictionary options, const Array r_platform_variants, const Array r_gen_files)
