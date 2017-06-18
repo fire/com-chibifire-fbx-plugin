@@ -9,29 +9,21 @@
 
 #include <Reference.hpp>
 
+#include "ResourceImporterFBX.h"
+
 using namespace godot;
 
-class ResourceImporterFBX : public GodotScript<Reference> {
-	GODOT_CLASS(ResourceImporterFBX);
-public:
-	ResourceImporterFBX() { }
+inline void ResourceImporterFBX::test_void_method() {
+	Godot::print("This is test");
+}
 
-	void test_void_method() {
-		Godot::print("This is test");
-	}
+inline Variant ResourceImporterFBX::method(Variant arg) {
+	Variant ret;
+	ret = arg;
 
-	Variant method(Variant arg) {
-		Variant ret;
-		ret = arg;
+	return ret;
+}
 
-		return ret;
-	}
-
-	static void _register_methods() {
-		register_method("method", &ResourceImporterFBX::method);
-	}
-};
-
-GODOT_NATIVE_INIT(godot_native_init_options *options) {
-	register_class<ResourceImporterFBX>();
+inline void ResourceImporterFBX::_register_methods() {
+	register_method("method", &ResourceImporterFBX::method);
 }
