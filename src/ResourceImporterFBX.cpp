@@ -224,8 +224,12 @@ int ResourceImporterFBX::import(const String p_source_file, const String p_save_
 	InitializeSdkObjects(lSdkManager, lScene);
 
 	lResult = LoadScene(lSdkManager, lScene, "D:/Hobby/ResourceImporterFBX/sample/cube.fbx");
+	const size_t len = 128;
+	char str[len];
 
-	Godot::print(lScene->GetNodeCount());
+    snprintf(str, len, "FBX Node count: %d", lScene->GetNodeCount());
+
+	Godot::print(str);
 
 	// Convert the file
 	//
