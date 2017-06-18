@@ -7,6 +7,7 @@
 #include <ResourceSaver.hpp>
 #include <Mesh.hpp>
 #include <SurfaceTool.hpp>
+#include <fbxsdk.h>
 
 #include <Reference.hpp>
 
