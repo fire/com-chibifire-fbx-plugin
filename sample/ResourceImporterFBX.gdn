@@ -3,16 +3,16 @@
 [sub_resource type="GDNativeLibrary" id=1]
 
 platform/unix = ""
-platform/x11 = "res://src/libsimple.so"
+platform/x11 = "res://lib/libresourceimporterfbx.so"
 platform/server = ""
 platform/android = ""
 platform/blackberry = ""
 platform/haiku = ""
-platform/mac = "res://src/libsimple.dylib"
+platform/mac = "res://lib/libresourceimporterfbx.dylib"
 platform/ios = ""
-platform/osx = "res://src/libsimple.dylib"
+platform/osx = "res://lib/libresourceimporterfbx.dylib"
 platform/html5 = ""
-platform/windows = "res://src/ResourceImporterFBX.dll"
+platform/windows = "res://lib/ResourceImporterFBX.dll"
 platform/uwp = ""
 
 [resource]
