@@ -227,7 +227,7 @@ int ResourceImporterFBX::import(const String p_source_file, const String p_save_
 	const size_t len = 128;
 	char str[len];
 
-    snprintf(str, len, "FBX Node count: %d", lScene->GetNodeCount());
+    snprintf(str, len, "FBX node count: %d", lScene->GetNodeCount());
 
 	Godot::print(str);
 
