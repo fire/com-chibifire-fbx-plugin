@@ -1,7 +1,6 @@
 #pragma once
 
 #include <godot.h>
-
 #include <core/Godot.hpp>
 #include <core/GodotGlobal.hpp>
 #include <Reference.hpp>
@@ -16,7 +15,7 @@ using godot::Reference;
 using godot::Array;
 using godot::Dictionary;
 
-class ResourceImporterFBX : public EditorImportPlugin {
+class ResourceImporterFBX : public GodotScript<EditorImportPlugin> {
 	GODOT_CLASS(ResourceImporterFBX);
 public:
 	ResourceImporterFBX() { }
@@ -36,5 +35,5 @@ public:
 };
 
 GODOT_NATIVE_INIT(godot_native_init_options *options) {
-//	register_class<ResourceImporterFBX>();
+	register_class<ResourceImporterFBX>();
 }

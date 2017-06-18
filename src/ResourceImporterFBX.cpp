@@ -12,15 +12,14 @@
 
 using namespace godot;
 
-
 String ResourceImporterFBX::get_importer_name() const
 {
-	return String();
+	return "fbx_mesh";
 }
 
 String ResourceImporterFBX::get_visible_name() const
 {
-	return String();
+	return "FBX As Mesh";
 }
 
 int ResourceImporterFBX::get_preset_count() const
@@ -35,7 +34,9 @@ String ResourceImporterFBX::get_preset_name(const int preset) const
 
 Array ResourceImporterFBX::get_recognized_extensions() const
 {
-	return Array();
+	Array recognized = Array();
+	recognized.push_back("fbx");
+	return recognized;
 }
 
 Array ResourceImporterFBX::get_import_options(const int preset) const
@@ -63,7 +64,7 @@ int ResourceImporterFBX::import(const String source_file, const String save_path
 	return 0;
 }
 
-inline void ResourceImporterFBX::_register_methods() {
+void ResourceImporterFBX::_register_methods() {
 	//register_method("get_importer_name", &ResourceImporterFBX::get_importer_name);
 	//register_method("get_visible_name", &ResourceImporterFBX::get_visible_name);
 	//register_method("get_preset_count", &ResourceImporterFBX::get_preset_count);
