@@ -4,4 +4,5 @@ extends Control
 onready var data = preload("res://ResourceImporterFBX.gdn").new()
 
 func _on_Button_pressed():
-	$Label.text = "Data = " + data.get_visible_name()
+  $Label.text = "Data = " + data.get_visible_name()
+  data.import("res://main.gd", "res://main", Dictionary(), Array(), Array())

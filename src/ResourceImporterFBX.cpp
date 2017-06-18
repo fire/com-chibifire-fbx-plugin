@@ -4,7 +4,9 @@
 #include <core/Godot.hpp>
 #include <core/GodotGlobal.hpp>
 
+#include <ClassDB.hpp>
 #include <ResourceSaver.hpp>
+#include <File.hpp>
 #include <Mesh.hpp>
 #include <SurfaceTool.hpp>
 #include <fbxsdk.h>
@@ -60,9 +62,188 @@ bool ResourceImporterFBX::get_option_visibility(const String option, const Dicti
 	return true;
 }
 
-int ResourceImporterFBX::import(const String source_file, const String save_path, const Dictionary options, const Array r_platform_variants, const Array r_gen_files)
+int ResourceImporterFBX::import(const String p_source_file, const String p_save_path, const Dictionary p_options, const Array p_r_platform_variants, const Array p_r_gen_files)
 {
+	File* source = (File *)(Object *)ClassDB::instance("File");
+	source->open(p_source_file, File::READ);
+	String content = source->get_as_text();
+	source->close();
+
+	File* save = (File *)(Object *)ClassDB::instance("File");
+	String save_path;
+	save_path += ".mesh";
+	save->open(save_path, File::WRITE);
+	save->store_string(content);
+	save->close();
+
 	return 0;
+
+	//FileAccessRef f = File::open(p_source_file, File::READ);
+	//ERR_FAIL_COND_V(!f, ERR_CANT_OPEN);
+
+	//Ref<ArrayMesh> mesh = Ref<ArrayMesh>(memnew(ArrayMesh));
+	//Map<String, Ref<Material> > name_map;
+
+	//bool generate_normals = p_options["generate/normals"];
+	//bool generate_tangents = p_options["generate/tangents"];
+	//bool flip_faces = p_options["force/flip_faces"];
+	//bool force_smooth = p_options["force/smooth_shading"];
+	//bool weld_vertices = p_options["force/weld_vertices"];
+	//float weld_tolerance = p_options["force/weld_tolerance"];
+	//Vector<Vector3> vertices;
+	//Vector<Vector3> normals;
+	//Vector<Vector2> uvs;
+	//String name;
+
+	//Ref<SurfaceTool> surf_tool = memnew(SurfaceTool);
+	//surf_tool->begin(Mesh::PRIMITIVE_TRIANGLES);
+	//if (force_smooth)
+	//	surf_tool->add_smooth_group(true);
+	//int has_index_data = false;
+
+	//while (true) {
+
+	//	String l = f->get_line().strip_edges();
+
+	//	if (l.begins_with("v ")) {
+	//		//vertex
+	//		Vector<String> v = l.split(" ", false);
+	//		ERR_FAIL_COND_V(v.size() < 4, ERR_INVALID_DATA);
+	//		Vector3 vtx;
+	//		vtx.x = v[1].to_float();
+	//		vtx.y = v[2].to_float();
+	//		vtx.z = v[3].to_float();
+	//		vertices.push_back(vtx);
+	//	}
+	//	else if (l.begins_with("vt ")) {
+	//		//uv
+	//		Vector<String> v = l.split(" ", false);
+	//		ERR_FAIL_COND_V(v.size() < 3, ERR_INVALID_DATA);
+	//		Vector2 uv;
+	//		uv.x = v[1].to_float();
+	//		uv.y = 1.0 - v[2].to_float();
+	//		uvs.push_back(uv);
+
+	//	}
+	//	else if (l.begins_with("vn ")) {
+	//		//normal
+	//		Vector<String> v = l.split(" ", false);
+	//		ERR_FAIL_COND_V(v.size() < 4, ERR_INVALID_DATA);
+	//		Vector3 nrm;
+	//		nrm.x = v[1].to_float();
+	//		nrm.y = v[2].to_float();
+	//		nrm.z = v[3].to_float();
+	//		normals.push_back(nrm);
+	//	}
+	//	else if (l.begins_with("f ")) {
+	//		//vertex
+
+	//		has_index_data = true;
+	//		Vector<String> v = l.split(" ", false);
+	//		ERR_FAIL_COND_V(v.size() < 4, ERR_INVALID_DATA);
+
+	//		//not very fast, could be sped up
+
+	//		Vector<String> face[3];
+	//		face[0] = v[1].split("/");
+	//		face[1] = v[2].split("/");
+	//		ERR_FAIL_COND_V(face[0].size() == 0, ERR_PARSE_ERROR);
+	//		ERR_FAIL_COND_V(face[0].size() != face[1].size(), ERR_PARSE_ERROR);
+	//		for (int i = 2; i < v.size() - 1; i++) {
+
+	//			face[2] = v[i + 1].split("/");
+	//			ERR_FAIL_COND_V(face[0].size() != face[2].size(), ERR_PARSE_ERROR);
+	//			for (int j = 0; j < 3; j++) {
+
+	//				int idx = j;
+
+	//				if (!flip_faces && idx < 2) {
+	//					idx = 1 ^ idx;
+	//				}
+
+	//				if (face[idx].size() == 3) {
+	//					int norm = face[idx][2].to_int() - 1;
+	//					if (norm < 0)
+	//						norm += normals.size() + 1;
+	//					ERR_FAIL_INDEX_V(norm, normals.size(), ERR_PARSE_ERROR);
+	//					surf_tool->add_normal(normals[norm]);
+	//				}
+
+	//				if (face[idx].size() >= 2 && face[idx][1] != String()) {
+	//					int uv = face[idx][1].to_int() - 1;
+	//					if (uv < 0)
+	//						uv += uvs.size() + 1;
+	//					ERR_FAIL_INDEX_V(uv, uvs.size(), ERR_PARSE_ERROR);
+	//					surf_tool->add_uv(uvs[uv]);
+	//				}
+
+	//				int vtx = face[idx][0].to_int() - 1;
+	//				if (vtx < 0)
+	//					vtx += vertices.size() + 1;
+	//				ERR_FAIL_INDEX_V(vtx, vertices.size(), ERR_PARSE_ERROR);
+
+	//				Vector3 vertex = vertices[vtx];
+	//				if (weld_vertices)
+	//					vertex = vertex.snapped(weld_tolerance);
+	//				surf_tool->add_vertex(vertex);
+	//			}
+
+	//			face[1] = face[2];
+	//		}
+	//	}
+	//	else if (l.begins_with("s ") && !force_smooth) { //smoothing
+	//		String what = l.substr(2, l.length()).strip_edges();
+	//		if (what == "off")
+	//			surf_tool->add_smooth_group(false);
+	//		else
+	//			surf_tool->add_smooth_group(true);
+
+	//	}
+	//	else if (l.begins_with("o ") || f->eof_reached()) { //new surface or done
+
+	//		if (has_index_data) {
+	//			//new object/surface
+	//			if (generate_normals || force_smooth)
+	//				surf_tool->generate_normals();
+	//			if (uvs.size() && (normals.size() || generate_normals) && generate_tangents)
+	//				surf_tool->generate_tangents();
+
+	//			surf_tool->index();
+	//			mesh = surf_tool->commit(mesh);
+	//			if (name == "")
+	//				name = vformat(TTR("Surface %d"), mesh->get_surface_count() - 1);
+	//			mesh->surface_set_name(mesh->get_surface_count() - 1, name);
+	//			name = "";
+	//			surf_tool->clear();
+	//			surf_tool->begin(Mesh::PRIMITIVE_TRIANGLES);
+	//			if (force_smooth)
+	//				surf_tool->add_smooth_group(true);
+
+	//			has_index_data = false;
+
+	//			if (f->eof_reached())
+	//				break;
+	//		}
+
+	//		if (l.begins_with("o ")) //name
+	//			name = l.substr(2, l.length()).strip_edges();
+	//	}
+	//}
+
+	/*
+	TODO, check existing materials and merge?
+	//re-apply materials if exist
+	for(int i=0;i<mesh->get_surface_count();i++) {
+
+	String n = mesh->surface_get_name(i);
+	if (name_map.has(n))
+	mesh->surface_set_material(i,name_map[n]);
+	}
+	*/
+
+	//Error err = ResourceSaver::save(p_save_path + ".mesh", mesh);
+
+	//return err;
 }
 
 void ResourceImporterFBX::_register_methods() {
