@@ -29,6 +29,19 @@ enum PrimitiveType {
 	PRIMITIVE_MAX = 7,
 };
 
+enum ArrayType {
+	ARRAY_VERTEX = 0,
+	ARRAY_NORMAL = 1,
+	ARRAY_TANGENT = 2,
+	ARRAY_COLOR = 3,
+	ARRAY_TEX_UV = 4,
+	ARRAY_TEX_UV2 = 5,
+	ARRAY_BONES = 6,
+	ARRAY_WEIGHTS = 7,
+	ARRAY_INDEX = 8,
+	ARRAY_MAX = 9
+};
+
 class ResourceImporterFBX : public GodotScript<EditorImportPlugin> {
 private:
 	void InitializeSdkObjects(FbxManager *& pManager, FbxScene *& pScene);

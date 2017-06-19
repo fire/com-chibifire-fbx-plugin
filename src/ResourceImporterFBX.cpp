@@ -268,10 +268,10 @@ int ResourceImporterFBX::import(const String p_source_file, const String p_save_
 
 	int iChildNodeCount = rootNode->GetChildCount();
 
-	Array vertices;
-	Array normals;
-	Array uvs;
-	Array indices;
+	PoolVector3Array vertices;
+	PoolVector3Array normals;
+	PoolVector2Array uvs;
+	PoolIntArray indices;
 
 	for (int i = 0; i < iChildNodeCount; i++)
 	{
@@ -309,20 +309,19 @@ int ResourceImporterFBX::import(const String p_source_file, const String p_save_
 						pVertices[index].mData[2]));
 
 					// Not uv... but will be!
-					uvs.push_back(Vector2(0.5f, 1.0f));
-				}
-				
+					//uvs.push_back(Vector2(0.5f, 1.0f));
+				}				
 			}
 
-		}
-		Array arrays;
-		//arrays.resize(ArrayMesh::ARRAY_MAX);
-		arrays[ArrayMesh::ARRAY_VERTEX] = vertices;
-		arrays[ArrayMesh::ARRAY_NORMAL] = normals;
-		arrays[ArrayMesh::ARRAY_COLOR] = uvs;
-		arrays[ArrayMesh::ARRAY_INDEX] = indices;
+			Array arrays;
+			arrays.resize(ArrayType::ARRAY_MAX);
+			arrays[ArrayType::ARRAY_VERTEX] = vertices;
+			arrays[ArrayType::ARRAY_NORMAL] = normals;
+			//arrays[ArrayType::ARRAY_TEX_UV2] = uvs;
+			arrays[ArrayType::ARRAY_INDEX] = indices;
 
-		array_mesh->add_surface_from_arrays(PrimitiveType::PRIMITIVE_TRIANGLES, vertices);
+			array_mesh->add_surface_from_arrays(PrimitiveType::PRIMITIVE_TRIANGLES, arrays);
+		}
 	}
 
 	//if (force_smooth)
