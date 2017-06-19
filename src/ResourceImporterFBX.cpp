@@ -251,10 +251,6 @@ int ResourceImporterFBX::import(const String p_source_file, const String p_save_
 	//bool weld_vertices = p_options["force/weld_vertices"];
 	//float weld_tolerance = p_options["force/weld_tolerance"];
 
-	Array normals;
-	Vector2 uv;
-	Array uvs;
-
 	String name;
 
 	Ref<SurfaceTool> surf_tool = new SurfaceTool;
@@ -272,6 +268,11 @@ int ResourceImporterFBX::import(const String p_source_file, const String p_save_
 
 	int iChildNodeCount = rootNode->GetChildCount();
 
+	Array vertices;
+	Array normals;
+	Array uvs;
+	Array indices;
+
 	for (int i = 0; i < iChildNodeCount; i++)
 	{
 		// Child Node -> Object
@@ -283,7 +284,7 @@ int ResourceImporterFBX::import(const String p_source_file, const String p_save_
 		if (iVertexCount > 0)
 		{
 			int indicesIndex = 0;
-			Array vertices;
+
 			// Get all positions
 			FbxVector4* pVertices = fbxMesh->GetControlPoints();
 			int iPolyCount = fbxMesh->GetPolygonCount();
@@ -292,28 +293,36 @@ int ResourceImporterFBX::import(const String p_source_file, const String p_save_
 				// The poly size should be 3 since it's a triangle
 				int iPolySize = fbxMesh->GetPolygonSize(j);
 				// Get 3 vertices of the triangle
-				Vector3 vertex;
 				for (int k = 0; k < iPolySize; k++)
 				{
 					// Get index
 					int index = fbxMesh->GetPolygonVertex(j, k);
-					//subMesh.indices.push_back(indicesIndex++);
+					indices.push_back(index);
 
 					// Get normal
 					fbxMesh->GetPolygonVertexNormal(j, k, nor);
+					normals.push_back(Vector3(nor[0], nor[1], nor[2]));
 
 					// Insert pos and nor data
-					vertex[0] = pVertices[index].mData[0];
-					vertex[1] = pVertices[index].mData[1];
-					vertex[2] = pVertices[index].mData[2];
-					
-					//                    vertex.fNor = DirectX::XMFLOAT3(static_cast<float>(nor.mData[0]), static_cast<float>(nor.mData[1]), static_cast<float>(nor.mData[2]));
-					//                    vertex.fTex = DirectX::XMFLOAT2(0.0f, 0.0f);
+					vertices.push_back(Vector3(pVertices[index].mData[0],
+						pVertices[index].mData[1],
+						pVertices[index].mData[2]));
+
+					// Not uv... but will be!
+					uvs.push_back(Vector2(0.5f, 1.0f));
 				}
-				vertices.push_back(vertex);
+				
 			}
-			array_mesh->add_surface_from_arrays(PrimitiveType::PRIMITIVE_TRIANGLES, vertices);
+
 		}
+		Array arrays;
+		//arrays.resize(ArrayMesh::ARRAY_MAX);
+		arrays[ArrayMesh::ARRAY_VERTEX] = vertices;
+		arrays[ArrayMesh::ARRAY_NORMAL] = normals;
+		arrays[ArrayMesh::ARRAY_COLOR] = uvs;
+		arrays[ArrayMesh::ARRAY_INDEX] = indices;
+
+		array_mesh->add_surface_from_arrays(PrimitiveType::PRIMITIVE_TRIANGLES, vertices);
 	}
 
 	//if (force_smooth)
