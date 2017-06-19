@@ -238,7 +238,7 @@ int ResourceImporterFBX::import(const String p_source_file, const String p_save_
 
 	// Convert the file
 
-	Ref<ArrayMesh> array_mesh = Ref<ArrayMesh>(new (ArrayMesh));
+	Ref<ArrayMesh> array_mesh = Ref<ArrayMesh>(new ArrayMesh);
 
 //	Dictionary<String, Ref<Material> > name_map;
 
@@ -251,8 +251,6 @@ int ResourceImporterFBX::import(const String p_source_file, const String p_save_
 	//bool weld_vertices = p_options["force/weld_vertices"];
 	//float weld_tolerance = p_options["force/weld_tolerance"];
 
-	Array vertices;
-	Vector3 elem;
 	Array normals;
 	Vector2 uv;
 	Array uvs;
@@ -285,7 +283,7 @@ int ResourceImporterFBX::import(const String p_source_file, const String p_save_
 		if (iVertexCount > 0)
 		{
 			int indicesIndex = 0;
-			//SubMesh subMesh;
+			Array vertices;
 			// Get all positions
 			FbxVector4* pVertices = fbxMesh->GetControlPoints();
 			int iPolyCount = fbxMesh->GetPolygonCount();
@@ -294,6 +292,7 @@ int ResourceImporterFBX::import(const String p_source_file, const String p_save_
 				// The poly size should be 3 since it's a triangle
 				int iPolySize = fbxMesh->GetPolygonSize(j);
 				// Get 3 vertices of the triangle
+				Vector3 vertex;
 				for (int k = 0; k < iPolySize; k++)
 				{
 					// Get index
@@ -304,17 +303,16 @@ int ResourceImporterFBX::import(const String p_source_file, const String p_save_
 					fbxMesh->GetPolygonVertexNormal(j, k, nor);
 
 					// Insert pos and nor data
-					Vector3 vtx;
-					vtx.x = pVertices[index].mData[0];
-					vtx.y = pVertices[index].mData[1];
-					vtx.z = pVertices[index].mData[2];
-					vertices.push_back(vtx);
-					//Vertex vertex = Vertex();
+					vertex[0] = pVertices[index].mData[0];
+					vertex[1] = pVertices[index].mData[1];
+					vertex[2] = pVertices[index].mData[2];
+					
 					//                    vertex.fNor = DirectX::XMFLOAT3(static_cast<float>(nor.mData[0]), static_cast<float>(nor.mData[1]), static_cast<float>(nor.mData[2]));
 					//                    vertex.fTex = DirectX::XMFLOAT2(0.0f, 0.0f);
 				}
+				vertices.push_back(vertex);
 			}
-			//mesh->subMeshes.push_back(subMesh);
+			array_mesh->add_surface_from_arrays(PrimitiveType::PRIMITIVE_TRIANGLES, vertices);
 		}
 	}
 
