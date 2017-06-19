@@ -295,10 +295,7 @@ int ResourceImporterFBX::import(const String p_source_file, const String p_save_
 				// Get 3 vertices of the triangle
 				for (int k = 0; k < iPolySize; k++)
 				{
-					// Get index
 					int index = fbxMesh->GetPolygonVertex(j, k);
-					indices.push_back(index);
-
 					// Get normal
 					fbxMesh->GetPolygonVertexNormal(j, k, nor);
 					normals.push_back(Vector3(nor[0], nor[1], nor[2]));
@@ -310,7 +307,15 @@ int ResourceImporterFBX::import(const String p_source_file, const String p_save_
 
 					// Not uv... but will be!
 					//uvs.push_back(Vector2(0.5f, 1.0f));
-				}				
+				}
+
+
+				for (int k = 0; k < iPolySize; k++)
+				{
+					// Get index
+					int index = fbxMesh->GetPolygonVertex(j, k);
+					indices.push_back(index);
+				}
 			}
 
 			Array arrays;
