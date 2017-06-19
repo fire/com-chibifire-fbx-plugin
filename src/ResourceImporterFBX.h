@@ -18,6 +18,17 @@ using godot::Reference;
 using godot::Array;
 using godot::Dictionary;
 
+enum PrimitiveType {
+	PRIMITIVE_POINTS = 0,
+	PRIMITIVE_LINES = 1,
+	PRIMITIVE_LINE_STRIP = 2,
+	PRIMITIVE_LINE_LOOP = 3,
+	PRIMITIVE_TRIANGLES = 4,
+	PRIMITIVE_TRIANGLE_STRIP = 5,
+	PRIMITIVE_TRIANGLE_FAN = 6,
+	PRIMITIVE_MAX = 7,
+};
+
 class ResourceImporterFBX : public GodotScript<EditorImportPlugin> {
 private:
 	void InitializeSdkObjects(FbxManager *& pManager, FbxScene *& pScene);
