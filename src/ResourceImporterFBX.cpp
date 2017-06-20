@@ -218,7 +218,6 @@ bool LoadScene(FbxManager* pManager, FbxDocument* pScene, const char* pFilename)
 	return lStatus;
 }
 
-
 int ResourceImporterFBX::import(const String p_source_file, const String p_save_path, const Dictionary p_options, const Array p_r_platform_variants, const Array p_r_gen_files)
 {	
 	FbxManager* lSdkManager = nullptr;
@@ -238,7 +237,7 @@ int ResourceImporterFBX::import(const String p_source_file, const String p_save_
 
 	// Convert the file
 
-	Ref<ArrayMesh> array_mesh = Ref<ArrayMesh>(new ArrayMesh);
+	ArrayMesh* array_mesh = new ArrayMesh;
 
 	//Ref<SurfaceTool> surf_tool = new SurfaceTool;
 
@@ -269,6 +268,7 @@ int ResourceImporterFBX::import(const String p_source_file, const String p_save_
 		if (!fbxMesh)
 			continue;
 		int iVertexCount = fbxMesh->GetControlPointsCount();
+
 		if (iVertexCount > 0)
 		{
 			int indicesIndex = 0;
@@ -278,6 +278,8 @@ int ResourceImporterFBX::import(const String p_source_file, const String p_save_
 			int iPolyCount = fbxMesh->GetPolygonCount();
 			for (int j = 0; j < iPolyCount; j++)
 			{
+
+
 				// The poly size should be 3 since it's a triangle
 				int iPolySize = fbxMesh->GetPolygonSize(j);
 				// Get 3 vertices of the triangle
@@ -304,19 +306,42 @@ int ResourceImporterFBX::import(const String p_source_file, const String p_save_
 					indices.push_back(index);
 				}
 			}
-
-			Array arrays;
-			arrays.resize(ArrayType::ARRAY_MAX);
-			arrays[ArrayType::ARRAY_VERTEX] = vertices;
-			arrays[ArrayType::ARRAY_NORMAL] = normals;
-			//arrays[ArrayType::ARRAY_TEX_UV2] = uvs;
-			arrays[ArrayType::ARRAY_INDEX] = indices;
-
-			array_mesh->add_surface_from_arrays(PrimitiveType::PRIMITIVE_TRIANGLES, arrays);
 		}
 	}
+
+	PoolVector3Array output_vertices;
+	PoolVector3Array output_normals;
+	PoolIntArray output_indices;
+
+	output_vertices.resize(vertices.size());
+	for (int i = 0; i < vertices.size(); ++i)
+	{
+		output_vertices[i] = vertices[i];
+	}
+
+	output_normals.resize(normals.size());
+	for (int i = 0; i < normals.size(); ++i)
+	{
+		output_normals[i] = normals[i];
+	}
+
+	output_indices.resize(indices.size());
+	for (int i = 0; i < indices.size(); ++i)
+	{
+		output_indices.push_back(indices[i]);
+	}
+
+	Array arrays;
+	arrays.resize(ArrayType::ARRAY_MAX);
+	arrays[ArrayType::ARRAY_VERTEX] = output_vertices;
+	arrays[ArrayType::ARRAY_NORMAL] = output_normals;
+	//arrays[ArrayType::ARRAY_TEX_UV2] = uvs;
+	arrays[ArrayType::ARRAY_INDEX] = output_indices;
+
+	array_mesh->add_surface_from_arrays(PrimitiveType::PRIMITIVE_TRIANGLES, arrays);
+
 	// TODO SAVE WITH .mesh extension
-	return ResourceSaver::save("res://main.mesh", *array_mesh);
+	return ResourceSaver::save("res://main.mesh", array_mesh);
 }
 
 void ResourceImporterFBX::_register_methods() {
