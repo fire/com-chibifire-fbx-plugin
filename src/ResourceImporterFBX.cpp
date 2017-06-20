@@ -98,7 +98,7 @@ void ResourceImporterFBX::InitializeSdkObjects(FbxManager*& pManager, FbxScene*&
 	}
 }
 
-void DestroySdkObjects(FbxManager* pManager, bool pExitStatus)
+void ResourceImporterFBX::DestroySdkObjects(FbxManager* pManager, bool pExitStatus)
 {
     //Delete the FBX Manager. All the objects that have been allocated using the FBX Manager and that haven't been explicitly destroyed are also automatically destroyed.
     if( pManager ) pManager->Destroy();
@@ -113,7 +113,7 @@ void DestroySdkObjects(FbxManager* pManager, bool pExitStatus)
 #endif
 
 // FBX SDK code
-bool LoadScene(FbxManager* pManager, FbxDocument* pScene, const char* pFilename)
+bool ResourceImporterFBX::LoadScene(FbxManager* pManager, FbxDocument* pScene, const char* pFilename)
 {
 	int lFileMajor, lFileMinor, lFileRevision;
 	int lSDKMajor, lSDKMinor, lSDKRevision;
