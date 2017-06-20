@@ -244,7 +244,7 @@ int ResourceImporterFBX::import(const String p_source_file, const String p_save_
 
 	// Convert the file
 
-	ArrayMesh* array_mesh = new ArrayMesh;
+	Ref<ArrayMesh> array_mesh = new ArrayMesh;
 
 	//Ref<SurfaceTool> surf_tool = new SurfaceTool;
 
@@ -273,7 +273,15 @@ int ResourceImporterFBX::import(const String p_source_file, const String p_save_
 		FbxNode* fbxChildNode = rootNode->GetChild(i);
 		FbxMesh* fbxMesh = fbxChildNode->GetMesh();
 		if (!fbxMesh)
+		{
 			continue;
+		}
+		if (!fbxMesh->IsTriangleMesh())
+		{
+			Godot::print("FBX: Not a triangle mesh; Skipping mesh");
+			continue;
+		}
+
 		int iVertexCount = fbxMesh->GetControlPointsCount();
 
 		if (iVertexCount > 0)
@@ -307,6 +315,41 @@ int ResourceImporterFBX::import(const String p_source_file, const String p_save_
 
 					// TODO uv... but will be!
 				}
+
+				int lStartIndex = fbxMesh->GetPolygonVertexIndex(j);
+				if (lStartIndex == -1)
+				{
+					return 1;
+				}
+
+				// Optimize!
+				int* lVertices = fbxMesh->GetPolygonVertices();
+				int lCount = fbxMesh->GetPolygonSize(3);
+				for (int i = 0; i < lCount; ++i)
+				{
+					int elem = lVertices[lStartIndex + i];
+
+					if (elem >= 0)
+					{
+						indices.push_back(elem);
+						continue;
+					}
+
+					if (i % 1 && elem < 0)
+					{
+						indices.push_back(abs(elem) - 1);
+					}
+					else if (i % 2 && elem < 0)
+					{
+						int elem3 = indices[indices.size()];
+						indices.remove(indices.size() - 1);
+						int elem2 = indices[indices.size()];
+						indices.remove(indices.size() - 1);
+
+						indices.push_back(abs(elem3));
+						indices.push_back(elem2);
+					}
+				}
 			}
 		}
 	}
@@ -323,7 +366,7 @@ int ResourceImporterFBX::import(const String p_source_file, const String p_save_
 	DestroySdkObjects(lSdkManager, lScene);
 
 	// TODO SAVE WITH .mesh extension
-	return ResourceSaver::save("res://main.mesh", array_mesh);
+	return ResourceSaver::save("res://main.mesh", array_mesh.ptr());
 }
 
 void ResourceImporterFBX::_register_methods() {
