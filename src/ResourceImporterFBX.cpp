@@ -295,10 +295,10 @@ int ResourceImporterFBX::import(const String p_source_file, const String p_save_
 					int index = fbxMesh->GetPolygonVertex(j, k);
 					// Get normal
 					fbxMesh->GetPolygonVertexNormal(j, k, nor);
-					normals.push_back(Vector3(nor[0], nor[1], nor[2]));
+					normals.insert(vertices.size(), Vector3(nor[0], nor[1], nor[2]));
 
 					// Insert pos and nor data
-					vertices.push_back(Vector3(pVertices[index].mData[0],
+					vertices.insert(vertices.size(), Vector3(pVertices[index].mData[0],
 						pVertices[index].mData[1],
 						pVertices[index].mData[2]));
 
@@ -310,40 +310,18 @@ int ResourceImporterFBX::import(const String p_source_file, const String p_save_
 				{
 					// Get index
 					int index = fbxMesh->GetPolygonVertex(j, k);
-					indices.push_back(index);
+					indices.insert(indices.size(), index);
 				}
 			}
 		}
 	}
 
-	PoolVector3Array output_vertices;
-	PoolVector3Array output_normals;
-	PoolIntArray output_indices;
-
-	output_vertices.resize(vertices.size());
-	for (int i = 0; i < vertices.size(); ++i)
-	{
-		output_vertices[i] = vertices[i];
-	}
-
-	output_normals.resize(normals.size());
-	for (int i = 0; i < normals.size(); ++i)
-	{
-		output_normals[i] = normals[i];
-	}
-
-	output_indices.resize(indices.size());
-	for (int i = 0; i < indices.size(); ++i)
-	{
-		output_indices.push_back(indices[i]);
-	}
-
 	Array arrays;
 	arrays.resize(ArrayType::ARRAY_MAX);
-	arrays[ArrayType::ARRAY_VERTEX] = output_vertices;
-	arrays[ArrayType::ARRAY_NORMAL] = output_normals;
+	arrays[ArrayType::ARRAY_VERTEX] = vertices;
+	arrays[ArrayType::ARRAY_NORMAL] = normals;
 	//arrays[ArrayType::ARRAY_TEX_UV2] = uvs;
-	arrays[ArrayType::ARRAY_INDEX] = output_indices;
+	arrays[ArrayType::ARRAY_INDEX] = indices;
 
 	array_mesh->add_surface_from_arrays(PrimitiveType::PRIMITIVE_TRIANGLES, arrays);
 
