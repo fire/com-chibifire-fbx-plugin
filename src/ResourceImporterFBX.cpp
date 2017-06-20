@@ -98,6 +98,13 @@ void ResourceImporterFBX::InitializeSdkObjects(FbxManager*& pManager, FbxScene*&
 	}
 }
 
+void DestroySdkObjects(FbxManager* pManager, bool pExitStatus)
+{
+    //Delete the FBX Manager. All the objects that have been allocated using the FBX Manager and that haven't been explicitly destroyed are also automatically destroyed.
+    if( pManager ) pManager->Destroy();
+	if( pExitStatus ) FBXSDK_printf("Program Success!\n");
+}
+
 // FBX SDK Code
 
 #ifdef IOS_REF
@@ -339,6 +346,8 @@ int ResourceImporterFBX::import(const String p_source_file, const String p_save_
 	arrays[ArrayType::ARRAY_INDEX] = output_indices;
 
 	array_mesh->add_surface_from_arrays(PrimitiveType::PRIMITIVE_TRIANGLES, arrays);
+
+	DestroySdkObjects(lSdkManager, lScene);
 
 	// TODO SAVE WITH .mesh extension
 	return ResourceSaver::save("res://main.mesh", array_mesh);
