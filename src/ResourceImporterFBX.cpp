@@ -285,32 +285,27 @@ int ResourceImporterFBX::import(const String p_source_file, const String p_save_
 			int iPolyCount = fbxMesh->GetPolygonCount();
 			for (int j = 0; j < iPolyCount; j++)
 			{
-
-
 				// The poly size should be 3 since it's a triangle
 				int iPolySize = fbxMesh->GetPolygonSize(j);
 				// Get 3 vertices of the triangle
 				for (int k = 0; k < iPolySize; k++)
 				{
 					int index = fbxMesh->GetPolygonVertex(j, k);
+
+					// Get index
+					int polygon_index = fbxMesh->GetPolygonVertexIndex(index);
+					indices.push_back(polygon_index);
+
 					// Get normal
 					fbxMesh->GetPolygonVertexNormal(j, k, nor);
-					normals.insert(vertices.size(), Vector3(nor[0], nor[1], nor[2]));
+					normals.push_back(Vector3(nor[0], nor[1], nor[2]));
 
 					// Insert pos and nor data
-					vertices.insert(vertices.size(), Vector3(pVertices[index].mData[0],
+					vertices.push_back(Vector3(pVertices[index].mData[0],
 						pVertices[index].mData[1],
 						pVertices[index].mData[2]));
 
 					// TODO uv... but will be!
-				}
-
-
-				for (int k = 0; k < iPolySize; k++)
-				{
-					// Get index
-					int index = fbxMesh->GetPolygonVertex(j, k);
-					indices.insert(indices.size(), index);
 				}
 			}
 		}
