@@ -300,7 +300,9 @@ int ResourceImporterFBX::import(const String p_source_file, const String p_save_
 			{
 				int index = fbxMesh->GetPolygonVertex(j, k);
 
-				if (index == -1)
+				FbxVector4 fbx_normal;
+
+				if (index == -1 || !fbxMesh->GetPolygonVertexNormal(j, k, fbx_normal))
 				{
 					continue;
 				}
@@ -309,21 +311,8 @@ int ResourceImporterFBX::import(const String p_source_file, const String p_save_
 				vertices.push_back(Vector3(pVertices[index].mData[0],
 					pVertices[index].mData[1],
 					pVertices[index].mData[2]));
-			}
-		}
-		
-		// TODO uv... but will be!
-		FbxGeometryElementNormal* normal_elem = fbxMesh->GetElementNormal();
-		for (int m = 0; m < fbxMesh->GetPolygonCount(); ++m)
-		{
-			FbxVector4 fbx_normal;
 
-			for (int k = 0; k < 3; ++k)
-			{
-				if (!fbxMesh->GetPolygonVertexNormal(m, k, fbx_normal))
-				{
-					continue;
-				}
+
 				normals.push_back(Vector3(fbx_normal.mData[0], fbx_normal.mData[1], fbx_normal.mData[2]));
 			}
 		}
