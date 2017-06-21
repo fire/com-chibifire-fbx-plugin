@@ -282,6 +282,10 @@ int ResourceImporterFBX::import(const String p_source_file, const String p_save_
 			continue;
 		}
 
+		char faces[len];
+		snprintf(faces, len, "FBX faces: %d", fbxMesh->GetPolygonCount());
+		Godot::print(faces);
+
 		int iVertexCount = fbxMesh->GetControlPointsCount();
 
 		if (iVertexCount > 0)
@@ -296,7 +300,7 @@ int ResourceImporterFBX::import(const String p_source_file, const String p_save_
 				// The poly size should be 3 since it's a triangle
 				int iPolySize = fbxMesh->GetPolygonSize(j);
 				// Get 3 vertices of the triangle
-				for (int k = 0; k < iPolySize; k++)
+				for (int k = 0; k < iPolySize; ++k)
 				{
 					int index = fbxMesh->GetPolygonVertex(j, k);
 
@@ -314,44 +318,30 @@ int ResourceImporterFBX::import(const String p_source_file, const String p_save_
 			}
 		}
 
-		int iPolyCount = fbxMesh->GetPolygonCount();
 		int* lVertices = fbxMesh->GetPolygonVertices();
-		for (int j = 0; j < iPolyCount; j++)
+		for (int j = 0; j < fbxMesh->GetPolygonCount(); ++j)
 		{
-			int lStartIndex = fbxMesh->GetPolygonVertexIndex(j);
-			if (lStartIndex == -1)
+			size_t start_index = fbxMesh->GetPolygonVertexIndex(j);
+			int a = lVertices[start_index + 0];
+			int b = lVertices[start_index + 1];
+			int c = lVertices[start_index + 2];
+			int d = 0;
+			if (b < 0)
 			{
-				return 1;
+				b = abs(b) - 1;
+				d = b;
+				b = c;
+				c = d;
 			}
-
-			int lCount = fbxMesh->GetPolygonSize(j);
-
-			for (int i = 0; i < lCount; ++i)
+			if (c < 0)
 			{
-				int elem = lVertices[lStartIndex + i];
-
-				if (elem >= 0)
-				{
-					indices.push_back(elem);
-					continue;
-				}
-
-				if (i == 1 && elem < 0)
-				{
-					// The negative vertex index indicates the end of the polygon. 
-					// You can bitwise negate the negative index, to get the positive one.
-					indices.push_back(~elem);
-				}
-				else if (i == 2 && elem < 0)
-				{
-					int temp = indices[indices.size()];
-					indices.remove(indices.size());
-
-					indices.push_back(elem);
-					indices.push_back(temp);
-				}
+				c = abs(c) - 1;
 			}
+			indices.push_back(a);
+			indices.push_back(b);
+			indices.push_back(c);
 		}
+
 	}
 
 	Array arrays;
@@ -365,7 +355,7 @@ int ResourceImporterFBX::import(const String p_source_file, const String p_save_
 
 	char faces[len];
 
-	snprintf(faces, len, "FBX faces: %d", array_mesh->get_surface_count());
+	snprintf(faces, len, "Mesh faces: %d", array_mesh->get_surface_count());
 
 	Godot::print(faces);
 
