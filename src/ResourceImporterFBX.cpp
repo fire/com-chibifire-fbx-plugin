@@ -234,8 +234,8 @@ int ResourceImporterFBX::import(const String p_source_file, const String p_save_
 
 	// Prepare the FBX SDK.
 	InitializeSdkObjects(lSdkManager, lScene);
-
-	lResult = LoadScene(lSdkManager, lScene, "D:/Hobby/ResourceImporterFBX/sample/cube.fbx");
+	
+	lResult = LoadScene(lSdkManager, lScene, "cube.fbx");
 	const size_t len = 128;
 	char str[len];
 
