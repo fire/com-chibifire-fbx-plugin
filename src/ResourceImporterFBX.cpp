@@ -22,49 +22,49 @@
 
 using namespace godot;
 
-String ResourceImporterFBX::get_importer_name()
+String ResourceImporterFBX::get_importer_name() const
 {
 	return "fbx_mesh";
 }
 
-String ResourceImporterFBX::get_visible_name()
+String ResourceImporterFBX::get_visible_name() const
 {
 	return "FBX As Mesh";
 }
 
-int ResourceImporterFBX::get_preset_count()
+int ResourceImporterFBX::get_preset_count() const
 {
 	return 0;
 }
 
-String ResourceImporterFBX::get_preset_name(const int preset)
+String ResourceImporterFBX::get_preset_name(const int preset) const
 {
 	return String();
 }
 
-Array ResourceImporterFBX::get_recognized_extensions()
+Array ResourceImporterFBX::get_recognized_extensions() const
 {
 	Array recognized = Array();
 	recognized.push_back("fbx");
 	return recognized;
 }
 
-Array ResourceImporterFBX::get_import_options(const int preset)
+Array ResourceImporterFBX::get_import_options(const int preset) const
 {
 	return Array();
 }
 
-String ResourceImporterFBX::get_save_extension()
+String ResourceImporterFBX::get_save_extension() const
 {
 	return "mesh";
 }
 
-String ResourceImporterFBX::get_resource_type()
+String ResourceImporterFBX::get_resource_type() const
 {
 	return "ArrayMesh";
 }
 
-bool ResourceImporterFBX::get_option_visibility(const String option, const Dictionary options)
+bool ResourceImporterFBX::get_option_visibility(const String option, const Dictionary options) const
 {
 	return true;
 }
