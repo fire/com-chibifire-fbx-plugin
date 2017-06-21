@@ -268,7 +268,7 @@ int ResourceImporterFBX::import(const String p_source_file, const String p_save_
 	PoolVector2Array uvs;
 	PoolIntArray indices;
 
-	for (int i = 0; i < iChildNodeCount; i++)
+	for (int i = 0; i < iChildNodeCount; ++i)
 	{
 		// Child Node -> Object
 		FbxNode* fbxChildNode = rootNode->GetChild(i);
@@ -287,40 +287,48 @@ int ResourceImporterFBX::import(const String p_source_file, const String p_save_
 		snprintf(faces, len, "FBX faces: %d", fbxMesh->GetPolygonCount());
 		Godot::print(faces);
 
+		// Get all positions
+		FbxVector4* pVertices = fbxMesh->GetControlPoints();
 		int iVertexCount = fbxMesh->GetControlPointsCount();
 
-		if (iVertexCount > 0)
+		for (int j = 0; j < fbxMesh->GetPolygonCount(); j++)
 		{
-			int indicesIndex = 0;
-
-			// Get all positions
-			FbxVector4* pVertices = fbxMesh->GetControlPoints();
-			int iPolyCount = fbxMesh->GetPolygonCount();
-			for (int j = 0; j < iPolyCount; j++)
+			// The poly size should be 3 since it's a triangle
+			int iPolySize = fbxMesh->GetPolygonSize(j);
+			// Get 3 vertices of the triangle
+			for (int k = 0; k < iPolySize; ++k)
 			{
-				// The poly size should be 3 since it's a triangle
-				int iPolySize = fbxMesh->GetPolygonSize(j);
-				// Get 3 vertices of the triangle
-				for (int k = 0; k < iPolySize; ++k)
+				int index = fbxMesh->GetPolygonVertex(j, k);
+
+				if (index == -1)
 				{
-					int index = fbxMesh->GetPolygonVertex(j, k);
-
-					// Get normal
-					fbxMesh->GetPolygonVertexNormal(j, k, nor);
-					normals.push_back(Vector3(nor[0], nor[1], nor[2]));
-
-					// Insert pos and nor data
-					vertices.push_back(Vector3(pVertices[index].mData[0],
-						pVertices[index].mData[1],
-						pVertices[index].mData[2]));
-
-					// TODO uv... but will be!
+					continue;
 				}
+
+				// Insert pos and nor data
+				vertices.push_back(Vector3(pVertices[index].mData[0],
+					pVertices[index].mData[1],
+					pVertices[index].mData[2]));
+			}
+		}
+		
+		// TODO uv... but will be!
+		FbxGeometryElementNormal* normal_elem = fbxMesh->GetElementNormal();
+		for (int m = 0; m < fbxMesh->GetPolygonCount(); ++m)
+		{
+			FbxVector4 fbx_normal;
+
+			for (int k = 0; k < 3; ++k)
+			{
+				if (!fbxMesh->GetPolygonVertexNormal(m, k, fbx_normal))
+				{
+					continue;
+				}
+				normals.push_back(Vector3(fbx_normal.mData[0], fbx_normal.mData[1], fbx_normal.mData[2]));
 			}
 		}
 
-		int iPolyCount = fbxMesh->GetPolygonCount();
-		for (int j = 0; j < iPolyCount; j++)
+		for (int j = 0; j < fbxMesh->GetPolygonCount(); j++)
 		{
 			int lStartIndex = fbxMesh->GetPolygonVertexIndex(j);
 			if (lStartIndex == -1)
@@ -350,7 +358,7 @@ int ResourceImporterFBX::import(const String p_source_file, const String p_save_
 		Godot::print(vertex_output);
 	}
 
-	pool_normals.resize(vertices.size());
+	pool_normals.resize(normals.size());
 	for (size_t i = 0; i < normals.size(); ++i) {
 		char normals_output[len];
 		snprintf(normals_output, len, "Normals: %f %f %f of %zd", normals[i].x, normals[i].y, normals[i].z, i);
@@ -365,7 +373,6 @@ int ResourceImporterFBX::import(const String p_source_file, const String p_save_
 		snprintf(index_output, len, "Index: %d of %zd", indices[i], i);
 		Godot::print(index_output);
 	}
-
 	Array arrays;
 	arrays.resize(ArrayType::ARRAY_MAX);
 
@@ -388,7 +395,8 @@ int ResourceImporterFBX::import(const String p_source_file, const String p_save_
 	return ResourceSaver::save("res://main.mesh", array_mesh.ptr());
 }
 
-void ResourceImporterFBX::_register_methods() {
+void ResourceImporterFBX::_register_methods() 
+{
 	register_method("get_importer_name", &ResourceImporterFBX::get_importer_name);
 	register_method("get_visible_name", &ResourceImporterFBX::get_visible_name);
 	register_method("get_preset_count", &ResourceImporterFBX::get_preset_count);
