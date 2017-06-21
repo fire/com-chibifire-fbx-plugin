@@ -311,41 +311,46 @@ int ResourceImporterFBX::import(const String p_source_file, const String p_save_
 
 					// TODO uv... but will be!
 				}
-				int lStartIndex = fbxMesh->GetPolygonVertexIndex(j);
-				if (lStartIndex == -1)
+			}
+		}
+
+		int iPolyCount = fbxMesh->GetPolygonCount();
+		int* lVertices = fbxMesh->GetPolygonVertices();
+		for (int j = 0; j < iPolyCount; j++)
+		{
+			int lStartIndex = fbxMesh->GetPolygonVertexIndex(j);
+			if (lStartIndex == -1)
+			{
+				return 1;
+			}
+
+			int lCount = fbxMesh->GetPolygonSize(j);
+
+			for (int i = 0; i < lCount; ++i)
+			{
+				int elem = lVertices[lStartIndex + i];
+
+				if (elem >= 0)
 				{
-					return 1;
+					indices.push_back(elem);
+					continue;
 				}
 
-				// Optimize!
-				int* lVertices = fbxMesh->GetPolygonVertices();
-				int lCount = fbxMesh->GetPolygonSize(j);
-				for (int i = 0; i < lCount; ++i)
+				if (i % 2 == 0 && elem < 0)
 				{
-					int elem = lVertices[lStartIndex + i];
+					// The negative vertex index indicates the end of the polygon. 
+					// You can bitwise negate the negative index, to get the positive one.
+					indices.push_back(~elem);
+				}
+				else if (i % 3 == 0 && elem < 0)
+				{
+					int elem3 = indices[indices.size() - 1];
+					indices.remove(indices.size());
+					int elem2 = indices[indices.size() - 1];
+					indices.remove(indices.size());
 
-					if (elem >= 0)
-					{
-						indices.push_back(elem);
-						continue;
-					}
-
-					if (i % 1 == 0 && elem < 0)
-					{
-						// The negative vertex index indicates the end of the polygon. 
-						// You can bitwise negate the negative index, to get the positive one.
-						indices.push_back(~elem);
-					}
-					else if (i % 3 == 0 && elem < 0)
-					{
-						int elem3 = indices[indices.size() - 1];
-						indices.remove(indices.size());
-						int elem2 = indices[indices.size() - 1];
-						indices.remove(indices.size());
-
-						indices.push_back(elem3);
-						indices.push_back(~elem2);
-					}
+					indices.push_back(elem3);
+					indices.push_back(~elem2);
 				}
 			}
 		}
