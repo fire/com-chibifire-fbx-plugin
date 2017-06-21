@@ -336,17 +336,16 @@ int ResourceImporterFBX::import(const String p_source_file, const String p_save_
 					continue;
 				}
 
-				if (i % 2 == 0 && elem < 0)
+				if (i == 1 && elem < 0)
 				{
 					// The negative vertex index indicates the end of the polygon. 
 					// You can bitwise negate the negative index, to get the positive one.
 					indices.push_back(~elem);
 				}
-				else if (i % 3 == 0 && elem < 0)
+				else if (i == 2 && elem < 0)
 				{
-					int elem3 = indices[indices.size() - 1];
-					indices.remove(indices.size());
-					int elem2 = indices[indices.size() - 1];
+					int elem3 = elem;
+					int elem2 = indices[indices.size()];
 					indices.remove(indices.size());
 
 					indices.push_back(elem3);
@@ -367,7 +366,7 @@ int ResourceImporterFBX::import(const String p_source_file, const String p_save_
 
 	char faces[len];
 
-    snprintf(faces, len, "FBX faces: %d", array_mesh->get_surface_count());
+	snprintf(faces, len, "FBX faces: %d", array_mesh->get_surface_count());
 
 	Godot::print(faces);
 
