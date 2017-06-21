@@ -337,7 +337,9 @@ int ResourceImporterFBX::import(const String p_source_file, const String p_save_
 
 					if (i % 1 && elem < 0)
 					{
-						indices.push_back(abs(elem) - 1);
+						// The negative vertex index indicates the end of the polygon. 
+						// You can bitwise negate the negative index, to get the positive one.
+						indices.push_back(~elem);
 					}
 					else if (i % 2 && elem < 0)
 					{
@@ -345,9 +347,9 @@ int ResourceImporterFBX::import(const String p_source_file, const String p_save_
 						indices.remove(indices.size() - 1);
 						int elem2 = indices[indices.size()];
 						indices.remove(indices.size() - 1);
-
-						indices.push_back(abs(elem3));
-						indices.push_back(elem2);
+						
+						indices.push_back(elem3);
+						indices.push_back(~elem2);
 					}
 				}
 			}
