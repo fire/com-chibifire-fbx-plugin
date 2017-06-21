@@ -348,28 +348,25 @@ int ResourceImporterFBX::import(const String p_source_file, const String p_save_
 	PoolVector2Array pool_uvs;
 	PoolIntArray pool_indices;
 
-	pool_vertices.resize(vertices.size());
 	for(size_t i = 0; i < vertices.size(); ++i) {
 		char vertex_output[len];
 		
-		snprintf(vertex_output, len, "Vertex: %f %f %f of %zd", vertices[i].x, vertices[i].y, vertices[i].z, i);
-		pool_vertices[i] = vertices[i];
+		pool_vertices.push_back(vertices[i]);		
+		snprintf(vertex_output, len, "Vertex: %f %f %f of %zd", pool_vertices[i].x, pool_vertices[i].y, pool_vertices[i].z, i);
 		Godot::print(vertex_output);
 	}
 
-	pool_normals.resize(normals.size());
 	for (size_t i = 0; i < normals.size(); ++i) {
-		char normals_output[len];
-		snprintf(normals_output, len, "Normals: %f %f %f of %zd", normals[i].x, normals[i].y, normals[i].z, i);
-		pool_normals[i] = normals[i];
+		char normals_output[len];		
+		pool_normals.push_back(normals[i]);
+		snprintf(normals_output, len, "Normals: %f %f %f of %zd", pool_normals[i].x, pool_normals[i].y, pool_normals[i].z, i);
 		Godot::print(normals_output);
 	}
 
-	pool_indices.resize(indices.size());
 	for (size_t i = 0; i < indices.size(); ++i) {
 		pool_indices.push_back(indices[i]);
 		char index_output[len];
-		snprintf(index_output, len, "Index: %d of %zd", indices[i], i);
+		snprintf(index_output, len, "Index: %d of %zd", pool_indices[i], i);
 		Godot::print(index_output);
 	}
 	Array arrays;
