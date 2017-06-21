@@ -344,12 +344,11 @@ int ResourceImporterFBX::import(const String p_source_file, const String p_save_
 				}
 				else if (i == 2 && elem < 0)
 				{
-					int elem3 = elem;
-					int elem2 = indices[indices.size()];
+					int temp = indices[indices.size()];
 					indices.remove(indices.size());
 
-					indices.push_back(elem3);
-					indices.push_back(~elem2);
+					indices.push_back(elem);
+					indices.push_back(temp);
 				}
 			}
 		}
