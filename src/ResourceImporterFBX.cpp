@@ -237,19 +237,11 @@ int ResourceImporterFBX::import(const String p_source_file, const String p_save_
 	lResult = LoadScene(lSdkManager, lScene, "cube.fbx");
 	const size_t len = 128;
 	char str[len];
-
     snprintf(str, len, "FBX node count: %d", lScene->GetNodeCount());
-
 	Godot::print(str);
-
-	// Convert the file
-
+	
 	Ref<ArrayMesh> array_mesh = new ArrayMesh;
-
-	//Ref<SurfaceTool> surf_tool = new SurfaceTool;
-
-	//surf_tool->begin(PrimitiveType::PRIMITIVE_TRIANGLES);
-
+	
 	FbxVector4 pos, nor;
 	FbxVector2 uv;
 
@@ -369,7 +361,7 @@ int ResourceImporterFBX::import(const String p_source_file, const String p_save_
 
 	char faces[len];
 
-	snprintf(faces, len, "Mesh faces: %d", array_mesh->get_surface_count());
+	snprintf(faces, len, "Mesh surface count: %d", array_mesh->get_surface_count());
 
 	Godot::print(faces);
 
