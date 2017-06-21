@@ -299,6 +299,10 @@ int ResourceImporterFBX::import(const String p_source_file, const String p_save_
 			{
 				int index = fbxMesh->GetPolygonVertex(j, k);
 
+				if (index == -1)
+				{
+					continue;
+				}
 				// Insert pos and nor data
 				vertices.push_back(Vector3(pVertices[index].mData[0],
 					pVertices[index].mData[1],
@@ -310,7 +314,7 @@ int ResourceImporterFBX::import(const String p_source_file, const String p_save_
 		if (!initedNormals)
 		{
 			fbxMesh->InitNormals();
-			fbxMesh->GenerateNormals(true, false, true);
+			fbxMesh->GenerateNormals(true, false, false);
 		}
 
 		FbxArray<FbxVector4> fbx_normal;
