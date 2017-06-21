@@ -263,112 +263,205 @@ int ResourceImporterFBX::import(const String p_source_file, const String p_save_
 
 	int iChildNodeCount = rootNode->GetChildCount();
 
-	PoolVector3Array vertices;
-	PoolVector3Array normals;
-	PoolVector2Array uvs;
-	PoolIntArray indices;
+	//PoolVector3Array vertices;
+	//PoolVector3Array normals;
+	//PoolVector2Array uvs;
+	//PoolIntArray indices;
 
-	for (int i = 0; i < iChildNodeCount; ++i)
-	{
-		// Child Node -> Object
-		FbxNode* fbxChildNode = rootNode->GetChild(i);
-		FbxMesh* fbxMesh = fbxChildNode->GetMesh();
-		if (!fbxMesh)
-		{
-			continue;
-		}
-		if (!fbxMesh->IsTriangleMesh())
-		{
-			Godot::print("FBX: Not a triangle mesh; Skipping mesh");
-			continue;
-		}
+	//for (int i = 0; i < iChildNodeCount; ++i)
+	//{
+	//	// Child Node -> Object
+	//	FbxNode* fbxChildNode = rootNode->GetChild(i);
+	//	FbxMesh* fbxMesh = fbxChildNode->GetMesh();
+	//	if (!fbxMesh)
+	//	{
+	//		continue;
+	//	}
+	//	if (!fbxMesh->IsTriangleMesh())
+	//	{
+	//		Godot::print("FBX: Not a triangle mesh; Skipping mesh");
+	//		continue;
+	//	}
 
-		char faces[len];
-		snprintf(faces, len, "FBX faces: %d", fbxMesh->GetPolygonCount());
-		Godot::print(faces);
+	//	char faces[len];
+	//	snprintf(faces, len, "FBX faces: %d", fbxMesh->GetPolygonCount());
+	//	Godot::print(faces);
 
-		// Get all positions
-		FbxVector4* pVertices = fbxMesh->GetControlPoints();
-		int iPolyCount = fbxMesh->GetPolygonCount();
-		for (int j = 0; j < iPolyCount; j++)
-		{
-			// The poly size should be 3 since it's a triangle
-			int iPolySize = fbxMesh->GetPolygonSize(j);
-			// Get 3 vertices of the triangle
-			for (int k = 0; k < iPolySize; k++)
-			{
-				int index = fbxMesh->GetPolygonVertex(j, k);
+	//	// Get all positions
+	//	FbxVector4* pVertices = fbxMesh->GetControlPoints();
+	//	int iPolyCount = fbxMesh->GetPolygonCount();
+	//	for (int j = 0; j < iPolyCount; j++)
+	//	{
+	//		// The poly size should be 3 since it's a triangle
+	//		int iPolySize = fbxMesh->GetPolygonSize(j);
+	//		// Get 3 vertices of the triangle
+	//		for (int k = 0; k < iPolySize; k++)
+	//		{
+	//			int index = fbxMesh->GetPolygonVertex(j, k);
 
-				if (index == -1)
-				{
-					continue;
-				}
-				// Insert pos and nor data
-				vertices.push_back(Vector3(pVertices[index].mData[0],
-					pVertices[index].mData[1],
-					pVertices[index].mData[2]));
-			}
-		}
+	//			if (index == -1)
+	//			{
+	//				continue;
+	//			}
+	//			// Insert pos and nor data
+	//			vertices.push_back(Vector3(pVertices[index].mData[0],
+	//				pVertices[index].mData[1],
+	//				pVertices[index].mData[2]));
+	//		}
+	//	}
 
-		bool initedNormals = 0;
-		if (!initedNormals)
-		{
-			fbxMesh->InitNormals();
-			fbxMesh->GenerateNormals(true, false, false);
-		}
+	//	bool initedNormals = 0;
+	//	if (!initedNormals)
+	//	{
+	//		fbxMesh->InitNormals();
+	//		fbxMesh->GenerateNormals(true, false, true);
+	//	}
 
-		FbxArray<FbxVector4> fbx_normal;
+	//	FbxArray<FbxVector4> fbx_normal;
 
-		if (fbxMesh->GetPolygonVertexNormals(fbx_normal))
-		{
-			for (int l = 0; l < fbx_normal.Size(); ++l)
-			{
-				normals.push_back(Vector3(fbx_normal[l].mData[0], fbx_normal[l].mData[1], fbx_normal[l].mData[2]));
-			}
-		}
+	//	if (fbxMesh->GetPolygonVertexNormals(fbx_normal))
+	//	{
+	//		for (int l = 0; l < fbx_normal.Size(); ++l)
+	//		{
+	//			normals.push_back(Vector3(fbx_normal[l].mData[0], fbx_normal[l].mData[1], fbx_normal[l].mData[2]));
+	//		}
+	//	}
 
-		for (int j = 0; j < fbxMesh->GetPolygonCount(); j++)
-		{
-			int lStartIndex = fbxMesh->GetPolygonVertexIndex(j);
-			if (lStartIndex == -1)
-			{
-				return 1;
-			}
-			int* lVertices = fbxMesh->GetPolygonVertices();
-			int lCount = fbxMesh->GetPolygonSize(j);
-			for (int i = 0; i < lCount; ++i)
-			{
-				indices.push_back(lVertices[lStartIndex + i]);
-			}
-		}
-	}
+	//	for (int j = 0; j < fbxMesh->GetPolygonCount(); j++)
+	//	{
+	//		int lStartIndex = fbxMesh->GetPolygonVertexIndex(j);
+	//		if (lStartIndex == -1)
+	//		{
+	//			return 1;
+	//		}
+	//		int* lVertices = fbxMesh->GetPolygonVertices();
+	//		int lCount = fbxMesh->GetPolygonSize(j);
+	//		for (int i = 0; i < lCount; ++i)
+	//		{
+	//			indices.push_back(lVertices[lStartIndex + i]);
+	//		}
+	//	}
+	//}
 
 	PoolVector3Array pool_vertices;
 	PoolVector3Array pool_normals;
+	// pool_colors;
 	PoolVector2Array pool_uvs;
 	PoolIntArray pool_indices;
 
-	for(size_t i = 0; i < vertices.size(); ++i) {
-		char vertex_output[len];
-		
-		pool_vertices.push_back(vertices[i]);		
-		snprintf(vertex_output, len, "Vertex: %f %f %f of %zd", pool_vertices[i].x, pool_vertices[i].y, pool_vertices[i].z, i);
-		Godot::print(vertex_output);
-	}
+	pool_vertices.push_back(Vector3(
+		float(-5),
+		float(-5),
+		float(-5)));
+	//pool_colors.push_back(Color(1, 1, 1, 1));
+	pool_normals.push_back(Vector3(1, 0, 0));
+	pool_vertices.push_back(Vector3(
+		float(5),
+		float(-5),
+		float(-5)));
+	//pool_colors.push_back(Color(1, 1, 1, 1));
+	pool_normals.push_back(Vector3(1, 0, 0));
+	pool_vertices.push_back(Vector3(
+		float(5),
+		float(5),
+		float(-5)));
+	//pool_colors.push_back(Color(1, 1, 1, 1));
+	pool_normals.push_back(Vector3(1, 0, 0));
+	pool_vertices.push_back(Vector3(
+		float(-5),
+		float(5),
+		float(-5)));
+	//pool_colors.push_back(Color(1, 1, 1, 1));
+	pool_normals.push_back(Vector3(1, 0, 0));
+	pool_vertices.push_back(Vector3(
+		float(-5),
+		float(-5),
+		float(5)));
+	//pool_colors.push_back(Color(1, 1, 1, 1));
+	pool_normals.push_back(Vector3(1, 0, 0));
+	pool_vertices.push_back(Vector3(
+		float(5),
+		float(-5),
+		float(5)));
+	//pool_colors.push_back(Color(1, 1, 1, 1));
+	pool_normals.push_back(Vector3(1, 0, 0));
+	pool_vertices.push_back(Vector3(
+		float(5),
+		float(5),
+		float(5)));
+	//pool_colors.push_back(Color(1, 1, 1, 1));
+	pool_normals.push_back(Vector3(1, 0, 0));
+	pool_vertices.push_back(Vector3(
+		float(-5),
+		float(5),
+		float(5)));
+	//pool_colors.push_back(Color(1, 1, 1, 1));
+	pool_normals.push_back(Vector3(1, 0, 0));
+	int i = 0;
+	//front
+	pool_indices.push_back(i);
+	pool_indices.push_back(i + 1);
+	pool_indices.push_back(i + 3);
+	pool_indices.push_back(i);
+	pool_indices.push_back(i + 2);
+	pool_indices.push_back(i + 3);
+	//left
+	pool_indices.push_back(i);
+	pool_indices.push_back(i + 4);
+	pool_indices.push_back(i + 5);
+	pool_indices.push_back(i);
+	pool_indices.push_back(i + 1);
+	pool_indices.push_back(i + 4);
+	//top
+	pool_indices.push_back(i + 1);
+	pool_indices.push_back(i + 5);
+	pool_indices.push_back(i + 3);
+	pool_indices.push_back(i + 3);
+	pool_indices.push_back(i + 6);
+	pool_indices.push_back(i + 5);
+	//bottom
+	pool_indices.push_back(i);
+	pool_indices.push_back(i + 4);
+	pool_indices.push_back(i + 7);
+	pool_indices.push_back(i);
+	pool_indices.push_back(i + 7);
+	pool_indices.push_back(i + 3);
+	//right
+	pool_indices.push_back(i + 3);
+	pool_indices.push_back(i + 6);
+	pool_indices.push_back(i + 2);
+	pool_indices.push_back(i + 3);
+	pool_indices.push_back(i + 7);
+	pool_indices.push_back(i + 6);
+	//back
+	pool_indices.push_back(i + 4);
+	pool_indices.push_back(i + 6);
+	pool_indices.push_back(i + 5);
+	pool_indices.push_back(i + 4);
+	pool_indices.push_back(i + 7);
+	pool_indices.push_back(i + 6);
 
-	for (size_t i = 0; i < normals.size(); ++i) {
-		char normals_output[len];		
-		pool_normals.push_back(normals[i]);
-		snprintf(normals_output, len, "Normals: %f %f %f of %zd", pool_normals[i].x, pool_normals[i].y, pool_normals[i].z, i);
-		Godot::print(normals_output);
-	}
+	//for(size_t i = 0; i < vertices.size(); ++i) {
+	//	char vertex_output[len];
+	//	
+	//	pool_vertices.push_back(vertices[i]);		
+	//	snprintf(vertex_output, len, "Vertex: %f %f %f of %zd", pool_vertices[i].x, pool_vertices[i].y, pool_vertices[i].z, i);
+	//	Godot::print(vertex_output);
+	//}
 
-	for (size_t i = 0; i < indices.size(); ++i) {
-		pool_indices.push_back(indices[i]);
-		char index_output[len];
-		snprintf(index_output, len, "Index: %d of %zd", pool_indices[i], i);
-		Godot::print(index_output);
-	}
+	//for (size_t i = 0; i < normals.size(); ++i) {
+	//	char normals_output[len];		
+	//	pool_normals.push_back(normals[i]);
+	//	snprintf(normals_output, len, "Normals: %f %f %f of %zd", pool_normals[i].x, pool_normals[i].y, pool_normals[i].z, i);
+	//	Godot::print(normals_output);
+	//}
+
+	//for (size_t i = 0; i < indices.size(); ++i) {
+	//	pool_indices.push_back(indices[i]);
+	//	char index_output[len];
+	//	snprintf(index_output, len, "Index: %d of %zd", pool_indices[i], i);
+	//	Godot::print(index_output);
+	//}
 	Array arrays;
 	arrays.resize(ArrayType::ARRAY_MAX);
 
