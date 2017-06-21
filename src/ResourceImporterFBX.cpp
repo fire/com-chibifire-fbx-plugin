@@ -305,7 +305,7 @@ int ResourceImporterFBX::import(const String p_source_file, const String p_save_
 			}
 		}
 
-		for (int j = 0; j < fbxMesh->GetPolygonCount(); j++)
+		for (int j = 0; j < fbxMesh->GetPolygonCount(); ++j)
 		{
 			int lStartIndex = fbxMesh->GetPolygonVertexIndex(j);
 			if (lStartIndex == -1)
@@ -313,10 +313,25 @@ int ResourceImporterFBX::import(const String p_source_file, const String p_save_
 				return 1;
 			}
 			int* lVertices = fbxMesh->GetPolygonVertices();
-			int lCount = fbxMesh->GetPolygonSize(j);
-			for (int i = 0; i < lCount; ++i)
+			for (int i = 0; i < fbxMesh->GetPolygonSize(j); ++i)
 			{
 				indices.push_back(lVertices[lStartIndex + i]);
+			}
+
+			if (fbxMesh->GetUVLayerCount() == 0)
+			{
+				continue;
+			}
+
+			FbxLayerElementArrayTemplate<FbxVector2>* uvVertices = 0;			
+			if(!fbxMesh->GetTextureUV(&uvVertices))
+			{
+				return 1;
+			}
+			for (int i = 0; i < fbxMesh->GetPolygonSize(j); ++i)
+			{
+				FbxVector2 uv = uvVertices->GetAt(fbxMesh->GetTextureUVIndex(j, i));
+				uvs.push_back(Vector2(uv.mData[0], uv.mData[1]));
 			}
 		}
 	}
@@ -332,21 +347,28 @@ int ResourceImporterFBX::import(const String p_source_file, const String p_save_
 		
 		pool_vertices.push_back(vertices[i]);		
 		snprintf(vertex_output, len, "Vertex: %f %f %f at index %zd", pool_vertices[i].x, pool_vertices[i].y, pool_vertices[i].z, i);
-		//Godot::print(vertex_output);
+		Godot::print(vertex_output);
 	}
 
 	for (size_t i = 0; i < normals.size(); ++i) {
 		char normals_output[len];		
 		pool_normals.push_back(normals[i]);
 		snprintf(normals_output, len, "Normals: %f %f %f of %zd", pool_normals[i].x, pool_normals[i].y, pool_normals[i].z, i);
-		//Godot::print(normals_output);
+		Godot::print(normals_output);
 	}
 
 	for (size_t i = 0; i < indices.size(); ++i) {
 		pool_indices.push_back(indices[i]);
 		char index_output[len];
 		snprintf(index_output, len, "Index: %d at index %zd", pool_indices[i], i);
-		//Godot::print(index_output);
+		Godot::print(index_output);
+	}
+
+	for (size_t i = 0; i < uvs.size(); ++i) {
+		pool_uvs.push_back(uvs[i]);
+		char index_output[len];
+		snprintf(index_output, len, "Uvs: %d %d at index %zd", pool_uvs[i].x, pool_uvs[i].y, i);
+		Godot::print(index_output);
 	}
 
 	Array arrays;
@@ -354,7 +376,7 @@ int ResourceImporterFBX::import(const String p_source_file, const String p_save_
 
 	arrays[ArrayType::ARRAY_VERTEX] = pool_vertices;
 	//arrays[ArrayType::ARRAY_NORMAL] = pool_normals;
-	//arrays[ArrayType::ARRAY_TEX_UV2] = uvs;
+	//arrays[ArrayType::ARRAY_TEX_UV2] = pool_uvs;
 	arrays[ArrayType::ARRAY_INDEX] = pool_indices;
 
 	array_mesh->add_surface_from_arrays(PrimitiveType::PRIMITIVE_TRIANGLES, arrays);
