@@ -232,7 +232,6 @@ int ResourceImporterFBX::import(const String p_source_file, const String p_save_
 	FbxScene* lScene = nullptr;
 	bool lResult;
 
-	// Prepare the FBX SDK.
 	InitializeSdkObjects(lSdkManager, lScene);
 	
 	lResult = LoadScene(lSdkManager, lScene, "cube.fbx");
@@ -293,8 +292,8 @@ int ResourceImporterFBX::import(const String p_source_file, const String p_save_
 			FbxVector4 vertex = fbxMesh->GetControlPointAt(j);
 
 			vertices.push_back(Vector3(vertex[0],
-				vertex[1],
-				vertex[2]));
+				vertex[2],
+				vertex[1]));
 		}
 
 		bool initedNormals = 0;
@@ -325,14 +324,6 @@ int ResourceImporterFBX::import(const String p_source_file, const String p_save_
 			int lCount = fbxMesh->GetPolygonSize(j);
 			for (int i = 0; i < lCount; ++i)
 			{
-				//if ((i + 1) % 3 == 0)
-				//{
-				//	int temp = indices[indices.size() - 1];
-				//	indices.remove(indices.size() - 1);
-				//	indices.push_back(lVertices[lStartIndex + i]);
-				//	indices.push_back(temp);
-				//	continue;
-				//}
 				indices.push_back(lVertices[lStartIndex + i]);
 			}
 		}
