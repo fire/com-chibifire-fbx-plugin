@@ -300,10 +300,6 @@ int ResourceImporterFBX::import(const String p_source_file, const String p_save_
 				{
 					int index = fbxMesh->GetPolygonVertex(j, k);
 
-					// Get index
-					int polygon_index = fbxMesh->GetPolygonVertexIndex(index);
-					indices.push_back(polygon_index);
-
 					// Get normal
 					fbxMesh->GetPolygonVertexNormal(j, k, nor);
 					normals.push_back(Vector3(nor[0], nor[1], nor[2]));
@@ -315,7 +311,6 @@ int ResourceImporterFBX::import(const String p_source_file, const String p_save_
 
 					// TODO uv... but will be!
 				}
-
 				int lStartIndex = fbxMesh->GetPolygonVertexIndex(j);
 				if (lStartIndex == -1)
 				{
@@ -324,7 +319,7 @@ int ResourceImporterFBX::import(const String p_source_file, const String p_save_
 
 				// Optimize!
 				int* lVertices = fbxMesh->GetPolygonVertices();
-				int lCount = fbxMesh->GetPolygonSize(3);
+				int lCount = fbxMesh->GetPolygonSize(j);
 				for (int i = 0; i < lCount; ++i)
 				{
 					int elem = lVertices[lStartIndex + i];
@@ -335,19 +330,19 @@ int ResourceImporterFBX::import(const String p_source_file, const String p_save_
 						continue;
 					}
 
-					if (i % 1 && elem < 0)
+					if (i % 1 == 0 && elem < 0)
 					{
 						// The negative vertex index indicates the end of the polygon. 
 						// You can bitwise negate the negative index, to get the positive one.
 						indices.push_back(~elem);
 					}
-					else if (i % 2 && elem < 0)
+					else if (i % 3 == 0 && elem < 0)
 					{
-						int elem3 = indices[indices.size()];
-						indices.remove(indices.size() - 1);
-						int elem2 = indices[indices.size()];
-						indices.remove(indices.size() - 1);
-						
+						int elem3 = indices[indices.size() - 1];
+						indices.remove(indices.size());
+						int elem2 = indices[indices.size() - 1];
+						indices.remove(indices.size());
+
 						indices.push_back(elem3);
 						indices.push_back(~elem2);
 					}
@@ -364,6 +359,12 @@ int ResourceImporterFBX::import(const String p_source_file, const String p_save_
 	arrays[ArrayType::ARRAY_INDEX] = indices;
 
 	array_mesh->add_surface_from_arrays(PrimitiveType::PRIMITIVE_TRIANGLES, arrays);
+
+	char faces[len];
+
+    snprintf(faces, len, "FBX faces: %d", array_mesh->get_surface_count());
+
+	Godot::print(faces);
 
 	DestroySdkObjects(lSdkManager, lScene);
 
