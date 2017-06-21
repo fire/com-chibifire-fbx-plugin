@@ -13,6 +13,7 @@
 #include <Reference.hpp>
 #include <Vector3.hpp>
 #include <Ref.hpp>
+#include <PoolArrays.hpp>
 
 #include <fbxsdk.h>
 #include <fbxsdk/scene/geometry/fbxnodeattribute.h>
@@ -318,38 +319,60 @@ int ResourceImporterFBX::import(const String p_source_file, const String p_save_
 			}
 		}
 
-		int* lVertices = fbxMesh->GetPolygonVertices();
-		for (int j = 0; j < fbxMesh->GetPolygonCount(); ++j)
+		int iPolyCount = fbxMesh->GetPolygonCount();
+		for (int j = 0; j < iPolyCount; j++)
 		{
-			size_t start_index = fbxMesh->GetPolygonVertexIndex(j);
-			int a = lVertices[start_index + 0];
-			int b = lVertices[start_index + 1];
-			int c = lVertices[start_index + 2];
-			int d = 0;
-			if (b < 0)
+			int lStartIndex = fbxMesh->GetPolygonVertexIndex(j);
+			if (lStartIndex == -1)
 			{
-				b = abs(b) - 1;
-				d = b;
-				b = c;
-				c = d;
+				return 1;
 			}
-			if (c < 0)
+			int* lVertices = fbxMesh->GetPolygonVertices();
+			int lCount = fbxMesh->GetPolygonSize(3);
+			for (int i = 0; i < lCount; ++i)
 			{
-				c = abs(c) - 1;
+				indices.push_back(lVertices[lStartIndex + i]);
 			}
-			indices.push_back(a);
-			indices.push_back(b);
-			indices.push_back(c);
 		}
+	}
 
+	PoolVector3Array pool_vertices;
+	PoolVector3Array pool_normals;
+	PoolVector2Array pool_uvs;
+	PoolIntArray pool_indices;
+
+	pool_vertices.resize(vertices.size());
+	for(size_t i = 0; i < vertices.size(); ++i) {
+		char vertex_output[len];
+		
+		snprintf(vertex_output, len, "Vertex: %f %f %f of %zd", vertices[i].x, vertices[i].y, vertices[i].z, i);
+		pool_vertices[i] = vertices[i];
+		Godot::print(vertex_output);
+	}
+
+	pool_normals.resize(vertices.size());
+	for (size_t i = 0; i < normals.size(); ++i) {
+		char normals_output[len];
+		snprintf(normals_output, len, "Normals: %f %f %f of %zd", normals[i].x, normals[i].y, normals[i].z, i);
+		pool_normals[i] = normals[i];
+		Godot::print(normals_output);
+	}
+
+	pool_indices.resize(indices.size());
+	for (size_t i = 0; i < indices.size(); ++i) {
+		pool_indices.push_back(indices[i]);
+		char index_output[len];
+		snprintf(index_output, len, "Index: %d of %zd", indices[i], i);
+		Godot::print(index_output);
 	}
 
 	Array arrays;
 	arrays.resize(ArrayType::ARRAY_MAX);
-	arrays[ArrayType::ARRAY_VERTEX] = vertices;
-	arrays[ArrayType::ARRAY_NORMAL] = normals;
+
+	arrays[ArrayType::ARRAY_VERTEX] = pool_vertices;
+	arrays[ArrayType::ARRAY_NORMAL] = pool_normals;
 	//arrays[ArrayType::ARRAY_TEX_UV2] = uvs;
-	arrays[ArrayType::ARRAY_INDEX] = indices;
+	arrays[ArrayType::ARRAY_INDEX] = pool_indices;
 
 	array_mesh->add_surface_from_arrays(PrimitiveType::PRIMITIVE_TRIANGLES, arrays);
 
