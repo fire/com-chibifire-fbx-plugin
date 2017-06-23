@@ -20,7 +20,6 @@
 
 #include <stdio.h>
 
-
 using namespace godot;
 
 GODOT_NATIVE_INIT(godot_native_init_options *options) {
@@ -29,12 +28,12 @@ GODOT_NATIVE_INIT(godot_native_init_options *options) {
 
 String ResourceImporterFBX::get_importer_name() const
 {
-	return "fbx_mesh";
+	return String("fbx_mesh");
 }
 
 String ResourceImporterFBX::get_visible_name() const
 {
-	return "FBX As Mesh";
+	return String("FBX As Mesh");
 }
 
 int ResourceImporterFBX::get_preset_count() const
@@ -49,24 +48,25 @@ String ResourceImporterFBX::get_preset_name(const int preset) const
 
 Array ResourceImporterFBX::get_recognized_extensions() const
 {
-	Array recognized;
-	recognized.push_back("fbx");
+	PoolStringArray recognized;
+	recognized.push_back(String("fbx"));
 	return recognized;
 }
 
 Array ResourceImporterFBX::get_import_options(const int preset) const
 {
-	return Array();
+	PoolStringArray options;
+	return options;
 }
 
 String ResourceImporterFBX::get_save_extension() const
 {
-	return "mesh";
+	return String("mesh");
 }
 
 String ResourceImporterFBX::get_resource_type() const
 {
-	return "ArrayMesh";
+	return String("ArrayMesh");
 }
 
 bool ResourceImporterFBX::get_option_visibility(const String option, const Dictionary options) const
@@ -287,9 +287,9 @@ int ResourceImporterFBX::import(const String p_source_file, const String p_save_
 			int iPolySize = fbxMesh->GetPolygonSize(j);
 			FbxVector4 vertex = fbxMesh->GetControlPointAt(j);
 
-			vertices.push_back(Vector3(vertex[0],
-				vertex[2],
-				vertex[1]));
+			vertices.push_back(Vector3(static_cast<real_t>(vertex[0]),
+				static_cast<real_t>(vertex[2]),
+				static_cast<real_t>(vertex[1])));
 		}
 
 		bool initedNormals = 0;
@@ -305,7 +305,7 @@ int ResourceImporterFBX::import(const String p_source_file, const String p_save_
 		{
 			for (int l = 0; l < fbx_normal.Size(); ++l)
 			{
-				normals.push_back(Vector3(fbx_normal[l].mData[0], fbx_normal[l].mData[1], fbx_normal[l].mData[2]));
+				normals.push_back(Vector3(static_cast<real_t>(fbx_normal[l].mData[0]), static_cast<real_t>(fbx_normal[l].mData[1]), static_cast<real_t>(fbx_normal[l].mData[2])));
 			}
 		}
 
@@ -371,7 +371,7 @@ int ResourceImporterFBX::import(const String p_source_file, const String p_save_
 	for (size_t i = 0; i < uvs.size(); ++i) {
 		pool_uvs.push_back(uvs[i]);
 		char index_output[len];
-		snprintf(index_output, len, "Uvs: %d %d at index %zd", pool_uvs[i].x, pool_uvs[i].y, i);
+		snprintf(index_output, len, "Uvs: %f %f at index %zd", pool_uvs[i].x, pool_uvs[i].y, i);
 		Godot::print(index_output);
 	}
 
