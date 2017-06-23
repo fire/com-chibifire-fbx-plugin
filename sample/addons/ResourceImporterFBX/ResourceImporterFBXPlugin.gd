@@ -6,7 +6,7 @@ var fbx_lib
 func get_recognized_extensions():
   return ["fbx"]
 
-func import(path, metadata):
+func import(source_file, save_path, options, r_platform_variants, r_gen_files): 
   fbx_lib = preload("res://addons/ResourceImporterFBX/ResourceImporterFBX.gdn")
   fbx_lib.new().import(path, path, {}, [], [])
   return "OK"
