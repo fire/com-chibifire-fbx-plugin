@@ -23,6 +23,10 @@
 
 using namespace godot;
 
+GODOT_NATIVE_INIT(godot_native_init_options *options) {
+	register_tool_class<ResourceImporterFBX>();
+}
+
 String ResourceImporterFBX::get_importer_name() const
 {
 	return "fbx_mesh";

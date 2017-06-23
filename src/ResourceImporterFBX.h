@@ -64,8 +64,3 @@ public:
 
 	static void _register_methods();
 };
-
-GODOT_NATIVE_INIT(godot_native_init_options *options) {
-	register_class<ResourceImporterFBX>();
-}
-
