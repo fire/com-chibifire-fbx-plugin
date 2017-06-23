@@ -7,4 +7,5 @@ func _enter_tree():
   add_import_plugin(import_plugin)
 
 func _exit_tree():
-  remove_import_plugin3(import_plugin)
+  remove_import_plugin(import_plugin)
+  import_plugin = null

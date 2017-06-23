@@ -8,8 +8,8 @@ func get_recognized_extensions():
 
 func import(path, metadata):
   fbx_lib = preload("res://addons/ResourceImporterFBX/ResourceImporterFBX.gdn")
-  fbx_lib.new().import("res://cube.fbx", "res://cube.fbx" + "mesh", {}, [], [])
-  return 0
+  fbx_lib.new().import(path, path, {}, [], [])
+  return "OK"
 
 func get_import_options ( preset ):
   return []
