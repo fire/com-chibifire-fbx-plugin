@@ -1,9 +1,15 @@
 config_version=3
+config_version=null
+
 [application]
 
 name="SimpleDemo"
 main_scene="res://main.tscn"
 icon="res://icon.png"
+
+[editor_plugins]
+
+enabled=PoolStringArray( "ResourceImporterFBX" )
 
 [memory]
 
