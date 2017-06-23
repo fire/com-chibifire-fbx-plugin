@@ -45,7 +45,7 @@ String ResourceImporterFBX::get_preset_name(const int preset) const
 
 Array ResourceImporterFBX::get_recognized_extensions() const
 {
-	Array recognized = Array();
+	Array recognized;
 	recognized.push_back("fbx");
 	return recognized;
 }

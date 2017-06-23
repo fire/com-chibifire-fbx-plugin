@@ -3,20 +3,19 @@
 [sub_resource type="GDNativeLibrary" id=1]
 
 platform/unix = ""
-platform/x11 = "res://lib/libresourceimporterfbx.so"
+platform/x11 = ""
 platform/server = ""
 platform/android = ""
 platform/blackberry = ""
 platform/haiku = ""
-platform/mac = "res://lib/libresourceimporterfbx.dylib"
+platform/mac = ""
 platform/ios = ""
-platform/osx = "res://lib/libresourceimporterfbx.dylib"
+platform/osx = ""
 platform/html5 = ""
-platform/windows = "res://lib/ResourceImporterFBX.dll"
+platform/windows = "res://addons/ResourceImporterFBX/lib/ResourceImporterFBX.dll"
 platform/uwp = ""
 
 [resource]
 
 library = SubResource( 1 )
 script_name = "ResourceImporterFBX"
-a
