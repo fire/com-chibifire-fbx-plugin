@@ -1,7 +1,9 @@
 config_version=3
+config_version=null
+
 [application]
 
-name="SimpleDemo"
+name="Sample"
 main_scene="res://main.tscn"
 icon="res://icon.png"
 
