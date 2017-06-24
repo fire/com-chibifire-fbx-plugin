@@ -13,8 +13,8 @@
 #include <Reference.hpp>
 #include <Vector3.hpp>
 #include <Ref.hpp>
+#include <GlobalConfig.hpp>
 #include <PoolArrays.hpp>
-
 #include <fbxsdk.h>
 #include <fbxsdk/scene/geometry/fbxnodeattribute.h>
 
@@ -238,7 +238,7 @@ int ResourceImporterFBX::import(const String p_source_file, const String p_save_
 
 	InitializeSdkObjects(lSdkManager, lScene);
 	
-	lResult = LoadScene(lSdkManager, lScene, "cube.fbx");
+	lResult = LoadScene(lSdkManager, lScene, GlobalConfig::globalize_path(p_source_file).c_string());
 	const size_t len = 128;
 	char str[len];
     snprintf(str, len, "FBX node count: %d", lScene->GetNodeCount());
@@ -392,8 +392,10 @@ int ResourceImporterFBX::import(const String p_source_file, const String p_save_
 
 	DestroySdkObjects(lSdkManager, lScene);
 
-	// TODO SAVE WITH .mesh extension
-	return ResourceSaver::save("res://cube.mesh", array_mesh.ptr());
+	char save_output[len];
+	snprintf(save_output, len, "%s%s", p_save_path.c_string(), String(".mesh").c_string());
+
+	return ResourceSaver::save(save_output, array_mesh.ptr());
 }
 
 void ResourceImporterFBX::_register_methods() 
