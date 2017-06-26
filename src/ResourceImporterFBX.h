@@ -1,10 +1,10 @@
 #pragma once
 
+#include <fbxsdk.h>
 #include <godot.h>
+#include <Reference.hpp>
 #include <core/Godot.hpp>
 #include <core/GodotGlobal.hpp>
-#include <Reference.hpp>
-#include <fbxsdk.h>
 
 #include "EditorImportPlugin.hpp"
 
@@ -44,13 +44,14 @@ enum ArrayType {
 
 class ResourceImporterFBX : public GodotScript<EditorImportPlugin> {
 private:
-	void InitializeSdkObjects(FbxManager *& pManager, FbxScene *& pScene);
-	void DestroySdkObjects(FbxManager * pManager, bool pExitStatus);
-	bool LoadScene(FbxManager * pManager, FbxDocument * pScene, const char * pFilename);
+	void InitializeSdkObjects(FbxManager *&pManager, FbxScene *&pScene);
+	void DestroySdkObjects(FbxManager *pManager, bool pExitStatus);
+	bool LoadScene(FbxManager *pManager, FbxDocument *pScene, const char *pFilename);
 	GODOT_CLASS(ResourceImporterFBX);
+
 public:
-	ResourceImporterFBX() { }
-	
+	ResourceImporterFBX() {}
+
 	String get_importer_name() const;
 	String get_visible_name() const;
 	int get_preset_count() const;
