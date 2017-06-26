@@ -260,3 +260,5 @@ paket-files/
 __pycache__/
 *.pyc
 sample/.import/*
+.sconsign.dblite
+build/
