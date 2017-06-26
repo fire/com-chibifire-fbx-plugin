@@ -21,10 +21,10 @@ if platform == "linux":
 
 if platform == "windows":
     env.Append(CPPPATH=[ '../godot_headers/', '../../FBX SDK/2018.1.1/include/', '../cpp_bindings/include/', '../cpp_bindings/include/core/'])
-    env.Append(LIBS=['godot/bin/godot.windows.tools.64', 'cpp_bindings/bin/godot_cpp_core', 'cpp_bindings/bin/godot_cpp_bindings', '../FBX SDK/2018.1.1/lib/vs2015/x64/release/libfbxsdk']) 
+    env.Append(LIBS=['godot_fork/bin/godot.windows.tools.64', 'cpp_bindings/bin/godot_cpp_core', 'cpp_bindings/bin/godot_cpp_bindings', '../FBX SDK/2018.1.1/lib/vs2015/x64/release/libfbxsdk']) 
 
 sources = ["ResourceImporterFBX.cpp"]
 
-library = env.SharedLibrary(target='../lib/ResourceImporterFBX', source=sources)
+library = env.SharedLibrary(target='../sample/addons/ResourceImporterFBX/lib/ResourceImporterFBX', source=sources)
 Default(library)
 
