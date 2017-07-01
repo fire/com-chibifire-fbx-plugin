@@ -3,7 +3,11 @@ import os
 
 env = Environment()
 
-platform = ARGUMENTS.get("platform", "p")
+if ARGUMENTS.get("platform"):
+  platform = ARGUMENTS.get("platform")
+
+if ARGUMENTS.get("p"):
+  platform = ARGUMENTS.get("p")
 
 def add_sources(sources, dir):
     for f in os.listdir(dir):
