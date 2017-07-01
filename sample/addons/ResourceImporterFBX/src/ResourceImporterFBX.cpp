@@ -350,17 +350,13 @@ int ResourceImporterFBX::import(const String p_source_file, const String p_save_
 	array_mesh->add_surface_from_arrays(PrimitiveType::PRIMITIVE_TRIANGLES, arrays);
 
 	char faces[len];
-
 	snprintf(faces, len, "Mesh surface count: %d", array_mesh->get_surface_count());
-
 	Godot::print(faces);
 
 	DestroySdkObjects(lSdkManager, lScene);
 
-	char save_output[len];
-	snprintf(save_output, len, "%s%s", p_save_path.c_string(), String(".mesh").c_string());
-
-	return ResourceSaver::save(save_output, array_mesh.ptr());
+    String save_path = p_save_path;
+    return ResourceSaver::save(save_path.operator+(String(".mesh")), array_mesh);
 }
 
 void ResourceImporterFBX::_register_methods() {
