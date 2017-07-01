@@ -1,0 +1,1 @@
+scons platform=windows -j%NUMBER_OF_PROCESSORS%
