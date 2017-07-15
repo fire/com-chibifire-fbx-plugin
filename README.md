@@ -18,5 +18,5 @@ scons p=windows target=bindings
 scons p=windows target=bindings generate_bindings=yes -j%NUMBER_OF_PROCESSORS%
 robocopy bin ../sample/
 cd ..
-scons platform=windows -j%NUMBER_OF_PROCESSORS%
+scons platform=windows vsproj=yes -j%NUMBER_OF_PROCESSORS%
 ```
