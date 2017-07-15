@@ -1,5 +1,8 @@
-call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" amd64
-cd godot_fork
+REM Replace professional with community
+pushd %cd%
+call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Professional\VC\Auxiliary\Build\vcvarsall.bat" x64
+popd
+cd /D godot_fork
 scons platform=windows -j%NUMBER_OF_PROCESSORS%
 cd ..
 cd cpp_bindings
