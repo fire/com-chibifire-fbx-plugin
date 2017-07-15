@@ -263,6 +263,3 @@ sample/.import/*
 .sconsign.dblite
 build/
 sample/**/*.import
-sample/addons/ResourceImporterFBX/src/ResourceImporterFBX.sln
-sample/addons/ResourceImporterFBX/src/ResourceImporterFBX.vcxproj
-sample/addons/ResourceImporterFBX/src/ResourceImporterFBX.vcxproj.filters
