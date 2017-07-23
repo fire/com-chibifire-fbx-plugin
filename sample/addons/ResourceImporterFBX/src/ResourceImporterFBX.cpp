@@ -237,10 +237,13 @@ int ResourceImporterFBX::import(const String p_source_file, const String p_save_
     Ref<ArrayMesh> mesh;
     mesh = import_fbx(p_source_file, p_save_path, p_options, p_r_platform_variants, p_r_gen_files);
     if (mesh.is_null()) {
-        return 1;
+        return GODOT_FAILED;
     }
     String save_path = p_save_path;
-    return ResourceSaver::save(save_path.operator+(String(".mesh")), mesh);
+	if (ResourceSaver::save(save_path.operator+(String(".mesh")), mesh) <= 0) {
+		return GODOT_FAILED;
+	}
+    return GODOT_OK;
 }
 
 Ref<ArrayMesh> ResourceImporterFBX::import_fbx(const String p_source_file, const String p_save_path, const Dictionary p_options, const Array p_r_platform_variants, const Array p_r_gen_files)
@@ -250,12 +253,11 @@ Ref<ArrayMesh> ResourceImporterFBX::import_fbx(const String p_source_file, const
 
     InitializeSdkObjects(lSdkManager, lScene);
 
-  if (LoadScene(lSdkManager, lScene, ProjectSettings::globalize_path(p_source_file).c_string()) == false)
-  {
-    Godot::print("FBX: Can't load scene");
-    return nullptr;
-  }
-  
+	if (LoadScene(lSdkManager, lScene, ProjectSettings::globalize_path(p_source_file).c_string()) == false) {
+		Godot::print("FBX: Can't load scene");
+		return nullptr;
+	}
+	
     const size_t len = 128;
     char str[len];
     snprintf(str, len, "FBX node count: %d", lScene->GetNodeCount());
