@@ -32,7 +32,7 @@
 #include <ArrayMesh.hpp>
 #include <ClassDB.hpp>
 #include <File.hpp>
-#include <GlobalConfig.hpp>
+#include <ProjectSettings.hpp>
 #include <Mesh.hpp>
 #include <PoolArrays.hpp>
 #include <Ref.hpp>
@@ -247,11 +247,15 @@ Ref<ArrayMesh> ResourceImporterFBX::import_fbx(const String p_source_file, const
 {
     FbxManager *lSdkManager = nullptr;
     FbxScene *lScene = nullptr;
-    bool lResult;
 
     InitializeSdkObjects(lSdkManager, lScene);
 
-    lResult = LoadScene(lSdkManager, lScene, GlobalConfig::globalize_path(p_source_file).c_string());
+  if (LoadScene(lSdkManager, lScene, ProjectSettings::globalize_path(p_source_file).c_string()) == false)
+  {
+    Godot::print("FBX: Can't load scene");
+    return nullptr;
+  }
+  
     const size_t len = 128;
     char str[len];
     snprintf(str, len, "FBX node count: %d", lScene->GetNodeCount());
