@@ -264,3 +264,6 @@ sample/.import/*
 build/
 sample/**/*.import
 FBX SDK/
+bazel-bin/
+bazel-out/
+bazel-resourceimporterfbx/
