@@ -263,3 +263,4 @@ sample/.import/*
 .sconsign.dblite
 build/
 sample/**/*.import
+FBX SDK/
