@@ -12,12 +12,13 @@ Install bazel via chocolatey.
 chocolatey install bazel -y
 ```
 
+Install FBX 2018.1 to "FBX SDK"
+
 Open Microsoft Visual Studio native tools compiler prompt.
 
 Type:
 
 ```
-# Install FBX to "FBX SDK"
 cd "godot_fork"
 scons platform=windows -j%NUMBER_OF_PROCESSORS%
 cd ..
