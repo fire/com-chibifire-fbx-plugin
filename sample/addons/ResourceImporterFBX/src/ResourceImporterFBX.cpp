@@ -107,19 +107,21 @@ int ResourceImporterFBX::import(const String p_source_file, const String p_save_
 
 Ref<ArrayMesh> ResourceImporterFBX::import_fbx(const String p_source_file, const String p_save_path, const Dictionary p_options, const Array p_r_platform_variants, const Array p_r_gen_files)
 {
-  ofbx::IScene* g_scene = nullptr;
+  Ref<ArrayMesh> array_mesh = new ArrayMesh;
+  ofbx::IScene* scene = nullptr;
 
   FILE* fp = fopen(ProjectSettings::globalize_path(p_source_file).c_string(), "rb");
-  if (!fp) return false;
+  if (!fp) {
+    return nullptr;
+  }
 
   fseek(fp, 0, SEEK_END);
   long file_size = ftell(fp);
   fseek(fp, 0, SEEK_SET);
   auto* content = new ofbx::u8[file_size];
   fread(content, 1, file_size, fp);
-  g_scene = ofbx::load((ofbx::u8*)content, file_size);
+  scene = ofbx::load((ofbx::u8*)content, file_size);
 
-  ofbx::IScene* scene = nullptr;
   ofbx::load((ofbx::u8*)content, file_size);
   int obj_idx = 0;
   int indices_offset = 0;
@@ -133,9 +135,16 @@ Ref<ArrayMesh> ResourceImporterFBX::import_fbx(const String p_source_file, const
     const ofbx::Geometry* geom = mesh->getGeometry();
     int vertex_count = geom->getVertexCount();
     const ofbx::Vec3* vertices = geom->getVertices();
+
+    PoolVector3Array godot_vertices;
+    PoolVector3Array godot_normals;
+    PoolVector2Array godot_uvs;
+    PoolIntArray godot_indices;
+
     for (int i = 0; i < vertex_count; ++i)
     {
       ofbx::Vec3 v = vertices[i];
+      godot_vertices.push_back(Vector3(v.x, v.y, v.z));
       //Godot::print((fp, "v %f %f %f\n", v.x, v.y, v.z);
     }
 
@@ -149,6 +158,7 @@ Ref<ArrayMesh> ResourceImporterFBX::import_fbx(const String p_source_file, const
       {
         ofbx::Vec3 n = normals[i];
         //Godot::print((fp, "vn %f %f %f\n", n.x, n.y, n.z);
+        godot_normals.push_back(Vector3(n.x, n.y, n.z));
       }
     }
 
@@ -162,21 +172,24 @@ Ref<ArrayMesh> ResourceImporterFBX::import_fbx(const String p_source_file, const
       {
         ofbx::Vec2 uv = uvs[i];
         //Godot::print((fp, "vt %f %f\n", uv.x, uv.y);
+        godot_uvs.push_back(Vector2(uv.x, uv.y));
       }
     }
 
     bool new_face = true;
     int count = geom->getVertexCount();
+    // TODO FIX
     for (int i = 0; i < count; ++i)
     {
       if (new_face)
       {
-        fputs("f ", fp);
+        //fputs("f ", fp);
         new_face = false;
       }
       int idx = i + 1;
       int vertex_idx = indices_offset + idx;
       //Godot::print((fp, "%d", vertex_idx);
+      godot_indices.push_back(vertex_idx);
 
       if (has_normals)
       {
@@ -202,11 +215,52 @@ Ref<ArrayMesh> ResourceImporterFBX::import_fbx(const String p_source_file, const
 
     indices_offset += vertex_count;
     ++obj_idx;
+
+    PoolVector3Array pool_vertices;
+    PoolVector3Array pool_normals;
+    PoolVector2Array pool_uvs;
+    PoolIntArray pool_indices;
+
+/*
+    for (size_t i = 0; i < godot_vertices.size(); ++i) {
+      //char vertex_output[len];
+      //snprintf(vertex_output, len, "Vertex: %f %f %f at index %zd", pool_vertices[i].x, pool_vertices[i].y, pool_vertices[i].z, i);
+      //Godot::print(vertex_output);
+    }
+
+    for (size_t i = 0; i < godot_normals.size(); ++i) {
+      //char normals_output[len];
+      //snprintf(normals_output, len, "Normals: %f %f %f of %zd", pool_normals[i].x, pool_normals[i].y, pool_normals[i].z, i);
+      //Godot::print(normals_output);
+    }
+
+    for (size_t i = 0; i < godot_indices.size(); ++i) {
+      //char index_output[len];
+      //snprintf(index_output, len, "Index: %d at index %zd", pool_indices[i], i);
+      //Godot::print(index_output);
+    }
+
+    for (size_t i = 0; i < godot_uvs.size(); ++i) {
+      //char index_output[len];
+      //snprintf(index_output, len, "Uvs: %f %f at index %zd", pool_uvs[i].x, pool_uvs[i].y, i);
+      //Godot::print(index_output);
+    }
+*/
+
+    Array arrays;
+    arrays.resize(ArrayType::ARRAY_MAX);
+
+    arrays[ArrayType::ARRAY_VERTEX] = godot_vertices;
+    arrays[ArrayType::ARRAY_NORMAL] = godot_normals;
+    arrays[ArrayType::ARRAY_TEX_UV2] = godot_uvs;
+    arrays[ArrayType::ARRAY_INDEX] = godot_indices;
+
+    array_mesh->add_surface_from_arrays(PrimitiveType::PRIMITIVE_TRIANGLES, arrays);
   }
 
   delete[] content;
   fclose(fp);
-  return nullptr; // TODO Fix
+  return array_mesh;
 
 /*   if (LoadScene(lSdkManager, lScene, ProjectSettings::globalize_path(p_source_file).c_string()) == false) {
     Godot::print("FBX: Can't load scene");
