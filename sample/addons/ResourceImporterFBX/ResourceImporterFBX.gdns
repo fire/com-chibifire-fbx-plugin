@@ -2,20 +2,17 @@
 
 [sub_resource type="GDNativeLibrary" id=1]
 
-platform/unix = ""
-platform/x11 = ""
-platform/server = ""
-platform/android = ""
-platform/blackberry = ""
-platform/haiku = ""
-platform/mac = ""
-platform/ios = ""
-platform/osx = ""
-platform/html5 = ""
-platform/windows = "res://addons/ResourceImporterFBX/lib/ResourceImporterFBX.dll"
-platform/uwp = ""
+platform/X11_32bit = ""
+platform/X11_64bit = ""
+platform/Windows_32bit = ""
+platform/Windows_64bit = "res://addons/ResourceImporterFBX/lib/ResourceImporterFBX.dll"
+platform/OSX = ""
+platform/Android = ""
+platform/iOS = ""
+platform/WebAssembly = ""
+_sections_unfolded = [ "platform" ]
 
 [resource]
 
+class_name = "ResourceImporterFBX"
 library = SubResource( 1 )
-script_name = "ResourceImporterFBX"
