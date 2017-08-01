@@ -22,13 +22,11 @@
 // -- Godot Engine <https://godotengine.org>
 
 #include "ResourceImporterFBX.h"
-#include <godot.h>
 
 #include <core/Godot.hpp>
 #include <core/GodotGlobal.hpp>
 
-#include <fbxsdk.h>
-#include <fbxsdk/scene/geometry/fbxnodeattribute.h>
+#include "ofbx.h"
 #include <ArrayMesh.hpp>
 #include <ClassDB.hpp>
 #include <File.hpp>
@@ -45,7 +43,13 @@
 
 using namespace godot;
 
-GODOT_NATIVE_INIT(godot_native_init_options *options) {
+GDNATIVE_INIT(godot_gdnative_init_options *options) {
+}
+
+GDNATIVE_TERMINATE(godot_gdnative_terminate_options *options) {
+}
+
+NATIVESCRIPT_INIT() {
   register_tool_class<ResourceImporterFBX>();
 }
 
@@ -88,151 +92,6 @@ bool ResourceImporterFBX::get_option_visibility(const String option, const Dicti
   return true;
 }
 
-// FBX SDK code
-void ResourceImporterFBX::InitializeSdkObjects(FbxManager *&pManager, FbxScene *&pScene) {
-  //The first thing to do is to create the FBX Manager which is the object allocator for almost all the classes in the SDK
-  pManager = FbxManager::Create();
-  if (!pManager) {
-    FBXSDK_printf("Error: Unable to create FBX Manager!\n");
-    exit(1);
-  } else
-    FBXSDK_printf("Autodesk FBX SDK version %s\n", pManager->GetVersion());
-
-  //Create an IOSettings object. This object holds all import/export settings.
-  FbxIOSettings *ios = FbxIOSettings::Create(pManager, IOSROOT);
-  pManager->SetIOSettings(ios);
-
-  //Load plugins from the executable directory (optional)
-  FbxString lPath = FbxGetApplicationDirectory();
-  pManager->LoadPluginsDirectory(lPath.Buffer());
-
-  //Create an FBX scene. This object holds most objects imported/exported from/to files.
-  pScene = FbxScene::Create(pManager, "My Scene");
-  if (!pScene) {
-    FBXSDK_printf("Error: Unable to create FBX scene!\n");
-    exit(1);
-  }
-}
-
-void ResourceImporterFBX::DestroySdkObjects(FbxManager *pManager, bool pExitStatus) {
-  //Delete the FBX Manager. All the objects that have been allocated using the FBX Manager and that haven't been explicitly destroyed are also automatically destroyed.
-  if (pManager) pManager->Destroy();
-  if (pExitStatus) FBXSDK_printf("Program Success!\n");
-}
-
-// FBX SDK Code
-
-#ifdef IOS_REF
-#undef IOS_REF
-#define IOS_REF (*(pManager->GetIOSettings()))
-#endif
-
-// FBX SDK code
-bool ResourceImporterFBX::LoadScene(FbxManager *pManager, FbxDocument *pScene, const char *pFilename) {
-  int lFileMajor, lFileMinor, lFileRevision;
-  int lSDKMajor, lSDKMinor, lSDKRevision;
-  //int lFileFormat = -1;
-  int i, lAnimStackCount;
-  bool lStatus;
-  char lPassword[1024];
-
-  // Get the file version number generate by the FBX SDK.
-  FbxManager::GetFileFormatVersion(lSDKMajor, lSDKMinor, lSDKRevision);
-
-  // Create an importer.
-  FbxImporter *lImporter = FbxImporter::Create(pManager, "");
-
-  // Initialize the importer by providing a filename.
-  const bool lImportStatus = lImporter->Initialize(pFilename, -1, pManager->GetIOSettings());
-  lImporter->GetFileVersion(lFileMajor, lFileMinor, lFileRevision);
-
-  if (!lImportStatus) {
-    FbxString error = lImporter->GetStatus().GetErrorString();
-    FBXSDK_printf("Call to FbxImporter::Initialize() failed.\n");
-    FBXSDK_printf("Error returned: %s\n\n", error.Buffer());
-
-    if (lImporter->GetStatus().GetCode() == FbxStatus::eInvalidFileVersion) {
-      FBXSDK_printf("FBX file format version for this FBX SDK is %d.%d.%d\n", lSDKMajor, lSDKMinor, lSDKRevision);
-      FBXSDK_printf("FBX file format version for file '%s' is %d.%d.%d\n\n", pFilename, lFileMajor, lFileMinor, lFileRevision);
-    }
-
-    return false;
-  }
-
-  FBXSDK_printf("FBX file format version for this FBX SDK is %d.%d.%d\n", lSDKMajor, lSDKMinor, lSDKRevision);
-
-  if (lImporter->IsFBX()) {
-    FBXSDK_printf("FBX file format version for file '%s' is %d.%d.%d\n\n", pFilename, lFileMajor, lFileMinor, lFileRevision);
-
-    // From this point, it is possible to access animation stack information without
-    // the expense of loading the entire file.
-
-    FBXSDK_printf("Animation Stack Information\n");
-
-    lAnimStackCount = lImporter->GetAnimStackCount();
-
-    FBXSDK_printf("    Number of Animation Stacks: %d\n", lAnimStackCount);
-    FBXSDK_printf("    Current Animation Stack: \"%s\"\n", lImporter->GetActiveAnimStackName().Buffer());
-    FBXSDK_printf("\n");
-
-    for (i = 0; i < lAnimStackCount; i++) {
-      FbxTakeInfo *lTakeInfo = lImporter->GetTakeInfo(i);
-
-      FBXSDK_printf("    Animation Stack %d\n", i);
-      FBXSDK_printf("         Name: \"%s\"\n", lTakeInfo->mName.Buffer());
-      FBXSDK_printf("         Description: \"%s\"\n", lTakeInfo->mDescription.Buffer());
-
-      // Change the value of the import name if the animation stack should be imported
-      // under a different name.
-      FBXSDK_printf("         Import Name: \"%s\"\n", lTakeInfo->mImportName.Buffer());
-
-      // Set the value of the import state to false if the animation stack should be not
-      // be imported.
-      FBXSDK_printf("         Import State: %s\n", lTakeInfo->mSelect ? "true" : "false");
-      FBXSDK_printf("\n");
-    }
-
-    // Set the import states. By default, the import states are always set to
-    // true. The code below shows how to change these states.
-    IOS_REF.SetBoolProp(IMP_FBX_MATERIAL, true);
-    IOS_REF.SetBoolProp(IMP_FBX_TEXTURE, true);
-    IOS_REF.SetBoolProp(IMP_FBX_LINK, true);
-    IOS_REF.SetBoolProp(IMP_FBX_SHAPE, true);
-    IOS_REF.SetBoolProp(IMP_FBX_GOBO, true);
-    IOS_REF.SetBoolProp(IMP_FBX_ANIMATION, true);
-    IOS_REF.SetBoolProp(IMP_FBX_GLOBAL_SETTINGS, true);
-  }
-
-  // Import the scene.
-  lStatus = lImporter->Import(pScene);
-
-  if (lStatus == false && lImporter->GetStatus().GetCode() == FbxStatus::ePasswordError) {
-    FBXSDK_printf("Please enter password: ");
-
-    lPassword[0] = '\0';
-
-    FBXSDK_CRT_SECURE_NO_WARNING_BEGIN
-    scanf("%s", lPassword);
-    FBXSDK_CRT_SECURE_NO_WARNING_END
-
-    FbxString lString(lPassword);
-
-    IOS_REF.SetStringProp(IMP_FBX_PASSWORD, lString);
-    IOS_REF.SetBoolProp(IMP_FBX_PASSWORD_ENABLE, true);
-
-    lStatus = lImporter->Import(pScene);
-
-    if (lStatus == false && lImporter->GetStatus().GetCode() == FbxStatus::ePasswordError) {
-      FBXSDK_printf("\nPassword is wrong, import aborted.\n");
-    }
-  }
-
-  // Destroy the importer.
-  lImporter->Destroy();
-
-  return lStatus;
-}
-
 int ResourceImporterFBX::import(const String p_source_file, const String p_save_path, const Dictionary p_options, const Array p_r_platform_variants, const Array p_r_gen_files) {
     Ref<ArrayMesh> mesh;
     mesh = import_fbx(p_source_file, p_save_path, p_options, p_r_platform_variants, p_r_gen_files);
@@ -240,24 +99,120 @@ int ResourceImporterFBX::import(const String p_source_file, const String p_save_
         return GODOT_FAILED;
     }
     String save_path = p_save_path;
-	if (ResourceSaver::save(save_path.operator+(String(".mesh")), mesh) <= 0) {
-		return GODOT_FAILED;
-	}
+  if (ResourceSaver::save(save_path.operator+(String(".mesh")), mesh) <= 0) {
+    return GODOT_FAILED;
+  }
     return GODOT_OK;
 }
 
 Ref<ArrayMesh> ResourceImporterFBX::import_fbx(const String p_source_file, const String p_save_path, const Dictionary p_options, const Array p_r_platform_variants, const Array p_r_gen_files)
 {
-    FbxManager *lSdkManager = nullptr;
-    FbxScene *lScene = nullptr;
+  ofbx::IScene* g_scene = nullptr;
 
-    InitializeSdkObjects(lSdkManager, lScene);
+  FILE* fp = fopen(ProjectSettings::globalize_path(p_source_file).c_string(), "rb");
+  if (!fp) return false;
 
-	if (LoadScene(lSdkManager, lScene, ProjectSettings::globalize_path(p_source_file).c_string()) == false) {
-		Godot::print("FBX: Can't load scene");
-		return nullptr;
-	}
-	
+  fseek(fp, 0, SEEK_END);
+  long file_size = ftell(fp);
+  fseek(fp, 0, SEEK_SET);
+  auto* content = new ofbx::u8[file_size];
+  fread(content, 1, file_size, fp);
+  g_scene = ofbx::load((ofbx::u8*)content, file_size);
+
+  ofbx::IScene* scene = nullptr;
+  ofbx::load((ofbx::u8*)content, file_size);
+  int obj_idx = 0;
+  int indices_offset = 0;
+  int normals_offset = 0;
+  int mesh_count = scene->getMeshCount();
+  for (int i = 0; i < mesh_count; ++i)
+  {
+    //Godot::print(fp, "o obj%d\ng grp%d\n", i, obj_idx);
+
+    const ofbx::Mesh* mesh = scene->getMesh(i);
+    const ofbx::Geometry* geom = mesh->getGeometry();
+    int vertex_count = geom->getVertexCount();
+    const ofbx::Vec3* vertices = geom->getVertices();
+    for (int i = 0; i < vertex_count; ++i)
+    {
+      ofbx::Vec3 v = vertices[i];
+      //Godot::print((fp, "v %f %f %f\n", v.x, v.y, v.z);
+    }
+
+    bool has_normals = geom->getNormals() != nullptr;
+    if (has_normals)
+    {
+      const ofbx::Vec3* normals = geom->getNormals();
+      int count = geom->getVertexCount();
+
+      for (int i = 0; i < count; ++i)
+      {
+        ofbx::Vec3 n = normals[i];
+        //Godot::print((fp, "vn %f %f %f\n", n.x, n.y, n.z);
+      }
+    }
+
+    bool has_uvs = geom->getUVs() != nullptr;
+    if (has_uvs)
+    {
+      const ofbx::Vec2* uvs = geom->getUVs();
+      int count = geom->getVertexCount();
+
+      for (int i = 0; i < count; ++i)
+      {
+        ofbx::Vec2 uv = uvs[i];
+        //Godot::print((fp, "vt %f %f\n", uv.x, uv.y);
+      }
+    }
+
+    bool new_face = true;
+    int count = geom->getVertexCount();
+    for (int i = 0; i < count; ++i)
+    {
+      if (new_face)
+      {
+        fputs("f ", fp);
+        new_face = false;
+      }
+      int idx = i + 1;
+      int vertex_idx = indices_offset + idx;
+      //Godot::print((fp, "%d", vertex_idx);
+
+      if (has_normals)
+      {
+        //Godot::print((fp, "/%d", idx);
+      }
+      else
+      {
+        //Godot::print((fp, "/");
+      }
+
+      if (has_uvs)
+      {
+        //Godot::print((fp, "/%d", idx);
+      }
+      else
+      {
+        //Godot::print((fp, "/");
+      }
+
+      new_face = idx < 0;
+      //Godot::print(new_face ? '\n' : ' ', fp);
+    }
+
+    indices_offset += vertex_count;
+    ++obj_idx;
+  }
+
+  delete[] content;
+  fclose(fp);
+  return nullptr; // TODO Fix
+
+/*   if (LoadScene(lSdkManager, lScene, ProjectSettings::globalize_path(p_source_file).c_string()) == false) {
+    Godot::print("FBX: Can't load scene");
+    return nullptr;
+  }
+  
     const size_t len = 128;
     char str[len];
     snprintf(str, len, "FBX node count: %d", lScene->GetNodeCount());
@@ -343,7 +298,7 @@ Ref<ArrayMesh> ResourceImporterFBX::import_fbx(const String p_source_file, const
           uvs.push_back(Vector2(uv.mData[0], uv.mData[1]));
         }
       }
-    }
+    } 
 
     DestroySdkObjects(lSdkManager, lScene);
 
@@ -395,6 +350,7 @@ Ref<ArrayMesh> ResourceImporterFBX::import_fbx(const String p_source_file, const
     Godot::print(faces);
 
     return array_mesh;
+    */
 }
 
 void ResourceImporterFBX::_register_methods() {

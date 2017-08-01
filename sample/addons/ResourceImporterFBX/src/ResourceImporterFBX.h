@@ -23,8 +23,8 @@
 
 #pragma once
 
-#include <fbxsdk.h>
-#include <godot.h>
+#include "ofbx.h"
+#include <core/Godot.hpp>
 #include <Reference.hpp>
 #include <core/Godot.hpp>
 #include <core/GodotGlobal.hpp>
@@ -71,9 +71,6 @@ enum ArrayType {
 
 class ResourceImporterFBX : public GodotScript<EditorImportPlugin> {
 private:
-  void InitializeSdkObjects(FbxManager *&pManager, FbxScene *&pScene);
-  void DestroySdkObjects(FbxManager *pManager, bool pExitStatus);
-  bool LoadScene(FbxManager *pManager, FbxDocument *pScene, const char *pFilename);
   Ref<ArrayMesh> import_fbx(const String source_file, const String save_path, const Dictionary options, const Array r_platform_variants, const Array r_gen_files);
   GODOT_CLASS(ResourceImporterFBX);
 
