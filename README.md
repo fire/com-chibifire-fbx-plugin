@@ -14,9 +14,8 @@ choco install mingw -params "/exception:seh /threads:posix" --force
 ```
 cd "../../Editor/Godot"
 scons platform=windows -j%NUMBER_OF_PROCESSORS% target=release_debug
-cd ..
 cd "../../Editor/CppBindings"
-scons godotbinpath="../godot_fork/bin/" headers="../godot_headers/" p=windows generate_bindings=yes -j%NUMBER_OF_PROCESSORS%
+scons godotbinpath="../Godot/bin/" headers="../GodotHeaders/" p=windows generate_bindings=yes -j%NUMBER_OF_PROCESSORS%
 scons p=windows target=bindings
 scons p=windows target=bindings generate_bindings=yes -j%NUMBER_OF_PROCESSORS%
 robocopy bin ../../Game/Sample
