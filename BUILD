@@ -76,7 +76,7 @@ load("@bazel_tools//tools/build_defs/pkg:pkg.bzl", "pkg_tar", "pkg_deb")
 
 pkg_tar(
     name = "resource-importer-fbx-bin",
-    strip_prefix = "sample",
+    strip_prefix = "../Game/Sample",
     package_dir = "addons/ResourceImporterFBX/lib",
     files = ["//:ResourceImporterFBX.dll"],
     mode = "0755",
@@ -84,7 +84,7 @@ pkg_tar(
 
 pkg_tar(
     name = "resource-importer-fbx-data",
-    strip_prefix = "sample",
+    strip_prefix = "../Game/Sample",
     package_dir = "",
     files = glob(["sample/**"], exclude=["*.import", "import"]),
     mode = "0755",
