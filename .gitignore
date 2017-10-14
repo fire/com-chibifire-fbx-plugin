@@ -267,3 +267,6 @@ FBX SDK/
 bazel-bin/
 bazel-out/
 bazel-resourceimporterfbx/
+/cpp_bindings
+/godot_fork
+/godot_headers
