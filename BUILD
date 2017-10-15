@@ -1,6 +1,6 @@
 cc_binary(
     features = ["use_linker"],
-    name = "ResourceImporterFBX.dll",
+    name = "Itchio.dll",
     srcs = ["sample/addons/ResourceImporterFBX/src/ResourceImporterFBX.cpp",
     "sample/addons/ResourceImporterFBX/src/ResourceImporterFBX.h",
     "sample/addons/ResourceImporterFBX/src/ofbx.cpp",
@@ -60,30 +60,29 @@ cc_binary(
     "cpp_bindings/include/ResourceSaver.hpp",
     "cpp_bindings/include/SurfaceTool.hpp",
     ],    
-    copts = ["-Igodot_headers/",
-    "-Icpp_bindings/include/", 
-    "-Icpp_bindings/include/core/",
+    copts = ["-I../../Editor/GodotHeaders/",
+    "-I../../Editor/CppBindings/include/", 
+    "-I../../Editor/CppBindings/include/core/",
     ],
     data = glob(["godot_cpp_bindings.dll", "godot_cpp_bindings.pdb", "cube.fbx", "godot_cpp_core.dll", "godot_cpp_core.pdb", "addons/**"]),
     linkstatic = 0,
     linkshared = 1,
-    linkopts = ["-DEFAULTLIB:godot_fork/bin/godot.windows.tools.64.lib",
-    "-DEFAULTLIB:cpp_bindings/bin/godot_cpp_bindings.lib"
+    linkopts = ["-DEFAULTLIB:../../Editor/CppBindings/bin/godot_cpp_bindings.lib"
     ]
 )
 
 load("@bazel_tools//tools/build_defs/pkg:pkg.bzl", "pkg_tar", "pkg_deb")
 
 pkg_tar(
-    name = "resource-importer-fbx-bin",
+    name = "itchio-bin",
     strip_prefix = "../Game/Sample",
     package_dir = "addons/ResourceImporterFBX/lib",
-    files = ["//:ResourceImporterFBX.dll"],
+    files = ["//:Itchio.dll"],
     mode = "0755",
 )
 
 pkg_tar(
-    name = "resource-importer-fbx-data",
+    name = "itchio-data",
     strip_prefix = "../Game/Sample",
     package_dir = "",
     files = glob(["sample/**"], exclude=["*.import", "import"]),
@@ -91,10 +90,10 @@ pkg_tar(
 )
 
 pkg_tar(
-    name = "resource-importer-fbx",
+    name = "itchio",
     extension = "tar.gz",
     deps = [
-        ":resource-importer-fbx-bin",
-        ":resource-importer-fbx-data",
+        ":itchio-bin",
+        ":itchio-data",
     ],
 )
