@@ -270,3 +270,5 @@ bazel-resourceimporterfbx/
 /cpp_bindings
 /godot_fork
 /godot_headers
+/CppBindings/
+/GodotHeaders/
