@@ -10,8 +10,6 @@ source code. "Significant" is arbitrarily decided, but should be fair :)
 GitHub usernames are indicated in parentheses, or as sole entry when no other
 name is available.
 
-See also `AUTHORS-FBX.md` for the plugin authors.
-
 ## Project Founders
 
     Juan Linietsky (reduz)
