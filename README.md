@@ -12,7 +12,8 @@ choco install mingw -params "/exception:seh /threads:posix" --force
 ```
 
 ```
-cd Plugins/Itchio
+cd Plugins/SimpleClass
+build_dependencies.bat
 build.bat
-bazel build //:itchio-bin
+bazel build //:SimpleClass.dll
 ```
