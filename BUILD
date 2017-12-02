@@ -7,6 +7,7 @@ cc_binary(
     "CppBindings/bin/godot_cpp_bindings.lib",
     ], 
     includes = ["Godot/modules/gdnative/include",
+    "GodotHeaders/",
     "CppBindings/include/",
     "CppBindings/include/core",],  
     copts = ["-O2", "/MT"],
