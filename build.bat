@@ -1,1 +1,1 @@
-bazel build //:itchio-bin
+bazel build //:SimpleClass.dll
