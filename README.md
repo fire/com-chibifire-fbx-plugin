@@ -16,7 +16,7 @@ Install repo. See https://github.com/esrlabs/git-repo
 ```
 mkdir com-chibifire-fbx-plugin
 cd com-chibifire-fbx-plugin
-repo init -u git@github.com:fire/com-chibifire-fbx-manifest.git --no-repo-verify
+repo init -u https://github.com/fire/com-chibifire-fbx-manifest.git --no-repo-verify
 repo sync
 ```
 
