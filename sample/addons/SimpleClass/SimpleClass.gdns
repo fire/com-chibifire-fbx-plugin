@@ -8,3 +8,4 @@ resource_name = "SimpleClass"
 class_name = "SimpleClass"
 library = ExtResource( 1 )
 _sections_unfolded = [ "Resource" ]
+

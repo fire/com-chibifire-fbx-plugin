@@ -15,6 +15,10 @@ name="Sample"
 main_scene="res://main.tscn"
 icon="res://icon.png"
 
+[editor_plugins]
+
+enabled=PoolStringArray( "SimpleClass" )
+
 [gdnative]
 
 singletons=[  ]

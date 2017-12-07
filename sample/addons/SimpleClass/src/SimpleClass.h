@@ -68,12 +68,12 @@ enum ArrayType {
   ARRAY_MAX = 9
 };
 
-class ResourceImporterFBX : public GodotScript<EditorImportPlugin> {
+class SimpleClass : public GodotScript<EditorImportPlugin> {
 private:
-  GODOT_CLASS(ResourceImporterFBX);
+  GODOT_CLASS(SimpleClass);
 
 public:
-  ResourceImporterFBX() {}
+  SimpleClass() {}
 
   String get_importer_name() const;
   String get_visible_name() const;
