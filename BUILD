@@ -28,7 +28,8 @@ cc_binary(
     features = ["use_linker"],
     name = "SimpleClass.dll",
     srcs = [
-        "sample/addons/SimpleClass/src/SimpleClass.cpp",        
+        "sample/addons/SimpleClass/src/SimpleClass.cpp",
+        "sample/addons/simpleclass/src/SimpleClass.h",
         "thirdparty/fbx20181_1_fbxsdk_vs2015_win/lib/vs2015/x64/release/libfbxsdk-mt.lib",
         "thirdparty/cpp_bindings/bin/godot_cpp_bindings.lib",
         "thirdparty/cpp_bindings/include/gdnative.hpp",
