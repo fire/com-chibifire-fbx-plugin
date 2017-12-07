@@ -25,6 +25,7 @@
 #include "RawModel.h"
 #include "Raw2Gltf.h"
 
+#include <ProjectSettings.hpp>
 #include "SimpleClass.h"
 
 bool verboseOutput = false;
@@ -50,7 +51,7 @@ String SimpleClass::get_visible_name() const {
 }
 
 int SimpleClass::get_preset_count() const {
-  return 0;
+  return 1;
 }
 
 String SimpleClass::get_preset_name(const int preset) const {
@@ -98,18 +99,18 @@ int SimpleClass::import(const String p_source_file, const godot::String p_save_p
   gltfOptions.useBlendShapeTangents = true;
   ModelData *data_render_model = nullptr;
   RawModel raw;
-  if(!LoadFBXFile(raw, p_source_file.alloc_c_string(), godot::String("png;jpg;jpeg").alloc_c_string()))
+  if(!LoadFBXFile(raw, ProjectSettings::globalize_path(p_source_file).alloc_c_string(), godot::String("png;jpg;jpeg").alloc_c_string()))
   {
-    return GODOT_FAILED;
+    return FAILED;
   }
   raw.Condense();
   std::ofstream outStream; // note: auto-flushes in destructor
   const auto streamStart = outStream.tellp();
 
-  outStream.open(p_source_file.alloc_c_string(), std::ios::trunc | std::ios::ate | std::ios::out | std::ios::binary);
+  outStream.open(ProjectSettings::globalize_path(p_source_file).alloc_c_string(), std::ios::trunc | std::ios::ate | std::ios::out | std::ios::binary);
   if (outStream.fail()) {
       //  godot::print(godot::String("ERROR:: Couldn't open file for writing: ") + p_source_file);
-       return GODOT_FAILED;
+       return FAILED;
   }
   data_render_model = Raw2Gltf(outStream, p_save_path.alloc_c_string(), raw, gltfOptions);
 
@@ -122,7 +123,7 @@ int SimpleClass::import(const String p_source_file, const godot::String p_save_p
   FILE *fp = fopen(binaryPath.alloc_c_string(), "wb");
   if (fp == nullptr) {
       //fmt::fprintf(stderr, "ERROR:: Couldn't open file '%s' for writing.\n", binaryPath);
-      return GODOT_FAILED;
+      return FAILED;
   }
 
   const unsigned char *binaryData = &(*data_render_model->binary)[0];
@@ -130,13 +131,13 @@ int SimpleClass::import(const String p_source_file, const godot::String p_save_p
   if (fwrite(binaryData, binarySize, 1, fp) != 1) {
       //fmt::fprintf(stderr, "ERROR: Failed to write %lu bytes to file '%s'.\n", binarySize, binaryPath);
       fclose(fp);
-      return GODOT_FAILED;
+      return FAILED;
   }
   fclose(fp);
   //fmt::printf("Wrote %lu bytes of binary data to %s.\n", binarySize, binaryPath);
 
   delete data_render_model;
-  return GODOT_OK;
+  return FAILED;
 }
 
 void SimpleClass::_register_methods() {
