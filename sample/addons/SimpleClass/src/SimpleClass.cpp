@@ -79,12 +79,18 @@ bool ResourceImporterFBX::get_option_visibility(const String option, const Dicti
 }
 
 int ResourceImporterFBX::import(const String p_source_file, const String p_save_path, const Dictionary p_options, const Array p_r_platform_variants, const Array p_r_gen_files) {
-    return GODOT_FAILED;
-}
-
-Ref<ArrayMesh> ResourceImporterFBX::import_fbx(const String p_source_file, const String p_save_path, const Dictionary p_options, const Array p_r_platform_variants, const Array p_r_gen_files)
-{
-  return nullptr;
+  GltfOptions gltfOptions{
+    -1,            // keepAttribs
+    false,         // outputBinary
+    false,         // embedResources
+    false,         // useDraco
+    false,         // useKHRMatCom
+    false,         // usePBRMetRough
+    false,         // usePBRSpecGloss
+    false,         // useBlendShapeNormals
+    false,         // useBlendShapeTangents
+  };
+  return GODOT_FAILED;
 }
 
 void ResourceImporterFBX::_register_methods() {

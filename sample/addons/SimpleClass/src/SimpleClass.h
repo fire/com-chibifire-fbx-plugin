@@ -70,7 +70,6 @@ enum ArrayType {
 
 class ResourceImporterFBX : public GodotScript<EditorImportPlugin> {
 private:
-  Ref<ArrayMesh> import_fbx(const String source_file, const String save_path, const Dictionary options, const Array r_platform_variants, const Array r_gen_files);
   GODOT_CLASS(ResourceImporterFBX);
 
 public:
