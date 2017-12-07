@@ -1,32 +1,70 @@
 cc_binary(
-    features = ["use_linker"],
-    name = "SimpleClass.dll",
-    srcs = ["sample/addons/SimpleClass/src/SimpleClass.cpp",
-    "thirdparty/cpp_bindings/include/gdnative.hpp",
-    "thirdparty/godot_headers/gdnative_api_struct.gen.h",
-    "thirdparty/cpp_bindings/bin/godot_cpp_bindings.lib",
+    name = "FBX2glTF",
+    srcs = [
+        "thirdparty/FBX2glTF/src/main.cpp",    
+        "thirdparty/fbx20181_1_fbxsdk_vs2015_win/lib/vs2015/x64/release/libfbxsdk-mt.lib",
     ],
     includes = [
+        "thirdparty/cppcodec",
+        "thirdparty/stb",
+        "thirdparty/draco/src/draco/src",
+        "thirdparty/cxxopts/include",
+        "thirdparty/fifo_map/src",
+        "thirdparty/fmt",
+        "thirdparty/fbx20181_1_fbxsdk_vs2015_win/include",
+        "thirdparty/mathfu/include",
+        "thirdparty/json/src",        
+        "thirdparty/FBX2glTF/src",
         "thirdparty/godot/modules/gdnative/include",
         "thirdparty/godot_headers/",
         "thirdparty/cpp_bindings/include/",
         "thirdparty/cpp_bindings/include/core",
-        "thirdparty/FBX2glTF/src",
-    ],  
+    ],
     copts = ["-O2", "/MT"],
-    linkstatic = 1,
-    linkshared = 1,
-    linkopts = [],    
     deps = ["//:FBX2glTF.lib"]
 )
 
 cc_binary(
-    name = "FBX2glTF",
+    features = ["use_linker"],
+    name = "SimpleClass.dll",
+    srcs = [
+        "sample/addons/SimpleClass/src/SimpleClass.cpp",        
+        "thirdparty/fbx20181_1_fbxsdk_vs2015_win/lib/vs2015/x64/release/libfbxsdk-mt.lib",
+        "thirdparty/cpp_bindings/bin/godot_cpp_bindings.lib",
+        "thirdparty/cpp_bindings/include/gdnative.hpp",
+        "thirdparty/godot_headers/gdnative_api_struct.gen.h",
+    ],
+    includes = [
+        "thirdparty/cppcodec",
+        "thirdparty/stb",
+        "thirdparty/draco/src/draco/src",
+        "thirdparty/cxxopts/include",
+        "thirdparty/fifo_map/src",
+        "thirdparty/fmt",
+        "thirdparty/fbx20181_1_fbxsdk_vs2015_win/include",
+        "thirdparty/mathfu/include",
+        "thirdparty/json/src",        
+        "thirdparty/FBX2glTF/src",
+        "thirdparty/godot/modules/gdnative/include",
+        "thirdparty/godot_headers/",
+        "thirdparty/cpp_bindings/include/",
+        "thirdparty/cpp_bindings/include/core",
+    ],    
+    linkstatic = 1,
+    linkshared = 1,
+    linkopts = [],
+    copts = ["-O2", "/MT"],
+    deps = ["//:FBX2glTF.lib"]
+)
+
+
+cc_library(
+    features = ["use_linker"],
+    name = "FBX2glTF.lib",
     srcs = [
     "thirdparty/FBX2glTF/src/utils/File_Utils.cpp",
     "thirdparty/FBX2glTF/src/utils/Image_Utils.cpp",
     "thirdparty/FBX2glTF/src/utils/String_Utils.cpp",
-    "thirdparty/FBX2glTF/src/main.cpp",
     "thirdparty/FBX2glTF/src/Fbx2Raw.cpp",
     "thirdparty/FBX2glTF/src/Raw2Gltf.cpp",
     "thirdparty/FBX2glTF/src/RawModel.cpp",
@@ -45,7 +83,6 @@ cc_binary(
     "thirdparty/FBX2glTF/src/glTF/AnimationData.cpp",
     "thirdparty/FBX2glTF/src/glTF/CameraData.cpp",
     "thirdparty/FBX2glTF/src/glTF/SceneData.cpp",
-    "thirdparty/fbx20181_1_fbxsdk_vs2015_win/lib/vs2015/x64/release/libfbxsdk-mt.lib",
     ],
     includes = [
         "thirdparty/cppcodec",
@@ -58,7 +95,7 @@ cc_binary(
         "thirdparty/mathfu/include",
         "thirdparty/json/src",        
         "thirdparty/FBX2glTF/src",
-    ],  
+    ],
     copts = ["-O2", "/MT"],
     deps = ["//:draco.lib", "//:fmt.lib"]
 )

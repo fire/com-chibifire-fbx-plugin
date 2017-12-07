@@ -1,6 +1,30 @@
 #include <core/Godot.hpp>
 #include <Reference.hpp>
 
+#include <vector>
+#include <unordered_map>
+#include <map>
+#include <iostream>
+#include <fstream>
+
+#if defined( __unix__ ) || defined( __APPLE__ )
+
+#include <sys/stat.h>
+
+#define _stricmp strcasecmp
+#endif
+
+#include <cxxopts.hpp>
+
+#include "FBX2glTF.h"
+#include "utils/String_Utils.h"
+#include "utils/File_Utils.h"
+#include "Fbx2Raw.h"
+#include "RawModel.h"
+#include "Raw2Gltf.h"
+
+bool verboseOutput = false;
+
 using namespace godot;
 
 class SimpleClass : public GodotScript<Reference> {
@@ -9,6 +33,17 @@ public:
         SimpleClass() { }
 
         void test_void_method() {
+                GltfOptions gltfOptions{
+                        -1,            // keepAttribs
+                        false,         // outputBinary
+                        false,         // embedResources
+                        false,         // useDraco
+                        false,         // useKHRMatCom
+                        false,         // usePBRMetRough
+                        false,         // usePBRSpecGloss
+                        false,         // useBlendShapeNormals
+                        false,         // useBlendShapeTangents
+                };
                 Godot::print("This is test");
         }
 
