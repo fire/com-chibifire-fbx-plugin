@@ -20,6 +20,8 @@ repo init -u https://github.com/fire/com-chibifire-fbx-manifest.git --no-repo-ve
 repo sync
 ```
 
+Download fbx20181_1_fbxsdk_vs2015 and use 7zip to uncompress the installer to `thirdparty/fbx20181_1_fbxsdk_vs2015_win`.
+
 ```
 build_dependencies.bat
 build.bat
