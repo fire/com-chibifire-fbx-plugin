@@ -25,11 +25,12 @@
 #include "RawModel.h"
 #include "Raw2Gltf.h"
 
-#include <platform_config.h>
-#include <core/safe_refcount.h>
 #include <ProjectSettings.hpp>
-#include <core/list.h>
 #include <EditorSceneImporter.hpp>
+#include <Ref.hpp>
+#include <File.hpp>
+#include <Directory.hpp>
+#include <gdnative/vector3.h>
 #include "SimpleClass.h"
 
 bool verboseOutput = true;
@@ -46,83 +47,112 @@ NATIVESCRIPT_INIT() {
   register_tool_class<SimpleClass>();
 }
 
-void SimpleClass::get_extensions(List<String> *r_extensions) const {
+Array SimpleClass::get_extensions() const {
+  Array list = Array();
+  list.push_back("gltf");
+  return list;
 }
 
-uint32_t SimpleClass::get_import_flags() const {
-  return 0;
+int64_t SimpleClass::get_import_flags() const {
+  return IMPORT_SCENE | IMPORT_ANIMATION;
 }
 
-Node * SimpleClass::import_scene(const String &p_path, uint32_t p_flags, int p_bake_fps, List<String> *r_missing_deps = NULL, godot::Error *r_err = NULL) {
-  if (!p_path.to_lower().ends_with(String("fbx"))) {
+Node * SimpleClass::import_scene(const String path, const int64_t flags, const int64_t bake_fps) {
+  
+  GltfOptions gltfOptions{
+    -1,            // keepAttribs
+    false,         // outputBinary
+    false,         // embedResources
+    false,         // useDraco
+    false,         // useKHRMatCom
+    false,         // usePBRMetRough
+    false,         // usePBRSpecGloss
+    false,         // useBlendShapeNormals
+    false,         // useBlendShapeTangents
+  };
+  gltfOptions.usePBRMetRough = true;
+  gltfOptions.useDraco = false;
+  gltfOptions.useBlendShapeNormals = false;
+  gltfOptions.useBlendShapeTangents = false;
+  ModelData *data_render_model = nullptr;
+  RawModel raw;
+
+  char *fbx_file = ProjectSettings::globalize_path(path).alloc_c_string();
+
+  if(!LoadFBXFile(raw, fbx_file, godot::String("png;jpg;jpeg").alloc_c_string()))
+  {
     return nullptr;
   }
+  raw.Condense();
+ 
+  std::ofstream outStream; // note: auto-flushes in destructor
+  const auto streamStart = outStream.tellp();
+
+  String gltf_path = path.get_basename() + String(".gltf");
+  godot::String gltf_global = ProjectSettings::globalize_path(gltf_path);
+  char * out_gltf_global = gltf_global.alloc_c_string();
+
   
-//   // GltfOptions gltfOptions{
-//   //   -1,            // keepAttribs
-//   //   false,         // outputBinary
-//   //   false,         // embedResources
-//   //   false,         // useDraco
-//   //   false,         // useKHRMatCom
-//   //   false,         // usePBRMetRough
-//   //   false,         // usePBRSpecGloss
-//   //   false,         // useBlendShapeNormals
-//   //   false,         // useBlendShapeTangents
-//   // };
-//   // gltfOptions.usePBRMetRough = true;
-//   // gltfOptions.useDraco = true;
-//   // gltfOptions.useBlendShapeNormals = true;
-//   // gltfOptions.useBlendShapeTangents = true;
-//   // ModelData *data_render_model = nullptr;
-//   // RawModel raw;
-//   // if(!LoadFBXFile(raw, ProjectSettings::globalize_path(p_source_file).alloc_c_string(), godot::String("png;jpg;jpeg").alloc_c_string()))
-//   // {
-//   //   return FAILED;
-//   // }
-//   // raw.Condense();
-//   // std::ofstream outStream; // note: auto-flushes in destructor
-//   // const auto streamStart = outStream.tellp();
+  String path_dir_global = ProjectSettings::globalize_path(path.get_basename() + String("_out/"));
 
-//   // outStream.open(ProjectSettings::globalize_path(p_source_file).alloc_c_string(), std::ios::trunc | std::ios::ate | std::ios::out | std::ios::binary);
-//   // if (outStream.fail()) {
-//   //     Godot::print(godot::String("ERROR:: Couldn't open file for writing: ") + p_source_file);
-//   //      return nullptr;
-//   // }
-//   // data_render_model = Raw2Gltf(outStream, p_save_path.alloc_c_string(), raw, gltfOptions);
+  outStream.open(out_gltf_global, std::ios::trunc | std::ios::ate | std::ios::out | std::ios::binary);
+  if (outStream.fail()) {
+      Godot::print(godot::String("ERROR:: Couldn't open file for writing: ") + path);
+       return nullptr;
+  }
 
-//   // // godot::String gltf_bytes = String((unsigned long) (outStream.tellp() - streamStart));
-//   // // godot::String wrote = String("Wrote ");
-//   // // Godot::print(
-//   // //      String("Wrote ").inserted(wrote.length(), gltf_bytes)(" bytes of glTF to %s.\n"),
-//   // //      , p_source_file.alloc_c_string());
 
-//   // godot::String binaryPath = p_source_file;
-//   // binaryPath = binaryPath.insert(binaryPath.length(), godot::String(extBufferFilename.c_str()));
-//   // FILE *fp = fopen(binaryPath.alloc_c_string(), "wb");
-//   // if (fp == nullptr) {
-//   //     Godot::print("ERROR:: Couldn't open file");
-//   //     //fmt::fprintf(stderr, "ERROR:: Couldn't open file '%s' for writing.\n", binaryPath);
-//   //     return nullptr;
-//   // }
+  data_render_model = Raw2Gltf(outStream, path_dir_global.alloc_c_string(), raw, gltfOptions);
 
-//   // const unsigned char *binaryData = &(*data_render_model->binary)[0];
-//   // unsigned long       binarySize  = data_render_model->binary->size();
-//   // if (fwrite(binaryData, binarySize, 1, fp) != 1) {
-//   //     Godot::print("ERROR: Failed to write");
-//   //     //fmt::fprintf(stderr, "ERROR: Failed to write %lu bytes to file '%s'.\n", binarySize, binaryPath);
-//   //     fclose(fp);
-//   //     return FAILED;
-//   // }
-//   // fclose(fp);
-//   // Godot::print("Wrote");
-//   // //fmt::printf("Wrote %lu bytes of binary data to %s.\n", binarySize, binaryPath);
+  // godot::String gltf_bytes = String((unsigned long) (outStream.tellp() - streamStart));
+  // godot::String wrote = String("Wrote ");
+  // Godot::print(
+  //      String("Wrote ").inserted(wrote.length(), gltf_bytes)(" bytes of glTF to %s.\n"),
+  //      , p_source_file.alloc_c_string());
 
-//   // delete data_render_model;
-  return nullptr;
+  String binary_path = ProjectSettings::globalize_path(path.get_base_dir() + String("/buffer.bin"));
+  char * out_binary_path = binary_path.alloc_c_string();
+  FILE *fp = fopen(out_binary_path, "wb");
+  if (fp == nullptr) {
+      Godot::print("ERROR:: Couldn't open file");
+      //fmt::fprintf(stderr, "ERROR:: Couldn't open file '%s' for writing.\n", binaryPath);
+      return nullptr;
+  }
+
+  const unsigned char *binaryData = &(*data_render_model->binary)[0];
+  unsigned long       binarySize  = data_render_model->binary->size();
+  if (fwrite(binaryData, binarySize, 1, fp) != 1) {
+      Godot::print("ERROR: Failed to write");
+      //fmt::fprintf(stderr, "ERROR: Failed to write %lu bytes to file '%s'.\n", binarySize, binaryPath);
+      fclose(fp);
+      return nullptr;
+  }
+  fclose(fp);
+  Godot::print("Wrote");
+  //fmt::printf("Wrote %lu bytes of binary data to %s.\n", binarySize, binaryPath);
+
+  delete data_render_model;
+  //EditorSceneImporter importer;
+  return nullptr;//importer.import_scene_from_other_importer(gltf_path, 0, 60);
 }
+
+// Ref<Animation> SimpleClass::import_animation(const String path, const int64_t flags, const int64_t bake_fps)
+// {
+//   return Ref<Animation>();
+// }
+
+// Node * SimpleClass::import_scene_from_other_importer(const String path, const int64_t flags, const int64_t bake_fps)
+// {
+//   return nullptr;
+// }
+
+// Ref<Animation> SimpleClass::import_animation_from_other_importer(const String path, const int64_t flags, const int64_t bake_fps)
+// {
+//   return Ref<Animation>();
+// }
 
 void SimpleClass::_register_methods() {
   register_method("_get_extensions", &SimpleClass::get_extensions);
   register_method("_get_import_flags", &SimpleClass::get_import_flags);
-//  register_method("_import_scene", &SimpleClass::import_scene);
+  register_method("_import_scene", &SimpleClass::import_scene);
 }

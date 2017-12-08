@@ -29,11 +29,9 @@
 #include <core/GodotGlobal.hpp>
 #include <ArrayMesh.hpp>
 #include <Ref.hpp>
-#include <platform_config.h>
-#include <core/safe_refcount.h>
-#include <core/list.h>
 #include <Node.hpp>
 #include <String.hpp>
+#include <Animation.hpp>
 
 #include <EditorSceneImporter.hpp>
 
@@ -96,10 +94,28 @@ private:
   GODOT_CLASS(SimpleClass);
 
 public:
+  enum ImportFlags {
+      IMPORT_SCENE = 1,
+      IMPORT_ANIMATION = 2,
+      IMPORT_ANIMATION_DETECT_LOOP = 4,
+      IMPORT_ANIMATION_OPTIMIZE = 8,
+      IMPORT_ANIMATION_FORCE_ALL_TRACKS_IN_ALL_CLIPS = 16,
+      IMPORT_ANIMATION_KEEP_VALUE_TRACKS = 32,
+      IMPORT_GENERATE_TANGENT_ARRAYS = 256,
+      IMPORT_FAIL_ON_MISSING_DEPENDENCIES = 512,
+      IMPORT_MATERIALS_IN_INSTANCES = 1024,
+      IMPORT_USE_COMPRESSION = 2048
+
+  };
+
   SimpleClass() {}
 
-  void get_extensions(List<String> *r_extensions) const;
-  uint32_t get_import_flags() const;
-  Node *import_scene(const String &p_path, uint32_t p_flags, int p_bake_fps, List<String> *r_missing_deps, godot::Error *r_err);
+  Array get_extensions() const;
+  int64_t get_import_flags() const;
+  Node *import_scene(const String path, const int64_t flags, const int64_t bake_fps);
+  // Ref<Animation> import_animation(const String path, const int64_t flags, const int64_t bake_fps);
+  // Node *import_scene_from_other_importer(const String path, const int64_t flags, const int64_t bake_fps);
+  // Ref<Animation> import_animation_from_other_importer(const String path, const int64_t flags, const int64_t bake_fps);
+
   static void _register_methods();
 };

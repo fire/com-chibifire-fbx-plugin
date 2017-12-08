@@ -46,8 +46,6 @@ cc_binary(
         "thirdparty/mathfu/include",
         "thirdparty/json/src",        
         "thirdparty/FBX2glTF/src",
-        "thirdparty/godot",
-        "thirdparty/godot/platform/windows",
         "thirdparty/godot/modules/gdnative/include",
         "thirdparty/godot_headers/",
         "thirdparty/cpp_bindings/include/",
