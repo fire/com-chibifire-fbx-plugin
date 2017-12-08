@@ -29,20 +29,26 @@
 #include <core/GodotGlobal.hpp>
 #include <ArrayMesh.hpp>
 #include <Ref.hpp>
+#include <platform_config.h>
+#include <core/safe_refcount.h>
+#include <core/list.h>
+#include <Node.hpp>
+#include <String.hpp>
 
-#include "EditorImportPlugin.hpp"
+#include <EditorSceneImporter.hpp>
 
 using godot::GodotScript;
 using godot::register_class;
 using godot::Reference;
 using godot::Variant;
-using godot::EditorImportPlugin;
+using godot::EditorSceneImporter;
 using godot::String;
 using godot::Reference;
 using godot::Array;
 using godot::Dictionary;
 using godot::Ref;
 using godot::ArrayMesh;
+using godot::Node;
 
 enum PrimitiveType {
   PRIMITIVE_POINTS = 0,
@@ -68,23 +74,32 @@ enum ArrayType {
   ARRAY_MAX = 9
 };
 
-class SimpleClass : public GodotScript<EditorImportPlugin> {
+enum Presets {
+    PRESET_SEPARATE_MATERIALS,
+    PRESET_SEPARATE_MESHES,
+    PRESET_SEPARATE_ANIMATIONS,
+
+    PRESET_SINGLE_SCENE,
+
+    PRESET_SEPARATE_MESHES_AND_MATERIALS,
+    PRESET_SEPARATE_MESHES_AND_ANIMATIONS,
+    PRESET_SEPARATE_MATERIALS_AND_ANIMATIONS,
+    PRESET_SEPARATE_MESHES_MATERIALS_AND_ANIMATIONS,
+
+    PRESET_MULTIPLE_SCENES,
+    PRESET_MULTIPLE_SCENES_AND_MATERIALS,
+    PRESET_MAX
+};
+
+class SimpleClass : public GodotScript<EditorSceneImporter> {
 private:
   GODOT_CLASS(SimpleClass);
 
 public:
   SimpleClass() {}
 
-  String get_importer_name() const;
-  String get_visible_name() const;
-  int get_preset_count() const;
-  String get_preset_name(const int preset) const;
-  Array get_recognized_extensions() const;
-  Array get_import_options(const int preset) const;
-  String get_save_extension() const;
-  String get_resource_type() const;
-  bool get_option_visibility(const String option, const Dictionary options) const;
-  int import(const String source_file, const String save_path, const Dictionary options, const Array r_platform_variants, const Array r_gen_files);
-
+  void get_extensions(List<String> *r_extensions) const;
+  uint32_t get_import_flags() const;
+  Node *import_scene(const String &p_path, uint32_t p_flags, int p_bake_fps, List<String> *r_missing_deps, godot::Error *r_err);
   static void _register_methods();
 };
