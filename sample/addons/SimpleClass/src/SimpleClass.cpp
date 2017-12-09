@@ -30,7 +30,7 @@
 #include <Ref.hpp>
 #include <File.hpp>
 #include <Directory.hpp>
-#include <gdnative/vector3.h>
+#include <Vector3.hpp>
 #include "SimpleClass.h"
 
 bool verboseOutput = true;
@@ -88,17 +88,20 @@ Node * SimpleClass::import_scene(const String path, const int64_t flags, const i
   std::ofstream outStream; // note: auto-flushes in destructor
   const auto streamStart = outStream.tellp();
 
-  String gltf_path = path.get_basename() + String(".gltf");
+  const String gltf_path = path.get_basename() + String(".gltf");
   godot::String gltf_global = ProjectSettings::globalize_path(gltf_path);
   char * out_gltf_global = gltf_global.alloc_c_string();
 
-  
-  String path_dir_global = ProjectSettings::globalize_path(path.get_basename() + String("_out/"));
+  const String path_dir_global = ProjectSettings::globalize_path(path.get_basename() + String("_out/"));
+  // Ref<godot::Directory> dir = new godot::Directory;
+  // if(dir->make_dir(path_dir_global) != OK) {
+  //   return nullptr;
+  // }
 
   outStream.open(out_gltf_global, std::ios::trunc | std::ios::ate | std::ios::out | std::ios::binary);
   if (outStream.fail()) {
-      Godot::print(godot::String("ERROR:: Couldn't open file for writing: ") + path);
-       return nullptr;
+    Godot::print(godot::String("ERROR:: Couldn't open file for writing: ") + path);
+    return nullptr;
   }
 
 
@@ -110,8 +113,8 @@ Node * SimpleClass::import_scene(const String path, const int64_t flags, const i
   //      String("Wrote ").inserted(wrote.length(), gltf_bytes)(" bytes of glTF to %s.\n"),
   //      , p_source_file.alloc_c_string());
 
-  String binary_path = ProjectSettings::globalize_path(path.get_base_dir() + String("/buffer.bin"));
-  char * out_binary_path = binary_path.alloc_c_string();
+  const String binary_path = ProjectSettings::globalize_path(path.get_base_dir() + String("/buffer.bin"));
+  const char * out_binary_path = binary_path.alloc_c_string();
   FILE *fp = fopen(out_binary_path, "wb");
   if (fp == nullptr) {
       Godot::print("ERROR:: Couldn't open file");
@@ -132,8 +135,9 @@ Node * SimpleClass::import_scene(const String path, const int64_t flags, const i
   //fmt::printf("Wrote %lu bytes of binary data to %s.\n", binarySize, binaryPath);
 
   delete data_render_model;
-  //EditorSceneImporter importer;
-  return nullptr;//importer.import_scene_from_other_importer(gltf_path, 0, 60);
+  // Ref<godot::EditorSceneImporter> importer = new godot::EditorSceneImporter;
+  // return importer->import_scene_from_other_importer(gltf_path, 0, 60);
+  return nullptr;
 }
 
 // Ref<Animation> SimpleClass::import_animation(const String path, const int64_t flags, const int64_t bake_fps)
