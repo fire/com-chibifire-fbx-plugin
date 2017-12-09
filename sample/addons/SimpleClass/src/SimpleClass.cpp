@@ -75,6 +75,7 @@ Node * SimpleClass::import_scene(const String path, const int64_t flags, const i
   gltfOptions.useDraco = false;
   gltfOptions.useBlendShapeNormals = false;
   gltfOptions.useBlendShapeTangents = false;
+
   ModelData *data_render_model = nullptr;
   RawModel raw;
 
@@ -83,6 +84,13 @@ Node * SimpleClass::import_scene(const String path, const int64_t flags, const i
   if(!LoadFBXFile(raw, fbx_file, godot::String("png;jpg;jpeg").alloc_c_string()))
   {
     return nullptr;
+  }
+
+  std::vector<std::function<Vec2f(Vec2f)>> texturesTransforms;
+  texturesTransforms.emplace_back([](Vec2f uv) { return Vec2f(uv[0], 1.0f - uv[1]); });
+ 
+  if (!texturesTransforms.empty()) {
+    raw.TransformTextures(texturesTransforms);
   }
   raw.Condense();
  
