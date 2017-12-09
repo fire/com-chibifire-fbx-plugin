@@ -275,3 +275,4 @@ bazel-resourceimporterfbx/
 /Godot/
 /.repo
 /thirdparty
+/bazel-fbx
