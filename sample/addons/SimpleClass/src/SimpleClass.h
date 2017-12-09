@@ -28,11 +28,12 @@
 #include <core/Godot.hpp>
 #include <core/GodotGlobal.hpp>
 #include <ArrayMesh.hpp>
+#include <Reference.hpp>
 #include <Ref.hpp>
 #include <Node.hpp>
 #include <String.hpp>
 #include <Animation.hpp>
-
+#include <EditorPlugin.hpp>
 #include <EditorSceneImporter.hpp>
 
 using godot::GodotScript;
@@ -113,9 +114,7 @@ public:
   Array get_extensions() const;
   int64_t get_import_flags() const;
   Node *import_scene(const String path, const int64_t flags, const int64_t bake_fps);
-  // Ref<Animation> import_animation(const String path, const int64_t flags, const int64_t bake_fps);
-  // Node *import_scene_from_other_importer(const String path, const int64_t flags, const int64_t bake_fps);
-  // Ref<Animation> import_animation_from_other_importer(const String path, const int64_t flags, const int64_t bake_fps);
+  godot::Ref<godot::Animation> import_animation(const String path, const int64_t flags, const int64_t bake_fps);
 
   static void _register_methods();
 };

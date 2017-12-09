@@ -31,6 +31,7 @@
 #include <File.hpp>
 #include <Directory.hpp>
 #include <Vector3.hpp>
+#include <Animation.hpp>
 #include "SimpleClass.h"
 
 bool verboseOutput = true;
@@ -49,7 +50,7 @@ NATIVESCRIPT_INIT() {
 
 Array SimpleClass::get_extensions() const {
   Array list = Array();
-  list.push_back("gltf");
+  list.push_back("fbx");
   return list;
 }
 
@@ -102,11 +103,10 @@ Node * SimpleClass::import_scene(const String path, const int64_t flags, const i
     return nullptr;
   }
 
-
   data_render_model = Raw2Gltf(outStream, path_dir_global.alloc_c_string(), raw, gltfOptions);
 
   // godot::String gltf_bytes = String((unsigned long) (outStream.tellp() - streamStart));
-  // godot::String wrote = String("Wrote ");
+  godot::String wrote = String("Wrote ");
   // Godot::print(
   //      String("Wrote ").inserted(wrote.length(), gltf_bytes)(" bytes of glTF to %s.\n"),
   //      , p_source_file.alloc_c_string());
@@ -133,27 +133,17 @@ Node * SimpleClass::import_scene(const String path, const int64_t flags, const i
 
   delete data_render_model;
 
-  godot::Ref<godot::EditorSceneImporter> importer = new godot::EditorSceneImporter;
-  return nullptr; //importer->import_scene_from_other_importer(gltf_path, 0, 60);
+  return owner->import_scene_from_other_importer(gltf_path, flags, bake_fps);
 }
 
-// Ref<Animation> SimpleClass::import_animation(const String path, const int64_t flags, const int64_t bake_fps)
-// {
-//   return Ref<Animation>();
-// }
-
-// Node * SimpleClass::import_scene_from_other_importer(const String path, const int64_t flags, const int64_t bake_fps)
-// {
-//   return nullptr;
-// }
-
-// Ref<Animation> SimpleClass::import_animation_from_other_importer(const String path, const int64_t flags, const int64_t bake_fps)
-// {
-//   return Ref<Animation>();
-// }
+godot::Ref<godot::Animation> SimpleClass::import_animation(const String path, const int64_t flags, const int64_t bake_fps)
+{
+   return godot::Ref<Animation>();
+}
 
 void SimpleClass::_register_methods() {
   register_method("_get_extensions", &SimpleClass::get_extensions);
   register_method("_get_import_flags", &SimpleClass::get_import_flags);
   register_method("_import_scene", &SimpleClass::import_scene);
+  register_method("_import_animation", &SimpleClass::import_animation);
 }

@@ -1,7 +1,7 @@
 cc_binary(
     name = "FBX2glTF",
     srcs = [
-        "thirdparty/FBX2glTF/src/main.cpp",    
+        "thirdparty/FBX2glTF/src/main.cpp",
         "thirdparty/fbx20181_1_fbxsdk_vs2015_win/lib/vs2015/x64/release/libfbxsdk-mt.lib",
     ],
     includes = [
