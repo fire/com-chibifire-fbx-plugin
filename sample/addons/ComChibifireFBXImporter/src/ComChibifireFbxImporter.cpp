@@ -34,7 +34,7 @@
 #include <Animation.hpp>
 #include "ComChibifireFbxImporter.h"
 
-bool verboseOutput = true;
+bool verboseOutput = false;
 
 using namespace godot;
 
