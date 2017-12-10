@@ -32,7 +32,7 @@
 #include <Directory.hpp>
 #include <Vector3.hpp>
 #include <Animation.hpp>
-#include "SimpleClass.h"
+#include "ComChibifireFbxImporter.h"
 
 bool verboseOutput = true;
 

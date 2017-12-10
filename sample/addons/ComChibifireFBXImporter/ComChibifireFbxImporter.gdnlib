@@ -8,7 +8,7 @@ symbol_prefix="godot_"
 [entry]
 
 X11.64=""
-Windows.64="res://addons/SimpleClass/lib/SimpleClass.dll"
+Windows.64="res://addons/ComChibifireFbxImporter/lib/ComChibifireFbxImporter.dll"
 OSX.64=""
 
 [dependencies]

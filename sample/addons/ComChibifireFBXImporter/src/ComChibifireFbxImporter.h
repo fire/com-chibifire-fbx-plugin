@@ -92,7 +92,7 @@ enum Presets {
 
 class SimpleClass : public GodotScript<EditorSceneImporter> {
 private:
-  GODOT_CLASS(SimpleClass);
+  GODOT_CLASS(ComChibifireFbxImporter);
 
 public:
   enum ImportFlags {

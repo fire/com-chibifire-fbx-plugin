@@ -17,7 +17,7 @@ icon="res://icon.png"
 
 [editor_plugins]
 
-enabled=PoolStringArray( "SimpleClass" )
+enabled=PoolStringArray( "ComChibifireFBXImporter" )
 
 [gdnative]
 
