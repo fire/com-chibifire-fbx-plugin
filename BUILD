@@ -53,8 +53,8 @@ cc_binary(
     ],    
     linkstatic = 1,
     linkshared = 1,
-    linkopts = [],
     copts = ["-O2", "/MT"],
+    linkopts = ["-NODEFAULTLIB:LIBCMT"],
     deps = ["//:FBX2glTF.lib"]
 )
 
