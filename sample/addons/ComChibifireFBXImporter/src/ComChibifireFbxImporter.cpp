@@ -37,8 +37,8 @@
 bool verboseOutput = false;
 
 using namespace godot;
-using godot::Ref;
 using godot::Directory;
+using godot::Ref;
 
 GDNATIVE_INIT(godot_gdnative_init_options *options) {
 }
@@ -81,6 +81,16 @@ Node *ComChibifireFbxImporter::import_scene(const String path, const int64_t fla
 
     const char *fbx_file = ProjectSettings::globalize_path(path).alloc_c_string();
 
+    const String dir_suffix = String("_out/");
+    const String path_dir_global = ProjectSettings::globalize_path(path.get_basename().insert(path.get_basename().length(), dir_suffix));
+
+    Ref<Directory> dir = new Directory;
+    const Error err = dir->make_dir(path_dir_global);
+    if (err == ERR_ALREADY_EXISTS) {
+        Godot::print(godot::String("ERROR:: Folder already exists: ") + path_dir_global);
+        return nullptr;
+    }
+
     if (!LoadFBXFile(raw, fbx_file, godot::String("png;jpg;jpeg").alloc_c_string())) {
         return nullptr;
     }
@@ -96,18 +106,9 @@ Node *ComChibifireFbxImporter::import_scene(const String path, const int64_t fla
     std::ofstream outStream; // note: auto-flushes in destructor
     const auto streamStart = outStream.tellp();
 
-    const String dir_suffix = String("_out/");
-    const String path_dir_global = ProjectSettings::globalize_path(path.get_basename().insert(path.get_basename().length(), dir_suffix));
     const String file = path.get_basename().get_file() + String(".gltf");
     const String gltf_path = path_dir_global.plus_file(file);
     const String gltf_global = ProjectSettings::globalize_path(gltf_path);
-
-    Ref<Directory> dir = new Directory;
-    const Error err = dir->make_dir(path_dir_global);
-    if (err != OK) {
-        Godot::print(godot::String("ERROR:: Couldn't create folder: ") + path_dir_global);
-        return nullptr;
-    }
 
     outStream.open(gltf_global.alloc_c_string(), std::ios::trunc | std::ios::ate | std::ios::out | std::ios::binary);
     if (outStream.fail()) {
