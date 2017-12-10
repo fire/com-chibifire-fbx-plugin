@@ -101,10 +101,9 @@ Node *ComChibifireFbxImporter::import_scene(const String path, const int64_t fla
 
     godot::Ref<godot::Directory> dir = new godot::Directory;
     Error err = dir->make_dir(path_dir_global);
-    if(err != OK)
-    {
-      Godot::print(godot::String("ERROR:: Couldn't create folder: ") + path_dir_global);
-      return nullptr;
+    if (err != OK) {
+        Godot::print(godot::String("ERROR:: Couldn't create folder: ") + path_dir_global);
+        return nullptr;
     }
 
     outStream.open(gltf_global.alloc_c_string(), std::ios::trunc | std::ios::ate | std::ios::out | std::ios::binary);
