@@ -101,40 +101,40 @@ Node *ComChibifireFbxImporter::import_scene(const String path, const int64_t fla
 
     godot::Ref<godot::Directory> dir = new godot::Directory;
     Error err = dir->make_dir(path_dir_global);
+    if(err != OK)
+    {
+      Godot::print(godot::String("ERROR:: Couldn't create folder: ") + path_dir_global);
+      return nullptr;
+    }
 
     outStream.open(gltf_global.alloc_c_string(), std::ios::trunc | std::ios::ate | std::ios::out | std::ios::binary);
     if (outStream.fail()) {
-        Godot::print(godot::String("ERROR:: Couldn't open file for writing: ") + path);
+        Godot::print(godot::String("ERROR:: Couldn't open file for writing: ") + gltf_global);
         return nullptr;
     }
 
     data_render_model = Raw2Gltf(outStream, path_dir_global.alloc_c_string(), raw, gltfOptions);
 
-    // godot::String gltf_bytes = String((unsigned long) (outStream.tellp() - streamStart));
-    godot::String wrote = String("Wrote ");
-    // Godot::print(
-    //      String("Wrote ").inserted(wrote.length(), gltf_bytes)(" bytes of glTF to %s.\n"),
-    //      , p_source_file.alloc_c_string());
+    printf(
+            "Wrote %lu bytes of glTF to %s.\n",
+            (unsigned long)(outStream.tellp() - streamStart), gltf_global.alloc_c_string());
 
     const String binary_path = ProjectSettings::globalize_path(path_dir_global.plus_file(String("buffer.bin")));
     FILE *fp = fopen(binary_path.alloc_c_string(), "wb");
     if (fp == nullptr) {
-        Godot::print("ERROR:: Couldn't open file");
-        //fmt::fprintf(stderr, "ERROR:: Couldn't open file '%s' for writing.\n", binaryPath);
+        printf("ERROR:: Couldn't open file '%s' for writing.\n", binary_path.alloc_c_string());
         return nullptr;
     }
 
     const unsigned char *binaryData = &(*data_render_model->binary)[0];
     unsigned long binarySize = data_render_model->binary->size();
     if (fwrite(binaryData, binarySize, 1, fp) != 1) {
-        Godot::print("ERROR: Failed to write");
-        //fmt::fprintf(stderr, "ERROR: Failed to write %lu bytes to file '%s'.\n", binarySize, binaryPath);
+        printf("ERROR: Failed to write %lu bytes to file '%s'.\n", binarySize, binary_path.alloc_c_string());
         fclose(fp);
         return nullptr;
     }
     fclose(fp);
-    Godot::print("Wrote");
-    //fmt::printf("Wrote %lu bytes of binary data to %s.\n", binarySize, binaryPath);
+    printf("Wrote %lu bytes of binary data to %s.\n", binarySize, binary_path.alloc_c_string());
 
     delete data_render_model;
 
