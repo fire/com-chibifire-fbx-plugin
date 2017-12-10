@@ -9,3 +9,4 @@ func _enter_tree():
     
 func _exit_tree():
     remove_scene_import_plugin(plugin)
+    plugin = null
