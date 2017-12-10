@@ -71,9 +71,8 @@ Node *ComChibifireFbxImporter::import_scene(const String path, const int64_t fla
         false, // useBlendShapeTangents
     };
     gltfOptions.usePBRMetRough = true;
-    gltfOptions.useDraco = false;
-    gltfOptions.useBlendShapeNormals = false;
-    gltfOptions.useBlendShapeTangents = false;
+    gltfOptions.useBlendShapeNormals = true;
+    gltfOptions.useBlendShapeTangents = true;
 
     ModelData *data_render_model = nullptr;
     RawModel raw;
