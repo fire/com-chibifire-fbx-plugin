@@ -77,7 +77,7 @@ Node *ComChibifireFbxImporter::import_scene(const String path, const int64_t fla
     ModelData *data_render_model = nullptr;
     RawModel raw;
 
-    char *fbx_file = ProjectSettings::globalize_path(path).alloc_c_string();
+    const char *fbx_file = ProjectSettings::globalize_path(path).alloc_c_string();
 
     if (!LoadFBXFile(raw, fbx_file, godot::String("png;jpg;jpeg").alloc_c_string())) {
         return nullptr;
@@ -96,11 +96,12 @@ Node *ComChibifireFbxImporter::import_scene(const String path, const int64_t fla
 
     const String dir_suffix = String("_out/");
     const String path_dir_global = ProjectSettings::globalize_path(path.get_basename().insert(path.get_basename().length(), dir_suffix));
-    const String gltf_path = path_dir_global.plus_file(path.get_file() + String(".gltf")); // root/example_out/example.gltf
-    godot::String gltf_global = ProjectSettings::globalize_path(gltf_path);
+    const String file = path.get_basename().get_file() + String(".gltf");
+    const String gltf_path = path_dir_global.plus_file(file);
+    const String gltf_global = ProjectSettings::globalize_path(gltf_path);
 
     godot::Ref<godot::Directory> dir = new godot::Directory;
-    Error err = dir->make_dir(path_dir_global);
+    const Error err = dir->make_dir(path_dir_global);
     if (err != OK) {
         Godot::print(godot::String("ERROR:: Couldn't create folder: ") + path_dir_global);
         return nullptr;
