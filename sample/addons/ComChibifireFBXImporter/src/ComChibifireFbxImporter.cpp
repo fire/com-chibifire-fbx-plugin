@@ -37,6 +37,8 @@
 bool verboseOutput = false;
 
 using namespace godot;
+using godot::Ref;
+using godot::Directory;
 
 GDNATIVE_INIT(godot_gdnative_init_options *options) {
 }
@@ -100,7 +102,7 @@ Node *ComChibifireFbxImporter::import_scene(const String path, const int64_t fla
     const String gltf_path = path_dir_global.plus_file(file);
     const String gltf_global = ProjectSettings::globalize_path(gltf_path);
 
-    godot::Ref<godot::Directory> dir = new godot::Directory;
+    Ref<Directory> dir = new Directory;
     const Error err = dir->make_dir(path_dir_global);
     if (err != OK) {
         Godot::print(godot::String("ERROR:: Couldn't create folder: ") + path_dir_global);
@@ -141,8 +143,8 @@ Node *ComChibifireFbxImporter::import_scene(const String path, const int64_t fla
     return owner->import_scene_from_other_importer(gltf_path, flags, bake_fps);
 }
 
-godot::Ref<godot::Animation> ComChibifireFbxImporter::import_animation(const String path, const int64_t flags, const int64_t bake_fps) {
-    return godot::Ref<Animation>();
+Ref<Animation> ComChibifireFbxImporter::import_animation(const String path, const int64_t flags, const int64_t bake_fps) {
+    return Ref<Animation>();
 }
 
 void ComChibifireFbxImporter::_register_methods() {
