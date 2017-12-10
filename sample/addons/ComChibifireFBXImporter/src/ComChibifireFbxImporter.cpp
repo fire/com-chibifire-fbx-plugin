@@ -45,20 +45,20 @@ GDNATIVE_TERMINATE(godot_gdnative_terminate_options *options) {
 }
 
 NATIVESCRIPT_INIT() {
-  register_tool_class<SimpleClass>();
+  register_tool_class<ComChibifireFbxImporter>();
 }
 
-Array SimpleClass::get_extensions() const {
+Array ComChibifireFbxImporter::get_extensions() const {
   Array list = Array();
   list.push_back("fbx");
   return list;
 }
 
-int64_t SimpleClass::get_import_flags() const {
+int64_t ComChibifireFbxImporter::get_import_flags() const {
   return IMPORT_SCENE | IMPORT_ANIMATION;
 }
 
-Node * SimpleClass::import_scene(const String path, const int64_t flags, const int64_t bake_fps) {
+Node * ComChibifireFbxImporter::import_scene(const String path, const int64_t flags, const int64_t bake_fps) {
   
   GltfOptions gltfOptions{
     -1,            // keepAttribs
@@ -144,14 +144,14 @@ Node * SimpleClass::import_scene(const String path, const int64_t flags, const i
   return owner->import_scene_from_other_importer(gltf_path, flags, bake_fps);
 }
 
-godot::Ref<godot::Animation> SimpleClass::import_animation(const String path, const int64_t flags, const int64_t bake_fps)
+godot::Ref<godot::Animation> ComChibifireFbxImporter::import_animation(const String path, const int64_t flags, const int64_t bake_fps)
 {
    return godot::Ref<Animation>();
 }
 
-void SimpleClass::_register_methods() {
-  register_method("_get_extensions", &SimpleClass::get_extensions);
-  register_method("_get_import_flags", &SimpleClass::get_import_flags);
-  register_method("_import_scene", &SimpleClass::import_scene);
-  register_method("_import_animation", &SimpleClass::import_animation);
+void ComChibifireFbxImporter::_register_methods() {
+  register_method("_get_extensions", &ComChibifireFbxImporter::get_extensions);
+  register_method("_get_import_flags", &ComChibifireFbxImporter::get_import_flags);
+  register_method("_import_scene", &ComChibifireFbxImporter::import_scene);
+  register_method("_import_animation", &ComChibifireFbxImporter::import_animation);
 }

@@ -90,7 +90,7 @@ enum Presets {
     PRESET_MAX
 };
 
-class SimpleClass : public GodotScript<EditorSceneImporter> {
+class ComChibifireFbxImporter : public GodotScript<EditorSceneImporter> {
 private:
   GODOT_CLASS(ComChibifireFbxImporter);
 
