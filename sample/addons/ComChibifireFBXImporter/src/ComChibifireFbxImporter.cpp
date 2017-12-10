@@ -85,11 +85,7 @@ Node *ComChibifireFbxImporter::import_scene(const String path, const int64_t fla
     const String path_dir_global = ProjectSettings::globalize_path(path.get_basename().insert(path.get_basename().length(), dir_suffix));
 
     Ref<Directory> dir = new Directory;
-    const Error err = dir->make_dir(path_dir_global);
-    if (err == ERR_ALREADY_EXISTS) {
-        Godot::print(godot::String("ERROR:: Folder already exists: ") + path_dir_global);
-        return nullptr;
-    }
+    dir->make_dir(path_dir_global);
 
     if (!LoadFBXFile(raw, fbx_file, godot::String("png;jpg;jpeg").alloc_c_string())) {
         return nullptr;
