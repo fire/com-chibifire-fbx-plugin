@@ -73,6 +73,7 @@ Node *ComChibifireFbxImporter::import_scene(const String path, const int64_t fla
         false, // useBlendShapeNormals
         false, // useBlendShapeTangents
     };
+    gltfOptions.outputBinary = true;
     gltfOptions.usePBRMetRough = true;
     gltfOptions.useBlendShapeNormals = true;
     gltfOptions.useBlendShapeTangents = true;
@@ -99,7 +100,7 @@ Node *ComChibifireFbxImporter::import_scene(const String path, const int64_t fla
     std::ofstream outStream; // note: auto-flushes in destructor
     const auto streamStart = outStream.tellp();
 
-    const String file = path.get_basename().get_file() + String(".gltf");
+    const String file = path.get_basename().get_file() + String(".glb");
     const String gltf_path = path_dir_global.plus_file(file);
     const String gltf_global = ProjectSettings::globalize_path(gltf_path);
 
@@ -111,26 +112,25 @@ Node *ComChibifireFbxImporter::import_scene(const String path, const int64_t fla
 
     data_render_model = Raw2Gltf(outStream, path_dir_global.alloc_c_string(), raw, gltfOptions);
 
+    outStream.close();
+
     printf(
             "Wrote %lu bytes of glTF to %s.\n",
             (unsigned long)(outStream.tellp() - streamStart), gltf_global.alloc_c_string());
 
-    const String binary_path = ProjectSettings::globalize_path(path_dir_global.plus_file(String("buffer.bin")));
-    FILE *fp = fopen(binary_path.alloc_c_string(), "wb");
-    if (fp == nullptr) {
-        printf("ERROR:: Couldn't open file '%s' for writing.\n", binary_path.alloc_c_string());
-        return nullptr;
-    }
-
-    const unsigned char *binaryData = &(*data_render_model->binary)[0];
-    unsigned long binarySize = data_render_model->binary->size();
-    if (fwrite(binaryData, binarySize, 1, fp) != 1) {
-        printf("ERROR: Failed to write %lu bytes to file '%s'.\n", binarySize, binary_path.alloc_c_string());
-        fclose(fp);
-        return nullptr;
-    }
-    fclose(fp);
-    printf("Wrote %lu bytes of binary data to %s.\n", binarySize, binary_path.alloc_c_string());
+    // Disable buffer.bin
+    // const String binary_path = ProjectSettings::globalize_path(path_dir_global.plus_file(String("buffer.bin")));
+    // const unsigned char *binary_data = &(*data_render_model->binary)[0];
+    // unsigned long binary_size = data_render_model->binary->size();
+    // Ref<File> binary_file = new File;
+    // PoolByteArray byte_array; 
+    // for(size_t i = 0; i < binary_size; ++i) {
+    //     byte_array.append(binary_data[i]);
+    // }
+    // binary_file->open(binary_path, File::ModeFlags::WRITE);
+    // binary_file->store_buffer(byte_array);
+    // binary_file->close();  
+    // printf("Wrote %lu bytes of binary data to %s.\n", binary_size, binary_path.alloc_c_string());
 
     delete data_render_model;
     return owner->import_scene_from_other_importer(gltf_path, flags, bake_fps);

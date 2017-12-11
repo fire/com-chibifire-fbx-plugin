@@ -5,10 +5,7 @@
 script/source = "extends Control
 
 func _on_Button_pressed():
-#  var simple = load(\"res://addons/SimpleClass/SimpleClass.gdns\").new()
-#
-#  simple._import_scene(\"res://miniHouse_FBX.FBX\", 0, 60)
-  pass"
+ pass"
 
 [sub_resource type="SpatialMaterial" id=2]
 
