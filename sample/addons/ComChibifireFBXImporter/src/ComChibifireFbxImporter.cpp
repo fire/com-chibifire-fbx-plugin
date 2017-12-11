@@ -32,6 +32,7 @@
 #include <File.hpp>
 #include <ProjectSettings.hpp>
 #include <Ref.hpp>
+#include <EditorFileSystem.hpp>
 #include <Vector3.hpp>
 
 bool verboseOutput = false;
@@ -51,9 +52,9 @@ NATIVESCRIPT_INIT() {
 }
 
 Array ComChibifireFbxImporter::get_extensions() const {
-    Array list = Array();
-    list.push_back("fbx");
-    return list;
+    PoolStringArray arr;
+    arr.push_back("fbx");
+    return Array(arr);
 }
 
 int64_t ComChibifireFbxImporter::get_import_flags() const {
@@ -81,11 +82,7 @@ Node *ComChibifireFbxImporter::import_scene(const String path, const int64_t fla
 
     const char *fbx_file = ProjectSettings::globalize_path(path).alloc_c_string();
 
-    const String dir_suffix = String("_out/");
-    const String path_dir_global = ProjectSettings::globalize_path(path.get_basename().insert(path.get_basename().length(), dir_suffix));
-
-    Ref<Directory> dir = new Directory;
-    dir->make_dir(path_dir_global);
+    const String path_dir_global = ProjectSettings::globalize_path(path.get_base_dir());
 
     if (!LoadFBXFile(raw, fbx_file, godot::String("png;jpg;jpeg").alloc_c_string())) {
         return nullptr;
@@ -136,7 +133,6 @@ Node *ComChibifireFbxImporter::import_scene(const String path, const int64_t fla
     printf("Wrote %lu bytes of binary data to %s.\n", binarySize, binary_path.alloc_c_string());
 
     delete data_render_model;
-
     return owner->import_scene_from_other_importer(gltf_path, flags, bake_fps);
 }
 

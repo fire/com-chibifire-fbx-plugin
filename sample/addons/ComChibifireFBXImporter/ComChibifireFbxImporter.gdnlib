@@ -1,8 +1,7 @@
-
 [general]
 
 singleton=false
-load_once=true
+load_once=false
 symbol_prefix="godot_"
 
 [entry]
