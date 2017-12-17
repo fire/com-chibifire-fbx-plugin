@@ -2,7 +2,7 @@ cc_binary(
     name = "FBX2glTF",
     srcs = [
         "thirdparty/FBX2glTF/src/main.cpp",
-        "thirdparty/fbx20181_1_fbxsdk_vs2015_win/lib/vs2015/x64/release/libfbxsdk-mt.lib",
+        "thirdparty/fbx20181_1_fbxsdk_vs2015_win/lib/vs2015/x64/release/libfbxsdk-md.lib",
     ],
     includes = [
         "thirdparty/cppcodec",
@@ -20,7 +20,7 @@ cc_binary(
         "thirdparty/cpp_bindings/include/",
         "thirdparty/cpp_bindings/include/core",
     ],
-    copts = ["-O2", "/MT"],
+    copts = ["-O2", "/MD"],
     deps = ["//:FBX2glTF.lib"]
 )
 
@@ -30,7 +30,7 @@ cc_binary(
     srcs = [
         "sample/addons/ComChibifireFbxImporter/src/ComChibifireFbxImporter.cpp",
         "sample/addons/ComChibifireFbxImporter/src/ComChibifireFbxImporter.h",
-        "thirdparty/fbx20181_1_fbxsdk_vs2015_win/lib/vs2015/x64/release/libfbxsdk-mt.lib",
+        "thirdparty/fbx20181_1_fbxsdk_vs2015_win/lib/vs2015/x64/release/libfbxsdk-md.lib",
         "thirdparty/cpp_bindings/bin/godot_cpp_bindings.lib",
         "thirdparty/cpp_bindings/include/gdnative.hpp",
         "thirdparty/godot_headers/gdnative_api_struct.gen.h",
@@ -52,7 +52,7 @@ cc_binary(
     ],    
     linkstatic = 1,
     linkshared = 1,
-    copts = ["-O2", "/MT"],
+    copts = ["-O2", "/MD"],
     linkopts = ["-NODEFAULTLIB:LIBCMT"],
     deps = ["//:FBX2glTF.lib"]
 )
@@ -96,7 +96,7 @@ cc_library(
         "thirdparty/json/src",        
         "thirdparty/FBX2glTF/src",
     ],
-    copts = ["-O2", "/MT"],
+    copts = ["-O2", "/MD"],
     deps = ["//:draco.lib", "//:fmt.lib"]
 )
 
@@ -110,7 +110,7 @@ cc_library(
     includes = [
         "thirdparty/fmt",
     ],  
-    copts = ["-O2", "/MT"],
+    copts = ["-O2", "/MD"],
 )
 
 
@@ -467,7 +467,7 @@ cc_library(
     ],  
     copts = [
         "-O2", 
-        "/MT",
+        "/MD",
         "-DDRACO_MESH_COMPRESSION_SUPPORTED",
         "-DDRACO_POINT_CLOUD_COMPRESSION_SUPPORTED",
         "-DDRACO_PREDICTIVE_EDGEBREAKER_SUPPORTED",
