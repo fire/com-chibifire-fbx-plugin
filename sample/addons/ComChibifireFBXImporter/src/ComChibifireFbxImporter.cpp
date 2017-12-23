@@ -75,8 +75,6 @@ Node *ComChibifireFbxImporter::import_scene(const String path, const int64_t fla
     };
     gltfOptions.outputBinary = true;
     gltfOptions.usePBRMetRough = true;
-    gltfOptions.useBlendShapeNormals = false;
-    gltfOptions.useBlendShapeTangents = false;
 
     ModelData *data_render_model = nullptr;
     RawModel raw;
@@ -95,6 +93,7 @@ Node *ComChibifireFbxImporter::import_scene(const String path, const int64_t fla
     if (!texturesTransforms.empty()) {
         raw.TransformTextures(texturesTransforms);
     }
+
     raw.Condense();
 
     std::ofstream outStream; // note: auto-flushes in destructor
