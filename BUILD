@@ -26,7 +26,7 @@ cc_binary(
 
 cc_binary(
     features = ["use_linker"],
-    name = "ComChibifireFbxImporter.dll",
+    name = "com_chibifire_fbx_importer.dll",
     srcs = [
         "sample/addons/ComChibifireFbxImporter/src/ComChibifireFbxImporter.cpp",
         "sample/addons/ComChibifireFbxImporter/src/ComChibifireFbxImporter.h",

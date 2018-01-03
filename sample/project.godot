@@ -17,7 +17,7 @@ icon="res://icon.png"
 
 [editor_plugins]
 
-enabled=PoolStringArray( "ComChibifireFBXImporter" )
+enabled=PoolStringArray( "com_chibifire_fbx_importer" )
 
 [gdnative]
 

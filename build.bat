@@ -1,3 +1,1 @@
-bazel build //:ComChibifireFbxImporter.dll
-robocopy bazel-bin sample\addons\ComChibifireFbxImporter\lib\ ComChibifireFbxImporter.pdb
-robocopy bazel-bin sample\addons\ComChibifireFbxImporter\lib\ ComChibifireFbxImporter.dll
+bazel build //:com_chibifire_fbx_importer.dll && robocopy bazel-bin sample\addons\ComChibifireFbxImporter\lib\ com_chibifire_fbx_importer.pdb && robocopy bazel-bin sample\addons\ComChibifireFbxImporter\lib\ com_chibifire_fbx_importer.dll

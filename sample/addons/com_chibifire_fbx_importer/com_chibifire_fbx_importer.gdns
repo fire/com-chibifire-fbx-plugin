@@ -1,6 +1,6 @@
 [gd_resource type="NativeScript" load_steps=2 format=2]
 
-[ext_resource path="res://addons/ComChibifireFbxImporter/ComChibifireFbxImporter.gdnlib" type="GDNativeLibrary" id=1]
+[ext_resource path="res://addons/com_chibifire_fbx_importer/com_chibifire_fbx_importer.gdnlib" type="GDNativeLibrary" id=1]
 
 [resource]
 
