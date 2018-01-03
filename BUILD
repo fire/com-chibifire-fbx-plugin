@@ -36,12 +36,9 @@ cc_binary(
         "thirdparty/godot_headers/gdnative_api_struct.gen.h",
     ],
     includes = [
-        "thirdparty/cppcodec",
         "thirdparty/stb",
         "thirdparty/draco/src/draco/src",
-        "thirdparty/cxxopts/include",
         "thirdparty/fifo_map/src",
-        "thirdparty/fmt",
         "thirdparty/fbx20181_1_fbxsdk_vs2015_win/include",
         "thirdparty/mathfu/include",
         "thirdparty/json/src",        
