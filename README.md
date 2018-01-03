@@ -1,4 +1,10 @@
-# Install Instructions
+# Godot Fbx importer
+
+A fbx importer for godot. The plugin converts from fbx to gltf2. 
+
+Assumes roughness materials.
+
+## Install Instructions
 
 http://landinghub.visualstudio.com/visual-cpp-build-tools
 
