@@ -28,8 +28,8 @@ cc_binary(
     features = ["use_linker"],
     name = "com_chibifire_fbx_importer.dll",
     srcs = [
-        "sample/addons/ComChibifireFbxImporter/src/ComChibifireFbxImporter.cpp",
-        "sample/addons/ComChibifireFbxImporter/src/ComChibifireFbxImporter.h",
+        "sample/addons/com_chibifire_fbx_importer/src/ComChibifireFbxImporter.cpp",
+        "sample/addons/com_chibifire_fbx_importer/src/ComChibifireFbxImporter.h",
         "thirdparty/fbx20181_1_fbxsdk_vs2015_win/lib/vs2015/x64/release/libfbxsdk-md.lib",
         "thirdparty/cpp_bindings/bin/godot_cpp_bindings.lib",
         "thirdparty/cpp_bindings/include/gdnative.hpp",
