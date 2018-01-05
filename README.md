@@ -31,5 +31,4 @@ Download fbx20181_1_fbxsdk_vs2015 and use 7zip to uncompress the installer to `t
 ```
 build_dependencies.bat
 build.bat
-copy.bat
 ```
