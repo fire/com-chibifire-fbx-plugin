@@ -1,17 +1,14 @@
 [general]
 
-singleton=false
-load_once=false
 symbol_prefix="godot_"
+singleton=false
+load_once=true
+reloadable=false
 
 [entry]
 
-X11.64=""
 Windows.64="res://addons/com_chibifire_fbx_importer/bin/windows.64/com_chibifire_fbx_importer.dll"
-OSX.64=""
 
 [dependencies]
 
-X11.64=[]
-Windows=[]
-OSX.64=[]
+Windows.64=[ "res://addons/com_chibifire_fbx_importer/bin/windows.64/com_chibifire_fbx_importer.dll" ]
