@@ -25,8 +25,17 @@ cc_binary(
 )
 
 cc_binary(
-    features = ["use_linker"],
+    features = ["use_linker", "windows_export_all_symbols"],
     name = "com_chibifire_fbx_importer.dll",
+    linkstatic = 1,
+    linkshared = 1,
+    copts = ["-O2", "/MD"],
+    linkopts = ["-NODEFAULTLIB:LIBCMT"],
+    deps = ["//:libcom_chibifire_fbx_importer"],
+)
+
+cc_library(
+    name = "libcom_chibifire_fbx_importer",
     srcs = [
         "sample/addons/com_chibifire_fbx_importer/src/ComChibifireFbxImporter.cpp",
         "sample/addons/com_chibifire_fbx_importer/src/ComChibifireFbxImporter.h",
@@ -46,18 +55,16 @@ cc_binary(
         "thirdparty/godot/modules/gdnative/include",
         "thirdparty/cpp_bindings/include/",
         "thirdparty/cpp_bindings/include/core",
-    ],    
-    linkstatic = 1,
-    linkshared = 1,
+    ],
     copts = ["-O2", "/MD"],
     linkopts = ["-NODEFAULTLIB:LIBCMT"],
-    deps = ["//:FBX2glTF.lib"]
+    deps = ["//:libFBX2glTF"],
 )
 
 
 cc_library(
     features = ["use_linker"],
-    name = "FBX2glTF.lib",
+    name = "libFBX2glTF",
     srcs = [
     "thirdparty/FBX2glTF/src/utils/File_Utils.cpp",
     "thirdparty/FBX2glTF/src/utils/Image_Utils.cpp",
@@ -94,12 +101,12 @@ cc_library(
         "thirdparty/FBX2glTF/src",
     ],
     copts = ["-O2", "/MD"],
-    deps = ["//:draco.lib", "//:fmt.lib"]
+    deps = ["//:draco", "//:fmt"]
 )
 
 
 cc_library(
-    name = "fmt.lib",
+    name = "fmt",
     srcs = [
         "thirdparty/fmt/fmt/format.cc",
         "thirdparty/fmt/fmt/printf.cc",
@@ -112,7 +119,7 @@ cc_library(
 
 
 cc_library(
-    name = "draco.lib",
+    name = "draco",
     srcs = [
         "thirdparty/draco/src/draco/attributes/attribute_octahedron_transform.cc",
         "thirdparty/draco/src/draco/attributes/attribute_octahedron_transform.h",
