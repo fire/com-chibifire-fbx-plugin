@@ -37,6 +37,7 @@ cc_binary(
 cc_library(
     name = "libcom_chibifire_fbx_importer",
     srcs = [
+        "sample/addons/com_chibifire_fbx_importer/src/Godot.cpp",
         "sample/addons/com_chibifire_fbx_importer/src/ComChibifireFbxImporter.cpp",
         "sample/addons/com_chibifire_fbx_importer/src/ComChibifireFbxImporter.h",
         "thirdparty/fbx20181_1_fbxsdk_vs2015_win/lib/vs2015/x64/release/libfbxsdk-md.lib",
