@@ -13,6 +13,7 @@ cc_binary(
         "thirdparty/fmt",
         "thirdparty/fbx20181_1_fbxsdk_vs2015_win/include",
         "thirdparty/mathfu/include",
+        "thirdparty/mathfu/dependencies/vectorial/include",
         "thirdparty/json/src",        
         "thirdparty/FBX2glTF/src",
         "thirdparty/godot/modules/gdnative/include",
@@ -41,7 +42,7 @@ cc_library(
         "sample/addons/com_chibifire_fbx_importer/src/ComChibifireFbxImporter.cpp",
         "sample/addons/com_chibifire_fbx_importer/src/ComChibifireFbxImporter.h",
         "thirdparty/fbx20181_1_fbxsdk_vs2015_win/lib/vs2015/x64/release/libfbxsdk-md.lib",
-        "thirdparty/cpp_bindings/bin/godot_cpp_bindings.lib",
+        "thirdparty/cpp_bindings/bin/cpp_bindings.windows.64.lib",
         "thirdparty/cpp_bindings/include/gdnative.hpp",
         "thirdparty/godot_headers/gdnative_api_struct.gen.h",
     ],
@@ -51,6 +52,7 @@ cc_library(
         "thirdparty/fifo_map/src",
         "thirdparty/fbx20181_1_fbxsdk_vs2015_win/include",
         "thirdparty/mathfu/include",
+        "thirdparty/mathfu/dependencies/vectorial/include",
         "thirdparty/json/src",        
         "thirdparty/FBX2glTF/src",
         "thirdparty/godot/modules/gdnative/include",
@@ -98,10 +100,11 @@ cc_library(
         "thirdparty/fmt",
         "thirdparty/fbx20181_1_fbxsdk_vs2015_win/include",
         "thirdparty/mathfu/include",
+        "thirdparty/mathfu/dependencies/vectorial/include",
         "thirdparty/json/src",        
         "thirdparty/FBX2glTF/src",
     ],
-    copts = ["-O2", "/MD"],
+    copts = ["-O2", "/MD", "/wd4127", "/wd4577", "/DMATHFU_COMPILE_FORCE_PADDING=1"],
     deps = ["//:draco", "//:fmt"]
 )
 
@@ -372,7 +375,6 @@ cc_library(
     #set(draco_mesh_sources
         "thirdparty/draco/src/draco/mesh/corner_table.cc",
         "thirdparty/draco/src/draco/mesh/corner_table.h",
-        "thirdparty/draco/src/draco/mesh/corner_table_indices.h",
         "thirdparty/draco/src/draco/mesh/corner_table_iterators.h",
         "thirdparty/draco/src/draco/mesh/corner_table_traversal_processor.h",
         "thirdparty/draco/src/draco/mesh/edgebreaker_observer.h",
@@ -385,7 +387,6 @@ cc_library(
         "thirdparty/draco/src/draco/mesh/mesh_attribute_corner_table.h",
         "thirdparty/draco/src/draco/mesh/mesh_cleanup.cc",
         "thirdparty/draco/src/draco/mesh/mesh_cleanup.h",
-        "thirdparty/draco/src/draco/mesh/mesh_indices.h",
         "thirdparty/draco/src/draco/mesh/mesh_misc_functions.cc",
         "thirdparty/draco/src/draco/mesh/mesh_misc_functions.h",
         "thirdparty/draco/src/draco/mesh/mesh_stripifier.cc",

@@ -67,17 +67,19 @@ int64_t ComChibifireFbxImporter::get_import_flags() const {
 }
 
 Node *ComChibifireFbxImporter::import_scene(const String path, const int64_t flags, const int64_t bake_fps) {
-    GltfOptions gltfOptions{
-        -1, // keepAttribs
-        true, // outputBinary
-        false, // embedResources
-        false, // useDraco
-        false, // useKHRMatCom
-        true, // usePBRMetRough
-        false, // usePBRSpecGloss
-        false, // useBlendShapeNormals
-        false, // useBlendShapeTangents
-    };
+	GltfOptions gltfOptions{
+		-1, // keepAttribs
+		true, // outputBinary
+		false, // embedResources
+		false, // useDraco
+		false, // useKHRMatCom
+		true, // usePBRMetRough
+		false, // useBlendShapeNormals
+		false, // useBlendShapeTangents		
+		ComputeNormalsOption(ComputeNormalsOption::BROKEN),
+		// compute vertex normals from geometry.
+		UseLongIndicesOptions(UseLongIndicesOptions::AUTO) // When to use 32-bit indices.
+	};
 
     RawModel raw;
 
