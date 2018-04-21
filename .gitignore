@@ -277,3 +277,4 @@ bazel-resourceimporterfbx/
 /thirdparty
 /bazel-fbx
 /sample/addons/ComChibifireFBXImporter/lib/ComChibifireFbxImporter.dll
+/sample/test/
