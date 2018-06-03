@@ -83,7 +83,7 @@ Node *ComChibifireFbxImporter::import_scene(const String path, const int64_t fla
 		true, // pbrMetallicRoughness
 		false, // useBlendShapeNormals
 		false, // useBlendShapeTangents
-		ComputeNormalsOption(ComputeNormalsOption::BROKEN),
+		ComputeNormalsOption(ComputeNormalsOption::MISSING),
 		// compute vertex normals from geometry.
 		UseLongIndicesOptions(UseLongIndicesOptions::AUTO) // When to use 32-bit indices.
 	};
