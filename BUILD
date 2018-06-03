@@ -22,7 +22,7 @@ cc_binary(
         "thirdparty/godot-cpp/include/core",
     ],
     copts = ["-O2", "/MD"],
-    deps = ["//:FBX2glTF.lib"]
+    deps = ["//:libFBX2glTF"]
 )
 
 cc_binary(

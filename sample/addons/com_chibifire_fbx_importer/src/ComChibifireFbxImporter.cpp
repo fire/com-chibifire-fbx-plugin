@@ -57,13 +57,13 @@ using godot::Directory;
 using godot::Ref;
 
 Array ComChibifireFbxImporter::get_extensions() const {
-    PoolStringArray arr;
-    arr.push_back("fbx");
-    return Array(arr);
+	PoolStringArray arr;
+	arr.push_back("fbx");
+	return Array(arr);
 }
 
 int64_t ComChibifireFbxImporter::get_import_flags() const {
-    return IMPORT_SCENE | IMPORT_ANIMATION;
+	return IMPORT_SCENE | IMPORT_ANIMATION;
 }
 
 Node *ComChibifireFbxImporter::import_scene(const String path, const int64_t flags, const int64_t bake_fps) {
@@ -71,67 +71,76 @@ Node *ComChibifireFbxImporter::import_scene(const String path, const int64_t fla
 		-1, // keepAttribs
 		true, // outputBinary
 		false, // embedResources
-		false, // useDraco
-		false, // useKHRMatCom
-		true, // usePBRMetRough
+		{
+				false,
+				-1,
+				-1,
+				-1,
+				-1,
+				-1,
+				-1 }, // useDraco
+		false, // KHR_materials_unlit
+		true, // pbrMetallicRoughness
 		false, // useBlendShapeNormals
-		false, // useBlendShapeTangents		
+		false, // useBlendShapeTangents
 		ComputeNormalsOption(ComputeNormalsOption::BROKEN),
 		// compute vertex normals from geometry.
 		UseLongIndicesOptions(UseLongIndicesOptions::AUTO) // When to use 32-bit indices.
 	};
 
-    RawModel raw;
+	RawModel raw;
 
-    const String fbx_file = ProjectSettings::globalize_path(path);
-    const String path_dir_global = ProjectSettings::globalize_path(path.get_base_dir());
+	const String fbx_file = ProjectSettings::globalize_path(path);
+	const String path_dir_global = ProjectSettings::globalize_path(path.get_base_dir());
 
-    if (!LoadFBXFile(raw, fbx_file.alloc_c_string(), godot::String("png;jpg;jpeg").alloc_c_string())) {
-        return nullptr;
-    }
+	if (!LoadFBXFile(raw, fbx_file.alloc_c_string(), godot::String("png;jpg;jpeg").alloc_c_string())) {
+		return nullptr;
+	}
 
-    std::vector<std::function<Vec2f(Vec2f)> > texturesTransforms;
-    texturesTransforms.emplace_back([](Vec2f uv) { return Vec2f(uv[0], 1.0f - uv[1]); });
+	std::vector<std::function<Vec2f(Vec2f)> > texturesTransforms;
+	texturesTransforms.emplace_back([](Vec2f uv) { return Vec2f(uv[0], 1.0f - uv[1]); });
 
-    if (!texturesTransforms.empty()) {
-        raw.TransformTextures(texturesTransforms);
-    }
+	if (!texturesTransforms.empty()) {
+		raw.TransformTextures(texturesTransforms);
+	}
 
-    raw.Condense();
+	raw.Condense();
+	raw.TransformGeometry(gltfOptions.computeNormals);
 
-    std::ofstream outStream; // note: auto-flushes in destructor
-    const auto streamStart = outStream.tellp();
+	std::ofstream outStream; // note: auto-flushes in destructor
+	const auto streamStart = outStream.tellp();
 
-    const String file = path.get_basename().get_file() + String(".glb");
-    const String gltf_path = path_dir_global.plus_file(file);
-    const String gltf_global = ProjectSettings::globalize_path(gltf_path);
+	const String file = path.get_basename().get_file() + String(".glb");
+	const String gltf_path = path_dir_global.plus_file(file);
+	const String gltf_global = ProjectSettings::globalize_path(gltf_path);
 
-    outStream.open(gltf_global.alloc_c_string(), std::ios::trunc | std::ios::ate | std::ios::out | std::ios::binary);
-    if (outStream.fail()) {
-        Godot::print(godot::String("ERROR:: Couldn't open file for writing: ") + gltf_global);
-        return nullptr;
-    }
+	outStream.open(gltf_global.alloc_c_string(), std::ios::trunc | std::ios::ate | std::ios::out | std::ios::binary);
+	if (outStream.fail()) {
+		Godot::print(godot::String("ERROR:: Couldn't open file for writing: ") + gltf_global);
+		return nullptr;
+	}
 
-    const ModelData *data_render_model = Raw2Gltf(outStream, path_dir_global.alloc_c_string(), raw, gltfOptions);
+	const ModelData *data_render_model = Raw2Gltf(outStream, path_dir_global.alloc_c_string(), raw, gltfOptions);
 
-    outStream.close();
+	outStream.flush();
+	outStream.close();
 
-    printf(
-            "Wrote %lu bytes of glTF to %s.\n",
-            (unsigned long)(outStream.tellp() - streamStart), gltf_global.alloc_c_string());
+	printf(
+			"Wrote %lu bytes of glTF to %s.\n",
+			(unsigned long)(outStream.tellp() - streamStart), gltf_global.alloc_c_string());
 
-    delete data_render_model;
+	delete data_render_model;
 
-    return owner->import_scene_from_other_importer(gltf_path, flags, bake_fps);
+	return owner->import_scene_from_other_importer(gltf_path, flags, bake_fps);
 }
 
 Ref<Animation> ComChibifireFbxImporter::import_animation(const String path, const int64_t flags, const int64_t bake_fps) {
-    return Ref<Animation>();
+	return Ref<Animation>();
 }
 
 void ComChibifireFbxImporter::_register_methods() {
-    register_method("_get_extensions", &ComChibifireFbxImporter::get_extensions);
-    register_method("_get_import_flags", &ComChibifireFbxImporter::get_import_flags);
-    register_method("_import_scene", &ComChibifireFbxImporter::import_scene);
-    register_method("_import_animation", &ComChibifireFbxImporter::import_animation);
+	register_method("_get_extensions", &ComChibifireFbxImporter::get_extensions);
+	register_method("_get_import_flags", &ComChibifireFbxImporter::get_import_flags);
+	register_method("_import_scene", &ComChibifireFbxImporter::import_scene);
+	register_method("_import_animation", &ComChibifireFbxImporter::import_animation);
 }
