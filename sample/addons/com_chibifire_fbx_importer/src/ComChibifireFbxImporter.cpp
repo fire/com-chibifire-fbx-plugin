@@ -69,8 +69,8 @@ int64_t ComChibifireFbxImporter::get_import_flags() const {
 Node *ComChibifireFbxImporter::import_scene(const String path, const int64_t flags, const int64_t bake_fps) {
 	GltfOptions gltfOptions{
 		-1, // keepAttribs
-		true, // outputBinary
-		false, // embedResources
+		false, // outputBinary
+		true, // embedResources
 		{
 				false,
 				-1,
@@ -110,7 +110,7 @@ Node *ComChibifireFbxImporter::import_scene(const String path, const int64_t fla
 	std::ofstream outStream; // note: auto-flushes in destructor
 	const auto streamStart = outStream.tellp();
 
-	const String file = path.get_basename().get_file() + String(".glb");
+	const String file = path.get_basename().get_file() + String(".gltf");
 	const String gltf_path = path_dir_global.plus_file(file);
 	const String gltf_global = ProjectSettings::globalize_path(gltf_path);
 
@@ -135,7 +135,7 @@ Node *ComChibifireFbxImporter::import_scene(const String path, const int64_t fla
 }
 
 Ref<Animation> ComChibifireFbxImporter::import_animation(const String path, const int64_t flags, const int64_t bake_fps) {
-	return Ref<Animation>();
+	return import_scene(path, flags, bake_fps);
 }
 
 void ComChibifireFbxImporter::_register_methods() {
