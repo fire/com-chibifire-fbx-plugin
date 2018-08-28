@@ -67,26 +67,25 @@ int64_t ComChibifireFbxImporter::get_import_flags() const {
 }
 
 Node *ComChibifireFbxImporter::import_scene(const String path, const int64_t flags, const int64_t bake_fps) {
-	GltfOptions gltfOptions{
-		-1, // keepAttribs
-		false, // outputBinary
-		true, // embedResources
-		{
-				false,
-				-1,
-				-1,
-				-1,
-				-1,
-				-1,
-				-1 }, // useDraco
-		false, // KHR_materials_unlit
-		true, // pbrMetallicRoughness
-		false, // useBlendShapeNormals
-		false, // useBlendShapeTangents
-		ComputeNormalsOption(ComputeNormalsOption::MISSING),
-		// compute vertex normals from geometry.
-		UseLongIndicesOptions(UseLongIndicesOptions::AUTO) // When to use 32-bit indices.
-	};
+	GltfOptions gltfOptions;
+	gltfOptions.keepAttribs = -1;
+	gltfOptions.outputBinary = false;
+	gltfOptions.embedResources = true;
+	gltfOptions.draco.enabled = false;
+	gltfOptions.draco.compressionLevel = -1;
+	gltfOptions.draco.quantBitsPosition = -1;
+	gltfOptions.draco.quantBitsTexCoord = -1;
+	gltfOptions.draco.quantBitsNormal = -1;
+	gltfOptions.draco.quantBitsColor = -1;
+	gltfOptions.draco.quantBitsGeneric = -1;
+	gltfOptions.useKHRMatUnlit = false;
+	gltfOptions.usePBRMetRough = true;
+	gltfOptions.useBlendShapeNormals = false;
+	gltfOptions.useBlendShapeTangents = false;
+	gltfOptions.computeNormals = ComputeNormalsOption::MISSING;
+	// compute vertex normals from geometry.
+	gltfOptions.useLongIndices = UseLongIndicesOptions::AUTO; // When to use 32-bit indices.
+
 
 	RawModel raw;
 
@@ -135,7 +134,7 @@ Node *ComChibifireFbxImporter::import_scene(const String path, const int64_t fla
 }
 
 Ref<Animation> ComChibifireFbxImporter::import_animation(const String path, const int64_t flags, const int64_t bake_fps) {
-	return import_scene(path, flags, bake_fps);
+	return Ref<Animation>();
 }
 
 void ComChibifireFbxImporter::_register_methods() {

@@ -7,8 +7,12 @@ reloadable=false
 
 [entry]
 
+OSX.64="res://addons/com_chibifire_fbx_importer/bin/osx.64/libcom_chibifire_fbx_importer_osx.dylib"
 Windows.64="res://addons/com_chibifire_fbx_importer/bin/windows.64/com_chibifire_fbx_importer.dll"
+X11.64="res://addons/com_chibifire_fbx_importer/bin/x11.64/libcom_chibifire_fbx_importer.so"
 
 [dependencies]
 
+OSX.64=[  ]
 Windows.64=[ "res://addons/com_chibifire_fbx_importer/bin/windows.64/com_chibifire_fbx_importer.dll" ]
+X11.64=[  ]
