@@ -379,14 +379,15 @@ add_library(com_chibifire_fbx_importer
         ${fbx_osx}
         ${fbx_linux}
         ${fbx_mingw}
+        ${fbx_msvc}
         "thirdparty/godot-cpp/godot_headers/gdnative/gdnative.h"
         "thirdparty/godot-cpp/godot_headers/nativescript/godot_nativescript.h")
 
 
 if(OSX)
 set(fbx_osx "thirdparty/FBX SDK/2018.1.1/include")
-elseif(MINGW)
-set(fbx_mingw "thirdparty/FBX SDK/2018.1.1/include")
+elseif(MSVC)
+set(fbx_msvc "thirdparty/fbx20181_1_fbxsdk_vs2015_win/include")
 elseif(UNIX)
 set(fbx_linux "thirdparty/fbx20181_1_fbxsdk_linux/include")
 endif(OSX)
@@ -394,11 +395,12 @@ endif(OSX)
 target_include_directories(com_chibifire_fbx_importer
                             PUBLIC
                             "thirdparty/stb"
-                            "thirdparty/draco/src/draco/src"
+                            "thirdparty/draco/src"
                             "thirdparty/fifo_map/src"
                             ${fbx_osx}
                             ${fbx_linux}
                             ${fbx_mingw}
+                            ${fbx_msvc}
                             "thirdparty/mathfu/include"
                             "thirdparty/mathfu/dependencies/vectorial/include"
                             "thirdparty/json/src"
@@ -406,7 +408,8 @@ target_include_directories(com_chibifire_fbx_importer
                             "thirdparty/godot/modules/gdnative/include"
                             "thirdparty/godot-cpp/include"
                             "thirdparty/godot-cpp/godot_headers"
-                            "thirdparty/godot-cpp/include/core")
+                            "thirdparty/godot-cpp/include/core"
+                            "thirdparty/fmt")
 
 add_library(FBX2glTF
             STATIC
@@ -443,8 +446,8 @@ target_include_directories(FBX2glTF
         ${fbx_osx}
         ${fbx_linux}
         ${fbx_mingw}
+        ${fbx_msvc}
         "thirdparty/fbx20181_1_fbxsdk_vs2015_win/include"
-        endif()
         "thirdparty/mathfu/include"
         "thirdparty/mathfu/dependencies/vectorial/include"
         "thirdparty/json/src"
@@ -462,9 +465,9 @@ target_link_libraries(com_chibifire_fbx_importer draco fmt FBX2glTF
 ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/godot-cpp/bin/libgodot-cpp.osx.release.64.a
 "-framework Cocoa"
 ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/FBX SDK/2018.1.1/lib/clang/release/libfbxsdk.a)
-elseif(MINGW)
+elseif(MSVC)
 target_link_libraries(com_chibifire_fbx_importer draco fmt FBX2glTF 
-${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/godot-cpp/bin/libgodot-cpp.windows.release.64.a
+${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/godot-cpp/bin/libgodot-cpp.windows.release.64.lib
 ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/fbx20181_1_fbxsdk_vs2015_win/lib/vs2015/x64/release/libfbxsdk-md.lib)
 elseif(UNIX)
 target_link_libraries(com_chibifire_fbx_importer draco fmt FBX2glTF 
