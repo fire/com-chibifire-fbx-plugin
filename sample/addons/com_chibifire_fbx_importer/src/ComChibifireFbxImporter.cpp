@@ -35,9 +35,9 @@
 #include <vector>
 
 #include "FBX2glTF.h"
-#include "Fbx2Raw.h"
-#include "Raw2Gltf.h"
-#include "RawModel.h"
+#include "fbx/Fbx2Raw.hpp"
+#include "gltf/Raw2Gltf.hpp"
+#include "raw/RawModel.hpp"
 
 #include "ComChibifireFbxImporter.h"
 #include <Animation.hpp>
@@ -69,7 +69,7 @@ int64_t ComChibifireFbxImporter::get_import_flags() const {
 Node *ComChibifireFbxImporter::import_scene(const String path, const int64_t flags, const int64_t bake_fps) {
 	GltfOptions gltfOptions;
 	gltfOptions.keepAttribs = -1;
-	gltfOptions.outputBinary = false;
+	gltfOptions.outputBinary = true;
 	gltfOptions.embedResources = true;
 	gltfOptions.draco.enabled = false;
 	gltfOptions.draco.compressionLevel = -1;
