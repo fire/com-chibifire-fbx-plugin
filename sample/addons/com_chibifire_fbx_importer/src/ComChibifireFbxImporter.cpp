@@ -109,8 +109,8 @@ Node *ComChibifireFbxImporter::import_scene(const String path, const int64_t fla
 	std::ofstream outStream; // note: auto-flushes in destructor
 	const auto streamStart = outStream.tellp();
 
-	const String file = path.get_basename().get_file() + String(".gltf");
-	const String gltf_path = path_dir_global.plus_file(file);
+	const String file = path.get_basename().get_file() + "-" + path.md5_text() + String(".glb");
+	const String gltf_path = String("res://.import/").plus_file(file);
 	const String gltf_global = ProjectSettings::globalize_path(gltf_path);
 
 	outStream.open(gltf_global.alloc_c_string(), std::ios::trunc | std::ios::ate | std::ios::out | std::ios::binary);
