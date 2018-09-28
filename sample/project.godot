@@ -34,5 +34,8 @@ multithread/thread_rid_pool_prealloc=60
 
 [rendering]
 
+threads/thread_model=2
+quality/filters/anisotropic_filter_level=16
 vram_compression/import_etc2=false
+quality/filters/msaa=2
 viewport/default_environment="res://default_env.tres"
