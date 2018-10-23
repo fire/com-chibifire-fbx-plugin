@@ -13,7 +13,7 @@ Install chocolatey.
 Install bazel via chocolatey.
 
 ```
-chocolatey install bazel -y
+chocolatey install cmake -y
 choco install mingw -params "/exception:seh /threads:posix" --force
 ```
 
@@ -30,5 +30,6 @@ Download fbx20181_1_fbxsdk_vs2015 from https://www.autodesk.com/developer-networ
 
 ```
 build_dependencies.bat
-build.bat
+# Use cmake to generate a visual studio project
+# Build debug
 ```
