@@ -16,8 +16,8 @@ _global_script_class_icons={
 [application]
 
 run/main_scene="res://main.tscn"
-name="Sample"
-main_scene="res://main.tscn"
+name="FBX Sample"
+main_scene=""
 icon="res://icon.png"
 
 [editor_plugins]
