@@ -362,6 +362,7 @@ add_library(draco
 
 target_include_directories(draco
         PUBLIC
+         "thirdparty/draco_features/"
          "thirdparty/draco/src/")
 
 target_compile_definitions(draco
