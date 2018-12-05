@@ -38,7 +38,6 @@ using godot::Array;
 using godot::ArrayMesh;
 using godot::Dictionary;
 using godot::EditorSceneImporter;
-using godot::GodotScript;
 using godot::Node;
 using godot::Ref;
 using godot::Reference;
@@ -87,9 +86,9 @@ enum Presets {
 	PRESET_MAX
 };
 
-class ComChibifireFbxImporter : public GodotScript<EditorSceneImporter> {
+class ComChibifireFbxImporter : public EditorSceneImporter {
 private:
-	GODOT_CLASS(ComChibifireFbxImporter);
+	GODOT_CLASS(ComChibifireFbxImporter, EditorSceneImporter);
 
 public:
 	enum ImportFlags {
@@ -106,6 +105,8 @@ public:
 	};
 
 	ComChibifireFbxImporter() {}
+
+	void _init() {}
 
 	Array get_extensions() const;
 	int64_t get_import_flags() const;

@@ -381,6 +381,7 @@ add_library(com_chibifire_fbx_importer
         ${fbx_linux}
         ${fbx_mingw}
         ${fbx_msvc}
+        "thirdparty/draco_features"
         "thirdparty/godot-cpp/godot_headers/gdnative/gdnative.h"
         "thirdparty/godot-cpp/godot_headers/nativescript/godot_nativescript.h")
 
@@ -404,10 +405,12 @@ target_include_directories(com_chibifire_fbx_importer
                             ${fbx_msvc}
                             "thirdparty/mathfu/include"
                             "thirdparty/mathfu/dependencies/vectorial/include"
-                            "thirdparty/json/src"
+                            "thirdparty/json/src/"
                             "thirdparty/FBX2glTF/src"
                             "thirdparty/godot/modules/gdnative/include"
                             "thirdparty/godot-cpp/include"
+                            "thirdparty/godot-cpp/include/gen"
+                            "thirdparty/draco_features"
                             "thirdparty/godot-cpp/godot_headers"
                             "thirdparty/godot-cpp/include/core"
                             "thirdparty/fmt")
@@ -489,7 +492,7 @@ target_include_directories(FBX2glTF
         "thirdparty/fbx20181_1_fbxsdk_vs2015_win/include"
         "thirdparty/mathfu/include"
         "thirdparty/mathfu/dependencies/vectorial/include"
-        "thirdparty/json/src"
+        "thirdparty/json/src/"
         "thirdparty/FBX2glTF/src")
 
 target_link_libraries(FBX2glTF draco fmt)

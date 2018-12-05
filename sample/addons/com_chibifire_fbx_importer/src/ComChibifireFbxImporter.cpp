@@ -89,8 +89,8 @@ Node *ComChibifireFbxImporter::import_scene(const String path, const int64_t fla
 
 	RawModel raw;
 
-	const String fbx_file = ProjectSettings::globalize_path(path);
-	const String path_dir_global = ProjectSettings::globalize_path(path.get_base_dir());
+	const String fbx_file = ProjectSettings::get_singleton()->globalize_path(path);
+	const String path_dir_global = ProjectSettings::get_singleton()->globalize_path(path.get_base_dir());
 
 	if (!LoadFBXFile(raw, fbx_file.alloc_c_string(), godot::String("png;jpg;jpeg").alloc_c_string())) {
 		return nullptr;
@@ -111,7 +111,7 @@ Node *ComChibifireFbxImporter::import_scene(const String path, const int64_t fla
 
 	const String file = path.get_basename().get_file() + "-" + path.md5_text() + String(".glb");
 	const String gltf_path = String("res://.import/").plus_file(file);
-	const String gltf_global = ProjectSettings::globalize_path(gltf_path);
+	const String gltf_global = ProjectSettings::get_singleton()->globalize_path(gltf_path);
 
 	outStream.open(gltf_global.alloc_c_string(), std::ios::trunc | std::ios::ate | std::ios::out | std::ios::binary);
 	if (outStream.fail()) {
@@ -129,8 +129,7 @@ Node *ComChibifireFbxImporter::import_scene(const String path, const int64_t fla
 			(unsigned long)(outStream.tellp() - streamStart), gltf_global.alloc_c_string());
 
 	delete data_render_model;
-
-	return owner->import_scene_from_other_importer(gltf_path, flags, bake_fps);
+	return import_scene_from_other_importer(gltf_path, flags, bake_fps);
 }
 
 Ref<Animation> ComChibifireFbxImporter::import_animation(const String path, const int64_t flags, const int64_t bake_fps) {
