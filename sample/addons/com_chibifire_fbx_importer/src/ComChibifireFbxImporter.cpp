@@ -26,6 +26,7 @@
 
 #include <Godot.hpp>
 #include <Mesh.hpp>
+#include <MeshInstance.hpp>
 #include <Quat.hpp>
 #include <ResourceLoader.hpp>
 #include <Skeleton.hpp>
@@ -267,7 +268,6 @@ Node *ComChibifireFbxImporter::import_scene(const String path, const int64_t fla
 	// compute vertex normals from geometry.
 	gltfOptions.useLongIndices = UseLongIndicesOptions::AUTO; // When to use 32-bit indices.
 
-
 	RawModel raw;
 
 	const String fbx_file = ProjectSettings::get_singleton()->globalize_path(path);
@@ -300,7 +300,6 @@ Node *ComChibifireFbxImporter::import_scene(const String path, const int64_t fla
 		return nullptr;
 	}
 
-	
 	Spatial *root = Spatial::_new();
 	//For all cameras
 	//ERR_FAIL_INDEX(i, state.cameras.size());
@@ -347,8 +346,7 @@ Node *ComChibifireFbxImporter::import_scene(const String path, const int64_t fla
 	skeletons.push_back(s);
 	//_generate_node_bone(p_path, scene, scene->mRootNode, root, skeletons, bone_names, light_names, camera_names);
 
-	
-	RawNode &node = raw.GetNode(raw.GetRootNode());
+	RawNode &node = raw.GetNode(raw.GetNodeById(raw.GetRootNode()));
 	_generate_node(raw, node, root, root, skeletons, bone_names);
 	//if (skeletons.size() == 0) {
 	//	return NULL;
@@ -417,274 +415,274 @@ Node *ComChibifireFbxImporter::import_scene(const String path, const int64_t fla
 	//								   25.0f;
 	//		length = anim->mDuration / ticks_per_second;
 	//	}
-		//if (anim) {
-		//	for (size_t i = 0; i < anim->mNumChannels; i++) {
-		//		if (skeletons.size()) {
-		//			for (size_t si = 0; si < skeletons.size(); si++) {
-		//				const aiNodeAnim *track = anim->mChannels[i];
-		//				String path;
-		//				String node_name = _ai_string_to_string(track->mNodeName);
-		//				Skeleton *sk = Object::cast_to<Skeleton>(Object::___get_from_variant(skeletons[si]));
-		//				//need to find the path
-		//				NodePath node_path = node_name;
-		//				bool is_bone_found = false;
-		//				Array bone_names;
-		//				for (size_t k = 0; k < sk->get_bone_count(); k++) {
-		//					if (sk->get_bone_name(k).begins_with(node_name)) {
-		//						node_name = sk->get_bone_name(k);
-		//						break;
-		//					}
-		//				}
-		//				if (sk->find_bone(node_name) != -1) {
-		//					is_bone_found = true;
-		//				}
-		//				if (is_bone_found) {
-		//					path = ap->get_owner()->get_path_to(sk);
-		//					if (path == String()) {
-		//						Godot::print("Can't find bone to animate");
-		//						continue;
-		//					}
-		//					node_path = NodePath(path + String(":") + node_name);
-		//				} else {
-		//					Node *node = ap->get_owner()->find_node(node_name);
-		//					if (node == NULL) {
-		//						continue;
-		//					}
-		//					path = ap->get_owner()->get_path_to(node);
-		//					if (path == String()) {
-		//						continue;
-		//					}
-		//					node_path = NodePath(path);
-		//				}
+	//if (anim) {
+	//	for (size_t i = 0; i < anim->mNumChannels; i++) {
+	//		if (skeletons.size()) {
+	//			for (size_t si = 0; si < skeletons.size(); si++) {
+	//				const aiNodeAnim *track = anim->mChannels[i];
+	//				String path;
+	//				String node_name = _ai_string_to_string(track->mNodeName);
+	//				Skeleton *sk = Object::cast_to<Skeleton>(Object::___get_from_variant(skeletons[si]));
+	//				//need to find the path
+	//				NodePath node_path = node_name;
+	//				bool is_bone_found = false;
+	//				Array bone_names;
+	//				for (size_t k = 0; k < sk->get_bone_count(); k++) {
+	//					if (sk->get_bone_name(k).begins_with(node_name)) {
+	//						node_name = sk->get_bone_name(k);
+	//						break;
+	//					}
+	//				}
+	//				if (sk->find_bone(node_name) != -1) {
+	//					is_bone_found = true;
+	//				}
+	//				if (is_bone_found) {
+	//					path = ap->get_owner()->get_path_to(sk);
+	//					if (path == String()) {
+	//						Godot::print("Can't find bone to animate");
+	//						continue;
+	//					}
+	//					node_path = NodePath(path + String(":") + node_name);
+	//				} else {
+	//					Node *node = ap->get_owner()->find_node(node_name);
+	//					if (node == NULL) {
+	//						continue;
+	//					}
+	//					path = ap->get_owner()->get_path_to(node);
+	//					if (path == String()) {
+	//						continue;
+	//					}
+	//					node_path = NodePath(path);
+	//				}
 
-		//				if (track->mNumRotationKeys || track->mNumPositionKeys || track->mNumScalingKeys) {
-		//					//make transform track
-		//					int track_idx = animation->get_track_count();
-		//					animation->add_track(Animation::TYPE_TRANSFORM);
-		//					animation->track_set_path(track_idx, node_path);
-		//					//first determine animation length
+	//				if (track->mNumRotationKeys || track->mNumPositionKeys || track->mNumScalingKeys) {
+	//					//make transform track
+	//					int track_idx = animation->get_track_count();
+	//					animation->add_track(Animation::TYPE_TRANSFORM);
+	//					animation->track_set_path(track_idx, node_path);
+	//					//first determine animation length
 
-		//					float increment = 1.0 / float(p_bake_fps);
-		//					float time = 0.0;
+	//					float increment = 1.0 / float(p_bake_fps);
+	//					float time = 0.0;
 
-		//					Vector3 base_pos;
-		//					Quat base_rot;
-		//					Vector3 base_scale = Vector3(1, 1, 1);
+	//					Vector3 base_pos;
+	//					Quat base_rot;
+	//					Vector3 base_scale = Vector3(1, 1, 1);
 
-		//					if (track->mNumRotationKeys) {
-		//						aiQuatKey key = track->mRotationKeys[0];
-		//						real_t x = key.mValue.x;
-		//						real_t y = key.mValue.y;
-		//						real_t z = key.mValue.z;
-		//						real_t w = key.mValue.w;
-		//						Quat q(x, y, z, w);
-		//						base_rot = _rot_convert_to_godot(q.normalized());
-		//					}
+	//					if (track->mNumRotationKeys) {
+	//						aiQuatKey key = track->mRotationKeys[0];
+	//						real_t x = key.mValue.x;
+	//						real_t y = key.mValue.y;
+	//						real_t z = key.mValue.z;
+	//						real_t w = key.mValue.w;
+	//						Quat q(x, y, z, w);
+	//						base_rot = _rot_convert_to_godot(q.normalized());
+	//					}
 
-		//					if (track->mNumPositionKeys) {
-		//						aiVectorKey key = track->mPositionKeys[0];
-		//						real_t x = key.mValue.x;
-		//						real_t y = key.mValue.y;
-		//						real_t z = key.mValue.z;
-		//						base_pos = _vec3_convert_to_godot(Vector3(x, y, z));
-		//					}
+	//					if (track->mNumPositionKeys) {
+	//						aiVectorKey key = track->mPositionKeys[0];
+	//						real_t x = key.mValue.x;
+	//						real_t y = key.mValue.y;
+	//						real_t z = key.mValue.z;
+	//						base_pos = _vec3_convert_to_godot(Vector3(x, y, z));
+	//					}
 
-		//					if (track->mNumScalingKeys) {
-		//						aiVectorKey key = track->mScalingKeys[0];
-		//						real_t x = key.mValue.x;
-		//						real_t y = key.mValue.y;
-		//						real_t z = key.mValue.z;
-		//						base_scale = _vec3_convert_to_godot(Vector3(x, y, z));
-		//					}
+	//					if (track->mNumScalingKeys) {
+	//						aiVectorKey key = track->mScalingKeys[0];
+	//						real_t x = key.mValue.x;
+	//						real_t y = key.mValue.y;
+	//						real_t z = key.mValue.z;
+	//						base_scale = _vec3_convert_to_godot(Vector3(x, y, z));
+	//					}
 
-		//					bool last = false;
+	//					bool last = false;
 
-		//					Array pos_values;
-		//					Array pos_times;
-		//					Array scale_values;
-		//					Array scale_times;
-		//					Array rot_values;
-		//					Array rot_times;
+	//					Array pos_values;
+	//					Array pos_times;
+	//					Array scale_values;
+	//					Array scale_times;
+	//					Array rot_values;
+	//					Array rot_times;
 
-		//					for (size_t p = 0; p < track->mNumPositionKeys; p++) {
-		//						aiVector3D pos = track->mPositionKeys[p].mValue;
-		//						pos_values.push_back(_vec3_convert_to_godot(Vector3(pos.x, pos.y, pos.z)));
-		//						pos_times.push_back(track->mPositionKeys[p].mTime / ticks_per_second);
-		//					}
+	//					for (size_t p = 0; p < track->mNumPositionKeys; p++) {
+	//						aiVector3D pos = track->mPositionKeys[p].mValue;
+	//						pos_values.push_back(_vec3_convert_to_godot(Vector3(pos.x, pos.y, pos.z)));
+	//						pos_times.push_back(track->mPositionKeys[p].mTime / ticks_per_second);
+	//					}
 
-		//					for (size_t r = 0; r < track->mNumRotationKeys; r++) {
-		//						aiQuaternion quat = track->mRotationKeys[r].mValue;
-		//						rot_values.push_back(_rot_convert_to_godot(Quat(quat.x, quat.y, quat.z, quat.w)));
-		//						rot_times.push_back(track->mRotationKeys[r].mTime / ticks_per_second);
-		//					}
+	//					for (size_t r = 0; r < track->mNumRotationKeys; r++) {
+	//						aiQuaternion quat = track->mRotationKeys[r].mValue;
+	//						rot_values.push_back(_rot_convert_to_godot(Quat(quat.x, quat.y, quat.z, quat.w)));
+	//						rot_times.push_back(track->mRotationKeys[r].mTime / ticks_per_second);
+	//					}
 
-		//					for (size_t sc = 0; sc < track->mNumScalingKeys; sc++) {
-		//						aiVector3D scale = track->mScalingKeys[sc].mValue;
-		//						scale_values.push_back(_vec3_convert_to_godot(Vector3(scale.x, scale.y, scale.z)));
-		//						scale_times.push_back(track->mScalingKeys[sc].mTime / ticks_per_second);
-		//					}
-		//					while (true) {
-		//						Vector3 pos = base_pos;
-		//						Quat rot = base_rot;
-		//						Vector3 scale = base_scale;
+	//					for (size_t sc = 0; sc < track->mNumScalingKeys; sc++) {
+	//						aiVector3D scale = track->mScalingKeys[sc].mValue;
+	//						scale_values.push_back(_vec3_convert_to_godot(Vector3(scale.x, scale.y, scale.z)));
+	//						scale_times.push_back(track->mScalingKeys[sc].mTime / ticks_per_second);
+	//					}
+	//					while (true) {
+	//						Vector3 pos = base_pos;
+	//						Quat rot = base_rot;
+	//						Vector3 scale = base_scale;
 
-		//						if (pos_values.size()) {
-		//							pos = _interpolate_track_vector3(pos_times, pos_values, time, AssetImportAnimation::INTERP_LINEAR);
-		//						}
+	//						if (pos_values.size()) {
+	//							pos = _interpolate_track_vector3(pos_times, pos_values, time, AssetImportAnimation::INTERP_LINEAR);
+	//						}
 
-		//						if (rot_values.size()) {
-		//							rot = _interpolate_track_quat(rot_times, rot_values, time, AssetImportAnimation::INTERP_LINEAR);
-		//						}
+	//						if (rot_values.size()) {
+	//							rot = _interpolate_track_quat(rot_times, rot_values, time, AssetImportAnimation::INTERP_LINEAR);
+	//						}
 
-		//						if (scale_values.size()) {
-		//							scale = _interpolate_track_vector3(scale_times, scale_values, time, AssetImportAnimation::INTERP_LINEAR);
-		//						}
+	//						if (scale_values.size()) {
+	//							scale = _interpolate_track_vector3(scale_times, scale_values, time, AssetImportAnimation::INTERP_LINEAR);
+	//						}
 
-		//						if (sk != NULL && sk->find_bone(node_name) != -1) {
-		//							Transform xform;
-		//							//xform.basis = Basis(rot);
-		//							//xform.basis.scale(scale);
-		//							xform.basis = _set_quat_scale(scale, rot);
-		//							xform.origin = pos;
+	//						if (sk != NULL && sk->find_bone(node_name) != -1) {
+	//							Transform xform;
+	//							//xform.basis = Basis(rot);
+	//							//xform.basis.scale(scale);
+	//							xform.basis = _set_quat_scale(scale, rot);
+	//							xform.origin = pos;
 
-		//							int bone = sk->find_bone(node_name);
-		//							xform = sk->get_bone_rest(bone).affine_inverse() * xform;
-		//							Vector3 axis = Vector3();
-		//							real_t angle = 0.0f;
-		//							xform.basis = xform.basis.orthonormalized();
-		//							_get_axis_angle(xform.basis, axis, angle);
-		//							rot = Quat(axis, angle);
-		//							scale = xform.basis.get_scale();
-		//							pos = xform.origin;
-		//						}
-		//						animation->transform_track_insert_key(track_idx, time, pos, rot, scale);
+	//							int bone = sk->find_bone(node_name);
+	//							xform = sk->get_bone_rest(bone).affine_inverse() * xform;
+	//							Vector3 axis = Vector3();
+	//							real_t angle = 0.0f;
+	//							xform.basis = xform.basis.orthonormalized();
+	//							_get_axis_angle(xform.basis, axis, angle);
+	//							rot = Quat(axis, angle);
+	//							scale = xform.basis.get_scale();
+	//							pos = xform.origin;
+	//						}
+	//						animation->transform_track_insert_key(track_idx, time, pos, rot, scale);
 
-		//						if (last) {
-		//							break;
-		//						}
-		//						time += increment;
-		//						if (time >= length) {
-		//							last = true;
-		//							time = length;
-		//						}
-		//					}
-		//				}
-		//			}
-		//		} else {
-		//			const aiNodeAnim *track = anim->mChannels[i];
-		//			String path;
-		//			String node_name = _ai_string_to_string(track->mNodeName);
-		//			//need to find the path
-		//			NodePath node_path = node_name;
+	//						if (last) {
+	//							break;
+	//						}
+	//						time += increment;
+	//						if (time >= length) {
+	//							last = true;
+	//							time = length;
+	//						}
+	//					}
+	//				}
+	//			}
+	//		} else {
+	//			const aiNodeAnim *track = anim->mChannels[i];
+	//			String path;
+	//			String node_name = _ai_string_to_string(track->mNodeName);
+	//			//need to find the path
+	//			NodePath node_path = node_name;
 
-		//			Node *node = ap->get_owner()->find_node(node_name);
-		//			if (node == NULL) {
-		//				continue;
-		//			}
-		//			path = ap->get_owner()->get_path_to(node);
-		//			if (path == String()) {
-		//				continue;
-		//			}
-		//			node_path = NodePath(path);
+	//			Node *node = ap->get_owner()->find_node(node_name);
+	//			if (node == NULL) {
+	//				continue;
+	//			}
+	//			path = ap->get_owner()->get_path_to(node);
+	//			if (path == String()) {
+	//				continue;
+	//			}
+	//			node_path = NodePath(path);
 
-		//			if (track->mNumRotationKeys || track->mNumPositionKeys || track->mNumScalingKeys) {
-		//				//make transform track
-		//				int track_idx = animation->get_track_count();
-		//				animation->add_track(Animation::TYPE_TRANSFORM);
-		//				animation->track_set_path(track_idx, node_path);
-		//				//first determine animation length
+	//			if (track->mNumRotationKeys || track->mNumPositionKeys || track->mNumScalingKeys) {
+	//				//make transform track
+	//				int track_idx = animation->get_track_count();
+	//				animation->add_track(Animation::TYPE_TRANSFORM);
+	//				animation->track_set_path(track_idx, node_path);
+	//				//first determine animation length
 
-		//				float increment = 1.0 / float(p_bake_fps);
-		//				float time = 0.0;
+	//				float increment = 1.0 / float(p_bake_fps);
+	//				float time = 0.0;
 
-		//				Vector3 base_pos;
-		//				Quat base_rot;
-		//				Vector3 base_scale = Vector3(1, 1, 1);
+	//				Vector3 base_pos;
+	//				Quat base_rot;
+	//				Vector3 base_scale = Vector3(1, 1, 1);
 
-		//				if (track->mNumRotationKeys) {
-		//					aiQuatKey key = track->mRotationKeys[i];
-		//					real_t x = key.mValue.x;
-		//					real_t y = key.mValue.y;
-		//					real_t z = key.mValue.z;
-		//					real_t w = key.mValue.w;
-		//					Quat q(x, y, z, w);
-		//					base_rot = _rot_convert_to_godot(q);
-		//				}
+	//				if (track->mNumRotationKeys) {
+	//					aiQuatKey key = track->mRotationKeys[i];
+	//					real_t x = key.mValue.x;
+	//					real_t y = key.mValue.y;
+	//					real_t z = key.mValue.z;
+	//					real_t w = key.mValue.w;
+	//					Quat q(x, y, z, w);
+	//					base_rot = _rot_convert_to_godot(q);
+	//				}
 
-		//				if (track->mNumPositionKeys) {
-		//					aiVectorKey key = track->mPositionKeys[i];
-		//					real_t x = key.mValue.x;
-		//					real_t y = key.mValue.y;
-		//					real_t z = key.mValue.z;
-		//					base_pos = _vec3_convert_to_godot(Vector3(x, y, z));
-		//				}
+	//				if (track->mNumPositionKeys) {
+	//					aiVectorKey key = track->mPositionKeys[i];
+	//					real_t x = key.mValue.x;
+	//					real_t y = key.mValue.y;
+	//					real_t z = key.mValue.z;
+	//					base_pos = _vec3_convert_to_godot(Vector3(x, y, z));
+	//				}
 
-		//				if (track->mNumScalingKeys) {
-		//					aiVectorKey key = track->mScalingKeys[i];
-		//					real_t x = key.mValue.x;
-		//					real_t y = key.mValue.y;
-		//					real_t z = key.mValue.z;
-		//					base_scale = _vec3_convert_to_godot(Vector3(x, y, z));
-		//				}
+	//				if (track->mNumScalingKeys) {
+	//					aiVectorKey key = track->mScalingKeys[i];
+	//					real_t x = key.mValue.x;
+	//					real_t y = key.mValue.y;
+	//					real_t z = key.mValue.z;
+	//					base_scale = _vec3_convert_to_godot(Vector3(x, y, z));
+	//				}
 
-		//				bool last = false;
+	//				bool last = false;
 
-		//				Array pos_values;
-		//				Array pos_times;
-		//				Array scale_values;
-		//				Array scale_times;
-		//				Array rot_values;
-		//				Array rot_times;
+	//				Array pos_values;
+	//				Array pos_times;
+	//				Array scale_values;
+	//				Array scale_times;
+	//				Array rot_values;
+	//				Array rot_times;
 
-		//				for (size_t p = 0; p < track->mNumPositionKeys; p++) {
-		//					aiVector3D pos = track->mPositionKeys[p].mValue;
-		//					pos_values.push_back(_vec3_convert_to_godot(Vector3(pos.x, pos.y, pos.z)));
-		//					pos_times.push_back(track->mPositionKeys[p].mTime / ticks_per_second);
-		//				}
+	//				for (size_t p = 0; p < track->mNumPositionKeys; p++) {
+	//					aiVector3D pos = track->mPositionKeys[p].mValue;
+	//					pos_values.push_back(_vec3_convert_to_godot(Vector3(pos.x, pos.y, pos.z)));
+	//					pos_times.push_back(track->mPositionKeys[p].mTime / ticks_per_second);
+	//				}
 
-		//				for (size_t r = 0; r < track->mNumRotationKeys; r++) {
-		//					aiQuaternion quat = track->mRotationKeys[r].mValue;
-		//					rot_values.push_back(_rot_convert_to_godot(Quat(quat.x, quat.y, quat.z, quat.w)));
-		//					rot_times.push_back(track->mRotationKeys[r].mTime / ticks_per_second);
-		//				}
+	//				for (size_t r = 0; r < track->mNumRotationKeys; r++) {
+	//					aiQuaternion quat = track->mRotationKeys[r].mValue;
+	//					rot_values.push_back(_rot_convert_to_godot(Quat(quat.x, quat.y, quat.z, quat.w)));
+	//					rot_times.push_back(track->mRotationKeys[r].mTime / ticks_per_second);
+	//				}
 
-		//				for (size_t sc = 0; sc < track->mNumScalingKeys; sc++) {
-		//					aiVector3D scale = track->mScalingKeys[sc].mValue;
-		//					scale_values.push_back(_vec3_convert_to_godot(Vector3(scale.x, scale.y, scale.z)));
-		//					scale_times.push_back(track->mScalingKeys[sc].mTime / ticks_per_second);
-		//				}
-		//				while (true) {
-		//					Vector3 pos = base_pos;
-		//					Quat rot = base_rot;
-		//					Vector3 scale = base_scale;
+	//				for (size_t sc = 0; sc < track->mNumScalingKeys; sc++) {
+	//					aiVector3D scale = track->mScalingKeys[sc].mValue;
+	//					scale_values.push_back(_vec3_convert_to_godot(Vector3(scale.x, scale.y, scale.z)));
+	//					scale_times.push_back(track->mScalingKeys[sc].mTime / ticks_per_second);
+	//				}
+	//				while (true) {
+	//					Vector3 pos = base_pos;
+	//					Quat rot = base_rot;
+	//					Vector3 scale = base_scale;
 
-		//					if (pos_values.size()) {
-		//						pos = _interpolate_track_vector3(pos_times, pos_values, time, AssetImportAnimation::INTERP_LINEAR);
-		//					}
+	//					if (pos_values.size()) {
+	//						pos = _interpolate_track_vector3(pos_times, pos_values, time, AssetImportAnimation::INTERP_LINEAR);
+	//					}
 
-		//					if (rot_values.size()) {
-		//						rot = _interpolate_track_quat(rot_times, rot_values, time, AssetImportAnimation::INTERP_LINEAR);
-		//					}
+	//					if (rot_values.size()) {
+	//						rot = _interpolate_track_quat(rot_times, rot_values, time, AssetImportAnimation::INTERP_LINEAR);
+	//					}
 
-		//					if (scale_values.size()) {
-		//						scale = _interpolate_track_vector3(scale_times, scale_values, time, AssetImportAnimation::INTERP_LINEAR);
-		//					}
+	//					if (scale_values.size()) {
+	//						scale = _interpolate_track_vector3(scale_times, scale_values, time, AssetImportAnimation::INTERP_LINEAR);
+	//					}
 
-		//					animation->transform_track_insert_key(track_idx, time, pos, rot, scale);
+	//					animation->transform_track_insert_key(track_idx, time, pos, rot, scale);
 
-		//					if (last) {
-		//						break;
-		//					}
-		//					time += increment;
-		//					if (time >= length) {
-		//						last = true;
-		//						time = length;
-		//					}
-		//				}
-		//			}
-		//		}
-		//	}
-		//}
+	//					if (last) {
+	//						break;
+	//					}
+	//					time += increment;
+	//					if (time >= length) {
+	//						last = true;
+	//						time = length;
+	//					}
+	//				}
+	//			}
+	//		}
+	//	}
+	//}
 	//	if (false) {
 	//		for (int i = 0; i < anim->mNumMeshChannels; i++) {
 	//			const aiMeshAnim *anim_mesh = anim->mMeshChannels[i];
@@ -808,42 +806,47 @@ void ComChibifireFbxImporter::_register_methods() {
 	register_method("_import_animation", &ComChibifireFbxImporter::import_animation);
 }
 
-void ComChibifireFbxImporter::_generate_node(RawModel p_scene, const RawNode p_node, Node *p_parent, Node *p_owner, Array &p_skeletons, Array &r_bone_name) {
-	Spatial *node = Spatial::_new();
-	String node_name = p_node.name.c_str();
-	node->set_name(node_name);
-	p_parent->add_child(Object::cast_to<Node>(node));
-	Transform xform;
-	float angle = 0.0f;
-	Vec3f axis = Vec3f();
-	xform.basis.scale(Vector3(p_node.scale.x, p_node.scale.y, p_node.scale.z));
-	p_node.rotation.ToAngleAxis(&angle, &axis);
-	xform.basis.rotate(Vector3(axis.x, axis.y, axis.z), angle);
-	xform.origin = Vector3(p_node.translation.x, p_node.translation.y, p_node.translation.z);
-	node->set_transform(xform);
+void ComChibifireFbxImporter::_generate_node(const RawModel &p_scene, const RawNode &p_node, Node *p_parent, Node *p_owner, Array &p_skeletons, Array &r_bone_name) {
+	Spatial *node = NULL;
+	if (!p_node.isJoint) {
+		node = Spatial::_new();
+		String node_name = p_node.name.c_str();
+		node->set_name(node_name);
+		p_parent->add_child(Object::cast_to<Node>(node));
+		Transform xform;
+		float angle = 0.0f;
+		Vec3f axis = Vec3f();
+		xform.basis.rotate(Vector3(axis.x, axis.y, axis.z), angle);
+		xform.basis.scale(Vector3(p_node.scale.x, p_node.scale.y, p_node.scale.z));
+		p_node.rotation.ToAngleAxis(&angle, &axis);
+		xform.origin = Vector3(p_node.translation.x, p_node.translation.y, p_node.translation.z);
+		node->set_transform(xform);
+		node->set_owner(p_owner);
+		bool has_uvs = false;
+	} else {
+		node = Object::cast_to<Spatial>(p_parent);
+	}
 
-	node->set_owner(p_owner);
-	bool has_uvs = false;
 
-	//for (size_t i = 0; i < p_node->mNumMeshes; i++) {
+	//if (p_node.surfaceId > 0) {
 	//	for (size_t k = 0; k < p_skeletons.size(); k++) {
 	//		Skeleton *s = Object::cast_to<Skeleton>(Object::___get_from_variant(p_skeletons[k]));
-	//		const unsigned int mesh_idx = p_node->mMeshes[i];
-	//		const aiMesh *ai_mesh = p_scene->mMeshes[mesh_idx];
 	//		node->get_parent()->remove_child(Object::cast_to<Node>(node));
 	//		MeshInstance *mi = MeshInstance::_new();
 	//		node = mi;
 	//		p_parent->add_child(node);
 	//		node->set_owner(p_owner);
 	//		node->set_name(node_name);
-	//		node->set_transform(_get_armature_xform(p_scene, s, r_bone_name, Object::cast_to<Spatial>(p_owner), node).affine_inverse() * _extract_ai_matrix_transform(p_node->mTransformation));
+	//		int surfaceIndex = p_scene.GetSurfaceById(p_node.surfaceId);
+	//		const RawSurface &rawSurface = p_scene.GetSurface(surfaceIndex);
+	//		node->set_transform(xform);
 	//		mi->set_skeleton_path(mi->get_path_to(s));
-	//		_add_mesh_to_mesh_instance(p_node, p_scene, has_uvs, s, p_path, mi, p_owner, r_bone_name);
+
+	//		//_add_mesh_to_mesh_instance(p_node, p_scene, has_uvs, s, mi, p_owner, r_bone_name);
 	//		p_skeletons[k] = s;
 	//	}
 	//}
-
-	for (int i = 0; i < p_node.childIds.size(); i++) {
-		_generate_node(p_scene, p_scene.GetNode(p_node.childIds[i]), node, p_owner, p_skeletons, r_bone_name);
+	for (size_t i = 0; i < p_node.childIds.size(); i++) {
+		_generate_node(p_scene, p_scene.GetNode(p_scene.GetNodeById(p_node.childIds[i])), node, p_owner, p_skeletons, r_bone_name);
 	}
 }
