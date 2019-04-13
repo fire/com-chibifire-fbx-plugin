@@ -23,6 +23,11 @@ icon="res://icon.png"
 
 enabled=PoolStringArray( "com_chibifire_fbx_importer" )
 
+[filesystem]
+
+import/open_asset_import/use_fbx=false
+import/open_asset_import/use_mmd=false
+
 [gdnative]
 
 singletons=[  ]
