@@ -518,3 +518,5 @@ target_link_libraries(com_chibifire_fbx_importer draco fmt FBX2glTF
 ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/godot-cpp/bin/libgodot-cpp.linux.release.64.a
 ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/fbx20181_1_fbxsdk_linux/lib/gcc4/x64/release/libfbxsdk.a)
 endif(OSX)
+
+file(COPY sample DESTINATION .)
