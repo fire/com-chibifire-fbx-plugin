@@ -459,7 +459,9 @@ add_library(FBX2glTF
         thirdparty/FBX2glTF/src/gltf/properties/SkinData.cpp
         thirdparty/FBX2glTF/src/gltf/properties/SkinData.hpp
         thirdparty/FBX2glTF/src/gltf/properties/TextureData.cpp
-        thirdparty/FBX2glTF/src/gltf/properties/TextureData.hpp
+        thirdparty/FBX2glTF/src/gltf/properties/TextureData.hpp        
+        thirdparty/FBX2glTF/src/gltf/properties/LightData.cpp        
+        thirdparty/FBX2glTF/src/gltf/properties/LightData.hpp
         thirdparty/FBX2glTF/src/gltf/GltfModel.cpp
         thirdparty/FBX2glTF/src/gltf/GltfModel.hpp
         thirdparty/FBX2glTF/src/gltf/TextureBuilder.cpp
