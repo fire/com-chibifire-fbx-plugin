@@ -422,7 +422,13 @@ add_library(FBX2glTF
         thirdparty/FBX2glTF/src/fbx/Fbx2Raw.hpp
         thirdparty/FBX2glTF/src/fbx/FbxLayerElementAccess.hpp
         thirdparty/FBX2glTF/src/fbx/FbxBlendShapesAccess.hpp
-        thirdparty/FBX2glTF/src/fbx/FbxMaterialInfo.hpp
+        thirdparty/FBX2glTF/src/fbx/materials/3dsMaxPhysicalMaterial.cpp
+        thirdparty/FBX2glTF/src/fbx/materials/FbxMaterials.cpp
+        thirdparty/FBX2glTF/src/fbx/materials/FbxMaterials.hpp
+        thirdparty/FBX2glTF/src/fbx/materials/RoughnessMetallicMaterials.hpp
+        thirdparty/FBX2glTF/src/fbx/materials/StingrayPBSMaterial.cpp
+        thirdparty/FBX2glTF/src/fbx/materials/TraditionalMaterials.cpp
+        thirdparty/FBX2glTF/src/fbx/materials/TraditionalMaterials.hpp
         thirdparty/FBX2glTF/src/gltf/Raw2Gltf.cpp
         thirdparty/FBX2glTF/src/gltf/Raw2Gltf.hpp
         thirdparty/FBX2glTF/src/raw/RawModel.cpp
@@ -468,14 +474,8 @@ add_library(FBX2glTF
         thirdparty/FBX2glTF/src/fbx/FbxBlendShapesAccess.cpp
         thirdparty/FBX2glTF/src/fbx/FbxBlendShapesAccess.hpp
         thirdparty/FBX2glTF/src/fbx/FbxLayerElementAccess.hpp
-        thirdparty/FBX2glTF/src/fbx/FbxMaterialsAccess.cpp
-        thirdparty/FBX2glTF/src/fbx/FbxMaterialsAccess.hpp
-        thirdparty/FBX2glTF/src/fbx/FbxRoughMetMaterialInfo.cpp
-        thirdparty/FBX2glTF/src/fbx/FbxRoughMetMaterialInfo.hpp
         thirdparty/FBX2glTF/src/fbx/FbxSkinningAccess.cpp
-        thirdparty/FBX2glTF/src/fbx/FbxSkinningAccess.hpp
-        thirdparty/FBX2glTF/src/fbx/FbxTraditionalMaterialInfo.cpp
-        thirdparty/FBX2glTF/src/fbx/FbxTraditionalMaterialInfo.hpp)
+        thirdparty/FBX2glTF/src/fbx/FbxSkinningAccess.hpp)
 
 target_include_directories(FBX2glTF
         PUBLIC
