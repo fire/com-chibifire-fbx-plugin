@@ -808,18 +808,18 @@ void ComChibifireFbxImporter::_register_methods() {
 
 void ComChibifireFbxImporter::_generate_node(const RawModel &p_scene, const RawNode &p_node, Node *p_parent, Node *p_owner, Array &p_skeletons, Array &r_bone_name) {
 	Spatial *node = NULL;
+	String node_name = p_node.name.c_str();
+	Transform xform;
+	float angle = 0.0f;
+	Vec3f axis = Vec3f();
+	xform.basis.rotate(Vector3(axis.x, axis.y, axis.z), angle);
+	xform.basis.scale(Vector3(p_node.scale.x, p_node.scale.y, p_node.scale.z));
+	p_node.rotation.ToAngleAxis(&angle, &axis);
+	xform.origin = Vector3(p_node.translation.x, p_node.translation.y, p_node.translation.z);
 	if (!p_node.isJoint) {
-		node = Spatial::_new();
-		String node_name = p_node.name.c_str();
+		node = Spatial::_new();		
 		node->set_name(node_name);
 		p_parent->add_child(Object::cast_to<Node>(node));
-		Transform xform;
-		float angle = 0.0f;
-		Vec3f axis = Vec3f();
-		xform.basis.rotate(Vector3(axis.x, axis.y, axis.z), angle);
-		xform.basis.scale(Vector3(p_node.scale.x, p_node.scale.y, p_node.scale.z));
-		p_node.rotation.ToAngleAxis(&angle, &axis);
-		xform.origin = Vector3(p_node.translation.x, p_node.translation.y, p_node.translation.z);
 		node->set_transform(xform);
 		node->set_owner(p_owner);
 		bool has_uvs = false;
@@ -827,25 +827,25 @@ void ComChibifireFbxImporter::_generate_node(const RawModel &p_scene, const RawN
 		node = Object::cast_to<Spatial>(p_parent);
 	}
 
+	if (p_node.surfaceId > 0) {
+		for (size_t k = 0; k < p_skeletons.size(); k++) {
+			Skeleton *s = Object::cast_to<Skeleton>(Object::___get_from_variant(p_skeletons[k]));
+			node->get_parent()->remove_child(Object::cast_to<Node>(node));
+			MeshInstance *mi = MeshInstance::_new();
+			node = mi;
+			p_parent->add_child(node);
+			node->set_owner(p_owner);
+			node->set_name(node_name);
+			int surfaceIndex = p_scene.GetSurfaceById(p_node.surfaceId);
+			const RawSurface &rawSurface = p_scene.GetSurface(surfaceIndex);
+			node->set_transform(xform);
+			mi->set_skeleton_path(mi->get_path_to(s));
 
-	//if (p_node.surfaceId > 0) {
-	//	for (size_t k = 0; k < p_skeletons.size(); k++) {
-	//		Skeleton *s = Object::cast_to<Skeleton>(Object::___get_from_variant(p_skeletons[k]));
-	//		node->get_parent()->remove_child(Object::cast_to<Node>(node));
-	//		MeshInstance *mi = MeshInstance::_new();
-	//		node = mi;
-	//		p_parent->add_child(node);
-	//		node->set_owner(p_owner);
-	//		node->set_name(node_name);
-	//		int surfaceIndex = p_scene.GetSurfaceById(p_node.surfaceId);
-	//		const RawSurface &rawSurface = p_scene.GetSurface(surfaceIndex);
-	//		node->set_transform(xform);
-	//		mi->set_skeleton_path(mi->get_path_to(s));
+			//_add_mesh_to_mesh_instance(p_node, p_scene, has_uvs, s, mi, p_owner, r_bone_name);
+			p_skeletons[k] = s;
+		}
+	}
 
-	//		//_add_mesh_to_mesh_instance(p_node, p_scene, has_uvs, s, mi, p_owner, r_bone_name);
-	//		p_skeletons[k] = s;
-	//	}
-	//}
 	for (size_t i = 0; i < p_node.childIds.size(); i++) {
 		_generate_node(p_scene, p_scene.GetNode(p_scene.GetNodeById(p_node.childIds[i])), node, p_owner, p_skeletons, r_bone_name);
 	}
