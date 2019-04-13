@@ -14,5 +14,5 @@ X11.64="res://addons/com_chibifire_fbx_importer/bin/x11.64/libcom_chibifire_fbx_
 [dependencies]
 
 OSX.64=[  ]
-Windows.64=[ "res://addons/com_chibifire_fbx_importer/bin/windows.64/com_chibifire_fbx_importer.dll" ]
+Windows.64=[  ]
 X11.64=[  ]
