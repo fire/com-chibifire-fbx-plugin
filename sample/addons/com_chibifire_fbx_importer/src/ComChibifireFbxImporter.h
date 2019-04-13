@@ -294,7 +294,7 @@ public:
 	//	}
 	//}
 
-	void _generate_node(const RawModel& p_scene, const RawNode& p_node, Node *p_parent, Node *p_owner, Array &p_skeletons, Array &r_bone_name);
+	void _generate_node(const RawModel p_scene, const RawNode p_node, Node *p_parent, Node *p_owner, Array &p_skeletons, Array &r_bone_name);
 
 	//bool _add_mesh_to_mesh_instance(const aiNode *p_node, const aiScene *p_scene, bool has_uvs, Skeleton *s, const String &p_path, MeshInstance *p_mesh_instance, Node *p_owner, Array &r_bone_name) {
 	//	ArrayMesh *mesh = ArrayMesh::_new();

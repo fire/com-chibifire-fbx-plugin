@@ -286,20 +286,6 @@ Node *ComChibifireFbxImporter::import_scene(const String path, const int64_t fla
 
 	raw.Condense();
 	raw.TransformGeometry(gltfOptions.computeNormals);
-
-	std::ofstream outStream; // note: auto-flushes in destructor
-	const auto streamStart = outStream.tellp();
-
-	const String file = path.get_basename().get_file() + "-" + path.md5_text() + String(".glb");
-	const String gltf_path = String("res://.import/").plus_file(file);
-	const String gltf_global = ProjectSettings::get_singleton()->globalize_path(gltf_path);
-
-	outStream.open(gltf_global.alloc_c_string(), std::ios::trunc | std::ios::ate | std::ios::out | std::ios::binary);
-	if (outStream.fail()) {
-		Godot::print(godot::String("ERROR:: Couldn't open file for writing: ") + gltf_global);
-		return nullptr;
-	}
-
 	Spatial *root = Spatial::_new();
 	//For all cameras
 	//ERR_FAIL_INDEX(i, state.cameras.size());
@@ -346,8 +332,91 @@ Node *ComChibifireFbxImporter::import_scene(const String path, const int64_t fla
 	skeletons.push_back(s);
 	//_generate_node_bone(p_path, scene, scene->mRootNode, root, skeletons, bone_names, light_names, camera_names);
 
-	RawNode &node = raw.GetNode(raw.GetNodeById(raw.GetRootNode()));
+	RawNode node = raw.GetNode(raw.GetNodeById(raw.GetRootNode()));
 	_generate_node(raw, node, root, root, skeletons, bone_names);
+
+	//TODO(Ernest) Draco compression
+	std::vector<RawModel> materialModels;
+	raw.CreateMaterialModels(
+			materialModels,
+			true,
+			true,
+			true);
+
+	for (const auto &surfaceModel : materialModels) {
+		assert(surfaceModel.GetSurfaceCount() == 1);
+		const RawSurface &rawSurface = surfaceModel.GetSurface(0);
+		const long surfaceId = rawSurface.id;
+		String name = rawSurface.name.c_str();
+		Node *node = root->find_node(name);
+		if (!node) {
+			continue;
+		}
+		MeshInstance *mi = Object::cast_to<MeshInstance>(node);
+		if (!mi) {
+			continue;
+		}
+		SurfaceTool *st = SurfaceTool::_new();
+		st->begin(Mesh::PRIMITIVE_TRIANGLES);
+		//for (size_t i = 0; i < surfaceModel.GetVertexCount(); i++) {
+		//	const RawVertex &vertex = surfaceModel.GetVertex(i);
+		//	Vector3 vec = Vector3(vertex.position.x, vertex.position.y, vertex.position.z);
+		//	st->add_vertex(vec);
+		//}
+		if ((surfaceModel.GetVertexAttributes() & RAW_VERTEX_ATTRIBUTE_POSITION) != 0) {
+			const AttributeDefinition<Vec3f> ATTR_POSITION(
+					"POSITION",
+					&RawVertex::position,
+					GLT_VEC3F,
+					draco::GeometryAttribute::POSITION,
+					draco::DT_FLOAT32);
+			std::vector<Vec3f> attribArr;
+			surfaceModel.GetAttributeArray<Vec3f>(attribArr, ATTR_POSITION.rawAttributeIx);
+
+			for (auto a : attribArr) {
+				st->add_vertex(Vector3(a.x, a.y, a.z));
+			}
+		}
+		if ((surfaceModel.GetVertexAttributes() & RAW_VERTEX_ATTRIBUTE_UV0) != 0) {
+			const AttributeDefinition<Vec2f> ATTR_TEXCOORD_0(
+					"TEXCOORD_0",
+					&RawVertex::uv0,
+					GLT_VEC2F,
+					draco::GeometryAttribute::TEX_COORD,
+					draco::DT_FLOAT32);
+			std::vector<Vec2f> attribArrUV0;
+			surfaceModel.GetAttributeArray<Vec2f>(attribArrUV0, ATTR_TEXCOORD_0.rawAttributeIx);
+
+			for (auto a : attribArrUV0) {
+				st->add_uv(Vector2(a.x, a.y));
+			}
+		}
+		if ((surfaceModel.GetVertexAttributes() & RAW_VERTEX_ATTRIBUTE_UV1) != 0) {
+			const AttributeDefinition<Vec2f> ATTR_TEXCOORD_1(
+					"TEXCOORD_1",
+					&RawVertex::uv1,
+					GLT_VEC2F,
+					draco::GeometryAttribute::TEX_COORD,
+					draco::DT_FLOAT32);
+			std::vector<Vec2f> attribArrUV1;
+			surfaceModel.GetAttributeArray<Vec2f>(attribArrUV1, ATTR_TEXCOORD_1.rawAttributeIx);
+
+			for (auto a : attribArrUV1) {
+				st->add_uv2(Vector2(a.x, a.y));
+			}
+		}
+
+		typedef uint32_t TriangleIndex;
+		Array result;
+
+		for (int i = 0; i < surfaceModel.GetTriangleCount(); i++) {
+			st->add_index((TriangleIndex)surfaceModel.GetTriangle(i).verts[2]);
+			st->add_index((TriangleIndex)surfaceModel.GetTriangle(i).verts[1]);
+			st->add_index((TriangleIndex)surfaceModel.GetTriangle(i).verts[0]);
+		}
+		mi->set_mesh(st->commit());
+	}
+
 	//if (skeletons.size() == 0) {
 	//	return NULL;
 	//}
@@ -806,7 +875,7 @@ void ComChibifireFbxImporter::_register_methods() {
 	register_method("_import_animation", &ComChibifireFbxImporter::import_animation);
 }
 
-void ComChibifireFbxImporter::_generate_node(const RawModel &p_scene, const RawNode &p_node, Node *p_parent, Node *p_owner, Array &p_skeletons, Array &r_bone_name) {
+void ComChibifireFbxImporter::_generate_node(const RawModel p_scene, const RawNode p_node, Node *p_parent, Node *p_owner, Array &p_skeletons, Array &r_bone_name) {
 	Spatial *node = NULL;
 	String node_name = p_node.name.c_str();
 	Transform xform;
@@ -816,8 +885,9 @@ void ComChibifireFbxImporter::_generate_node(const RawModel &p_scene, const RawN
 	xform.basis.scale(Vector3(p_node.scale.x, p_node.scale.y, p_node.scale.z));
 	p_node.rotation.ToAngleAxis(&angle, &axis);
 	xform.origin = Vector3(p_node.translation.x, p_node.translation.y, p_node.translation.z);
+	xform.orthonormalize();
 	if (!p_node.isJoint) {
-		node = Spatial::_new();		
+		node = Spatial::_new();
 		node->set_name(node_name);
 		p_parent->add_child(Object::cast_to<Node>(node));
 		node->set_transform(xform);
@@ -832,16 +902,12 @@ void ComChibifireFbxImporter::_generate_node(const RawModel &p_scene, const RawN
 			Skeleton *s = Object::cast_to<Skeleton>(Object::___get_from_variant(p_skeletons[k]));
 			node->get_parent()->remove_child(Object::cast_to<Node>(node));
 			MeshInstance *mi = MeshInstance::_new();
-			node = mi;
-			p_parent->add_child(node);
-			node->set_owner(p_owner);
-			node->set_name(node_name);
-			int surfaceIndex = p_scene.GetSurfaceById(p_node.surfaceId);
-			const RawSurface &rawSurface = p_scene.GetSurface(surfaceIndex);
-			node->set_transform(xform);
+			p_parent->remove_child(node);
+			p_parent->add_child(mi);
+			mi->set_owner(p_owner);
+			mi->set_name(node_name);
+			mi->set_transform(xform);
 			mi->set_skeleton_path(mi->get_path_to(s));
-
-			//_add_mesh_to_mesh_instance(p_node, p_scene, has_uvs, s, mi, p_owner, r_bone_name);
 			p_skeletons[k] = s;
 		}
 	}
