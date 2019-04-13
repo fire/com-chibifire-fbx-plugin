@@ -424,7 +424,7 @@ void ComChibifireFbxImporter::_generate_node(const RawModel p_scene, const RawNo
 			mi->set_owner(p_owner);
 			mi->set_name(node_name);
 			mi->set_transform(xform);
-			mi->set_skeleton_path(p_owner->get_path_to(s));
+			mi->set_skeleton_path(mi->get_path_to(s));
 			p_skeletons[k] = s;
 		}
 	}
