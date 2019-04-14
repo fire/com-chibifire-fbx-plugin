@@ -192,8 +192,8 @@ public:
 
 	Array get_extensions() const;
 	int64_t get_import_flags() const;
-	Node *import_scene(const String path, const int64_t flags, const int64_t bake_fps);
-	godot::Ref<godot::Animation> import_animation(const String path, const int64_t flags, const int64_t bake_fps);
+	Node *_import_scene(const String path, const int64_t flags, const int64_t bake_fps);
+	godot::Ref<godot::Animation> _import_animation(const String path, const int64_t flags, const int64_t bake_fps);
 
 	static void _register_methods();
 };

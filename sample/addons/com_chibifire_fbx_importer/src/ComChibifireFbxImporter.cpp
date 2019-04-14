@@ -47,6 +47,7 @@
 #include <PoolArrays.hpp>
 #include <ProjectSettings.hpp>
 #include <Skeleton.hpp>
+#include "Engine.hpp"
 
 #ifndef CLAMP
 #define CLAMP(m_a, m_min, m_max) (((m_a) < (m_min)) ? (m_min) : (((m_a) > (m_max)) ? m_max : m_a))
@@ -230,6 +231,7 @@ using namespace godot;
 #include <Ref.hpp>
 #include <EditorFileSystem.hpp>
 #include <Vector3.hpp>
+#include <Engine.hpp>
 // clang-format on
 
 bool verboseOutput = false;
@@ -248,7 +250,7 @@ int64_t ComChibifireFbxImporter::get_import_flags() const {
 	return IMPORT_SCENE | IMPORT_ANIMATION;
 }
 
-Node *ComChibifireFbxImporter::import_scene(const String path, const int64_t flags, const int64_t bake_fps) {
+Node * ComChibifireFbxImporter::_import_scene(const String path, const int64_t flags, const int64_t bake_fps) {
 	//GltfOptions gltfOptions;
 	//gltfOptions.keepAttribs = RAW_VERTEX_ATTRIBUTE_AUTO;
 	//gltfOptions.outputBinary = true;
@@ -267,11 +269,10 @@ Node *ComChibifireFbxImporter::import_scene(const String path, const int64_t fla
 	//gltfOptions.computeNormals = ComputeNormalsOption::MISSING;
 	// compute vertex normals from geometry.
 	//gltfOptions.useLongIndices = UseLongIndicesOptions::AUTO; // When to use 32-bit indices.
-
 	RawModel raw;
 
-	const String fbx_file = ProjectSettings::get_singleton()->globalize_path(path);
-	const String path_dir_global = ProjectSettings::get_singleton()->globalize_path(path.get_base_dir());
+	const String fbx_file = Engine::get_singleton()->get_singleton("ProjectSettings")->call("globalize_path", path);
+	const String path_dir_global = Engine::get_singleton()->get_singleton("ProjectSettings")->call("globalize_path", path.get_base_dir());
 
 	if (!LoadFBXFile(raw, fbx_file.alloc_c_string(), godot::String("png;jpg;jpeg").alloc_c_string())) {
 		return nullptr;
@@ -324,7 +325,7 @@ Node *ComChibifireFbxImporter::import_scene(const String path, const int64_t fla
 		arr_mesh.instance();
 		MeshInstance *mi = NULL;
 		for (size_t i = 0; i < surfaceModel.GetSurfaceCount(); i++) {
-			const RawSurface &rawSurface =  surfaceModel.GetSurface(i);
+			const RawSurface &rawSurface = surfaceModel.GetSurface(i);
 			const long surfaceId = rawSurface.id;
 			String name = _convert_name(rawSurface.name);
 			Node *node = root->find_node(name);
@@ -338,7 +339,7 @@ Node *ComChibifireFbxImporter::import_scene(const String path, const int64_t fla
 
 			Array arrays;
 			arrays.resize(ArrayMesh::ARRAY_MAX);
-			
+
 			PoolVector3Array normals = PoolVector3Array();
 			int32_t attribute_flags = surfaceModel.GetVertexAttributes();
 			if ((surfaceModel.GetVertexAttributes() & RAW_VERTEX_ATTRIBUTE_NORMAL) != 0) {
@@ -470,15 +471,15 @@ Node *ComChibifireFbxImporter::import_scene(const String path, const int64_t fla
 	return root;
 }
 
-Ref<Animation> ComChibifireFbxImporter::import_animation(const String path, const int64_t flags, const int64_t bake_fps) {
+godot::Ref<godot::Animation> ComChibifireFbxImporter::_import_animation(const String path, const int64_t flags, const int64_t bake_fps) {
 	return Ref<Animation>();
 }
 
 void ComChibifireFbxImporter::_register_methods() {
 	register_method("_get_extensions", &ComChibifireFbxImporter::get_extensions);
 	register_method("_get_import_flags", &ComChibifireFbxImporter::get_import_flags);
-	register_method("_import_scene", &ComChibifireFbxImporter::import_scene);
-	register_method("_import_animation", &ComChibifireFbxImporter::import_animation);
+	register_method("_import_scene", &ComChibifireFbxImporter::_import_scene);
+	register_method("_import_animation", &ComChibifireFbxImporter::_import_animation);
 }
 
 void ComChibifireFbxImporter::_generate_bone_groups(ImportState &p_state, RawNode p_node, Dictionary p_ownership, Dictionary p_bind_xforms) {

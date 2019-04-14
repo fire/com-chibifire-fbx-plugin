@@ -512,9 +512,9 @@ ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/godot-cpp/bin/libgodot-cpp.osx.release.64
 ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/FBX SDK/2018.1.1/lib/clang/release/libfbxsdk.a)
 elseif(MSVC)
 target_link_libraries(com_chibifire_fbx_importer draco fmt FBX2glTF 
-${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/godot-cpp/bin/libgodot-cpp.windows.release.default
+${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/godot-cpp/bin/libgodot-cpp.windows.release.64.lib
 ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/fbx20181_1_fbxsdk_vs2015_win/lib/vs2015/x64/release/libfbxsdk-md.lib)
-#${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/godot-cpp/bin/libgodot-cpp.windows.debug.default
+#${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/godot-cpp/bin/libgodot-cpp.windows.debug.64.lib
 #${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/fbx20181_1_fbxsdk_vs2015_win/lib/vs2015/x64/debug/libfbxsdk-md.lib)
 elseif(UNIX)
 target_link_libraries(com_chibifire_fbx_importer draco fmt FBX2glTF 
