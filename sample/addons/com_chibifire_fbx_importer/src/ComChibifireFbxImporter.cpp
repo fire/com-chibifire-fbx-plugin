@@ -43,11 +43,12 @@
 #include <gen/Object.hpp>
 #include <gen/Reference.hpp>
 
+#include "Engine.hpp"
 #include <Godot.hpp>
 #include <PoolArrays.hpp>
 #include <ProjectSettings.hpp>
 #include <Skeleton.hpp>
-#include "Engine.hpp"
+#include <Material.hpp>
 
 #ifndef CLAMP
 #define CLAMP(m_a, m_min, m_max) (((m_a) < (m_min)) ? (m_min) : (((m_a) > (m_max)) ? m_max : m_a))
@@ -250,7 +251,7 @@ int64_t ComChibifireFbxImporter::get_import_flags() const {
 	return IMPORT_SCENE | IMPORT_ANIMATION;
 }
 
-Node * ComChibifireFbxImporter::_import_scene(const String path, const int64_t flags, const int64_t bake_fps) {
+Node *ComChibifireFbxImporter::_import_scene(const String path, const int64_t flags, const int64_t bake_fps) {
 	//GltfOptions gltfOptions;
 	//gltfOptions.keepAttribs = RAW_VERTEX_ATTRIBUTE_AUTO;
 	//gltfOptions.outputBinary = true;
@@ -459,9 +460,13 @@ Node * ComChibifireFbxImporter::_import_scene(const String path, const int64_t f
 				idxs.push_back(surfaceModel.GetTriangle(i).verts[0]);
 			}
 			arrays[ArrayMesh::ARRAY_INDEX] = idxs;
-			int32_t count = arr_mesh->get_surface_count();
+			int32_t idx = arr_mesh->get_surface_count();
 			arr_mesh->add_surface_from_arrays(Mesh::PRIMITIVE_TRIANGLES, arrays);
-			arr_mesh->surface_set_name(count, name);
+			arr_mesh->surface_set_name(idx, name);
+
+			// TODO(Ernest) Cache again
+			 Ref<Material> material = _generate_material_from_index(state, surfaceModel.GetMaterial(0), surfaceModel.GetMaterial(0).type);
+			arr_mesh->surface_set_material(idx, material);
 		}
 		if (mi) {
 			mi->set_mesh(arr_mesh);
@@ -592,4 +597,78 @@ godot::Transform ComChibifireFbxImporter::_get_global_node_transform(Quatf rotat
 	xform.basis.scale(Vector3(scale.x, scale.y, scale.z));
 	xform.origin = Vector3(translation.x, translation.y, translation.z);
 	return xform;
+}
+
+void ComChibifireFbxImporter::_find_texture_path(const String &r_p_path, String &r_path, bool &r_found) {
+	Directory dir;
+
+	Array exts = Engine::get_singleton()->get_singleton("ResourceFormatLoaderResourceImage")->call("get_recognized_extensions");
+
+	Array split_path = r_path.get_basename().split("*");
+	if (split_path.size() == 2) {
+		r_found = true;
+		return;
+	}
+
+	if (dir.file_exists(r_p_path.get_base_dir() + r_path.get_file())) {
+		r_path = r_p_path.get_base_dir() + r_path.get_file();
+		r_found = true;
+		return;
+	}
+
+	for (int32_t i = 0; i < exts.size(); i++) {
+		if (r_found) {
+			return;
+		}
+		if (r_found == false) {
+			_find_texture_path(r_p_path, dir, r_path, r_found, String(".") + exts[i]);
+		}
+	}
+}
+
+void ComChibifireFbxImporter::_find_texture_path(const String &p_path, godot::Directory &dir, String &path, bool &found, String extension) {
+	String name = path.get_basename() + extension;
+	if (dir.file_exists(name)) {
+		found = true;
+		path = name;
+		return;
+	}
+	String name_ignore_sub_directory = p_path.get_base_dir() + "/" + path.get_file().get_basename() + extension;
+	if (dir.file_exists(name_ignore_sub_directory)) {
+		found = true;
+		path = name_ignore_sub_directory;
+		return;
+	}
+
+	String name_find_texture_sub_directory = p_path.get_base_dir() + "/textures/" + path.get_file().get_basename() + extension;
+	if (dir.file_exists(name_find_texture_sub_directory)) {
+		found = true;
+		path = name_find_texture_sub_directory;
+		return;
+	}
+	String name_find_texture_upper_sub_directory = p_path.get_base_dir() + "/Textures/" + path.get_file().get_basename() + extension;
+	if (dir.file_exists(name_find_texture_upper_sub_directory)) {
+		found = true;
+		path = name_find_texture_upper_sub_directory;
+		return;
+	}
+	String name_find_texture_outside_sub_directory = p_path.get_base_dir() + "/../textures/" + path.get_file().get_basename() + extension;
+	if (dir.file_exists(name_find_texture_outside_sub_directory)) {
+		found = true;
+		path = name_find_texture_outside_sub_directory;
+		return;
+	}
+
+	String name_find_upper_texture_outside_sub_directory = p_path.get_base_dir() + "/../Textures/" + path.get_file().get_basename() + extension;
+	if (dir.file_exists(name_find_upper_texture_outside_sub_directory)) {
+		found = true;
+		path = name_find_upper_texture_outside_sub_directory;
+		return;
+	}
+}
+
+Ref<Material> ComChibifireFbxImporter::_generate_material_from_index(ImportState p_state, RawMaterial p_raw_material, RawMaterialType p_raw_material_type) {
+	Ref<Material> mat = Material::_new();
+	mat->set_name(p_raw_material.name.c_str());
+	return mat;
 }
