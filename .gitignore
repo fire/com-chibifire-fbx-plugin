@@ -278,3 +278,4 @@ bazel-resourceimporterfbx/
 /bazel-fbx
 /sample/addons/ComChibifireFBXImporter/lib/ComChibifireFbxImporter.dll
 /bazel-com-chibifire-fbx-plugin/
+/sample/model_cases/
