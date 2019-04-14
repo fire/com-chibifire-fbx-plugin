@@ -419,12 +419,13 @@ void ComChibifireFbxImporter::_generate_node(const RawModel p_scene, const RawNo
 			Skeleton *s = Object::cast_to<Skeleton>(Object::___get_from_variant(p_skeletons[k]));
 			node->get_parent()->remove_child(Object::cast_to<Node>(node));
 			MeshInstance *mi = MeshInstance::_new();
-			p_parent->remove_child(node);
 			p_parent->add_child(mi);
 			mi->set_owner(p_owner);
 			mi->set_name(node_name);
 			mi->set_transform(xform);
-			mi->set_skeleton_path(mi->get_path_to(s));
+			if (s->get_bone_count() > 0) {
+				mi->set_skeleton_path(mi->get_path_to(s));
+			}
 			p_skeletons[k] = s;
 		}
 	}
