@@ -370,7 +370,7 @@ Node *ComChibifireFbxImporter::import_scene(const String path, const int64_t fla
 				uv1s.push_back(Vector2(a.x, a.y));
 			}
 			arrays[ArrayMesh::ARRAY_TEX_UV2] = uv1s;
-		}			
+		}
 		PoolVector3Array vertices = PoolVector3Array();
 		if ((surfaceModel.GetVertexAttributes() & RAW_VERTEX_ATTRIBUTE_POSITION) != 0) {
 			const AttributeDefinition<Vec3f> ATTR_POSITION(
@@ -519,7 +519,6 @@ void ComChibifireFbxImporter::_generate_bone_groups(ImportState &p_state, RawNod
 }
 
 void ComChibifireFbxImporter::_generate_skeletons(ImportState &state, RawNode p_node, Dictionary ownership, Dictionary skeleton_map, Dictionary bind_xforms) {
-	
 }
 
 void ComChibifireFbxImporter::_generate_node(ImportState &state, const RawModel p_scene, const RawNode p_node, Node *p_parent, Node *p_owner, Array &r_bone_name) {
@@ -554,17 +553,20 @@ void ComChibifireFbxImporter::_generate_node(ImportState &state, const RawModel 
 }
 
 String ComChibifireFbxImporter::_convert_name(const std::string str) {
-	return String(str.c_str()).replace(".", "");
+	String s = String(str.c_str());
+	s = s.replace(".", "");
+	if (s.split(":").size() > 1) {
+		s = s.split(":")[1];
+	}
+	return s;
 }
 
 godot::Transform ComChibifireFbxImporter::_get_global_node_transform(Quatf rotation, Vec3f scale, Vec3f translation) {
 	Transform xform;
-	float angle = 0.0f;
-	Vec3f axis = Vec3f();
-	rotation.ToAngleAxis(&angle, &axis);
+	Mat3f m = rotation.ToMatrix();
+	xform.basis.set(m[0], m[1], m[2], m[3], m[4], m[5], m[6], m[7], m[8]);
+	xform.basis.transpose();
 	xform.basis.scale(Vector3(scale.x, scale.y, scale.z));
-	xform.basis.rotate(Vector3(axis.x, axis.y, axis.z), angle);
 	xform.origin = Vector3(translation.x, translation.y, translation.z);
-	xform.orthonormalize();
 	return xform;
 }
