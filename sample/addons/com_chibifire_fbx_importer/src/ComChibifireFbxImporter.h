@@ -25,17 +25,17 @@
 
 #include <Animation.hpp>
 #include <ArrayMesh.hpp>
+#include <Directory.hpp>
 #include <EditorPlugin.hpp>
 #include <EditorSceneImporter.hpp>
 #include <Node.hpp>
 #include <Ref.hpp>
 #include <Reference.hpp>
+#include <Skeleton.hpp>
 #include <String.hpp>
+#include <Transform.hpp>
 #include <core/Godot.hpp>
 #include <core/GodotGlobal.hpp>
-
-#include "Skeleton.hpp"
-#include "Transform.hpp"
 #include <raw/RawModel.hpp>
 
 using godot::Array;
@@ -102,6 +102,75 @@ private:
 	void _generate_node(ImportState &state, const RawModel p_scene, const RawNode p_node, Node *p_parent, Node *p_owner, Array &r_bone_name);
 	String _convert_name(const std::string str);
 	godot::Transform _get_global_node_transform(Quatf rotation, Vec3f scale, Vec3f translation);
+	//void _find_texture_path(const String &r_p_path, String &r_path, bool &r_found) {
+
+	//	Directory dir;
+
+	//	Array exts;
+	//	ResourceFormatLoaderImage::get_recognized_extensions(&exts);
+
+	//	Vector<String> split_path = r_path.get_basename().split("*");
+	//	if (split_path.size() == 2) {
+	//		r_found = true;
+	//		return;
+	//	}
+
+	//	if (dir.file_exists(r_p_path.get_base_dir() + r_path.get_file())) {
+	//		r_path = r_p_path.get_base_dir() + r_path.get_file();
+	//		r_found = true;
+	//		return;
+	//	}
+
+	//	for (int32_t i = 0; i < exts.size(); i++) {
+	//		if (r_found) {
+	//			return;
+	//		}
+	//		if (r_found == false) {
+	//			_find_texture_path(r_p_path, dir, r_path, r_found, "." + exts[i]);
+	//		}
+	//	}
+	//}
+
+	void _find_texture_path(const String &p_path, godot::Directory &dir, String &path, bool &found, String extension) {
+		String name = path.get_basename() + extension;
+		if (dir.file_exists(name)) {
+			found = true;
+			path = name;
+			return;
+		}
+		String name_ignore_sub_directory = p_path.get_base_dir() + "/" + path.get_file().get_basename() + extension;
+		if (dir.file_exists(name_ignore_sub_directory)) {
+			found = true;
+			path = name_ignore_sub_directory;
+			return;
+		}
+
+		String name_find_texture_sub_directory = p_path.get_base_dir() + "/textures/" + path.get_file().get_basename() + extension;
+		if (dir.file_exists(name_find_texture_sub_directory)) {
+			found = true;
+			path = name_find_texture_sub_directory;
+			return;
+		}
+		String name_find_texture_upper_sub_directory = p_path.get_base_dir() + "/Textures/" + path.get_file().get_basename() + extension;
+		if (dir.file_exists(name_find_texture_upper_sub_directory)) {
+			found = true;
+			path = name_find_texture_upper_sub_directory;
+			return;
+		}
+		String name_find_texture_outside_sub_directory = p_path.get_base_dir() + "/../textures/" + path.get_file().get_basename() + extension;
+		if (dir.file_exists(name_find_texture_outside_sub_directory)) {
+			found = true;
+			path = name_find_texture_outside_sub_directory;
+			return;
+		}
+
+		String name_find_upper_texture_outside_sub_directory = p_path.get_base_dir() + "/../Textures/" + path.get_file().get_basename() + extension;
+		if (dir.file_exists(name_find_upper_texture_outside_sub_directory)) {
+			found = true;
+			path = name_find_upper_texture_outside_sub_directory;
+			return;
+		}
+	}
 
 public:
 	enum ImportFlags {
