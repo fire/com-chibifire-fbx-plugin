@@ -33,7 +33,12 @@
 #include <String.hpp>
 #include <core/Godot.hpp>
 #include <core/GodotGlobal.hpp>
-#include "raw/RawModel.hpp"
+
+#include <raw/RawModel.hpp>
+#include "mathfu.hpp"
+#include "Transform.hpp"
+
+class RawModel;
 
 using godot::Array;
 using godot::ArrayMesh;
@@ -86,19 +91,21 @@ enum Presets {
 	PRESET_MULTIPLE_SCENES_AND_MATERIALS,
 	PRESET_MAX
 };
+struct ImportState {
+	const RawModel *scene;
+};
 
 class ComChibifireFbxImporter : public EditorSceneImporter {
 private:
 	GODOT_CLASS(ComChibifireFbxImporter, EditorSceneImporter);
-	struct ImportState {
-	};
+
 	void _generate_bone_groups(ImportState state, RawNode p_node, Dictionary ownership, Dictionary bind_xforms);
 	void _generate_skeletons(ImportState state, RawNode p_node, Dictionary ownership, Dictionary skeleton_map, Dictionary bind_xforms);
 	void _generate_node(const RawModel p_scene, const RawNode p_node, Node *p_parent, Node *p_owner, Array &p_skeletons, Array &r_bone_name);
 	String _convert_name(const std::string str);
+	godot::Transform _get_global_node_transform(Quatf rotation, Vec3f scale, Vec3f translation);
 
 public:
-
 	enum ImportFlags {
 		IMPORT_SCENE = 1,
 		IMPORT_ANIMATION = 2,

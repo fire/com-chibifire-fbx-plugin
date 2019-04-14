@@ -249,8 +249,6 @@ int64_t ComChibifireFbxImporter::get_import_flags() const {
 }
 
 Node *ComChibifireFbxImporter::import_scene(const String path, const int64_t flags, const int64_t bake_fps) {
-	ImportState state;
-
 	GltfOptions gltfOptions;
 	gltfOptions.keepAttribs = -1;
 	gltfOptions.outputBinary = true;
@@ -288,6 +286,8 @@ Node *ComChibifireFbxImporter::import_scene(const String path, const int64_t fla
 
 	raw.Condense();
 	raw.TransformGeometry(gltfOptions.computeNormals);
+	ImportState state;
+	state.scene = &raw;
 	Spatial *root = Spatial::_new();
 
 	Array skeletons;
@@ -320,7 +320,9 @@ Node *ComChibifireFbxImporter::import_scene(const String path, const int64_t fla
 			true);
 
 	for (const auto &surfaceModel : materialModels) {
-		assert(surfaceModel.GetSurfaceCount() == 1);
+		if (surfaceModel.GetSurfaceCount() != 1) {
+			continue;
+		}
 		const RawSurface &rawSurface = surfaceModel.GetSurface(0);
 		const long surfaceId = rawSurface.id;
 		String name = _convert_name(rawSurface.name);
@@ -404,6 +406,40 @@ void ComChibifireFbxImporter::_register_methods() {
 }
 
 void ComChibifireFbxImporter::_generate_bone_groups(ImportState state, RawNode p_node, Dictionary ownership, Dictionary bind_xforms) {
+	Transform mesh_offset = _get_global_node_transform(p_node.rotation, p_node.scale, p_node.translation);
+	//for (uint32_t i = 0; i < p_assimp_node->mNumMeshes; i++) {
+	//	const aiMesh *mesh = state.assimp_scene->mMeshes[i];
+	//	int owned_by = -1;
+	//	for (uint32_t j = 0; j < mesh->mNumBones; j++) {
+	//		const aiBone *bone = mesh->mBones[j];
+	//		String name = _assimp_get_string(bone->mName);
+
+	//		if (ownership.has(name)) {
+	//			owned_by = ownership[name];
+	//			break;
+	//		}
+	//	}
+
+	//	if (owned_by == -1) { //no owned, create new unique id
+	//		owned_by = 1;
+	//		for (Map<String, int>::Element *E = ownership.front(); E; E = E->next()) {
+	//			owned_by = MAX(E->get() + 1, owned_by);
+	//		}
+	//	}
+
+	//	for (uint32_t j = 0; j < mesh->mNumBones; j++) {
+	//		const aiBone *bone = mesh->mBones[j];
+	//		String name = _assimp_get_string(bone->mName);
+	//		ownership[name] = owned_by;
+	//		//store the full path for the bone transform
+	//		//when skeleton finds it's place in the tree, it will be restored
+	//		bind_xforms[name] = mesh_offset * _assimp_matrix_transform(bone->mOffsetMatrix);
+	//	}
+	//}
+
+	for (size_t i = 0; i < p_node.childIds.size(); i++) {
+		_generate_bone_groups(state, state.scene->GetNode(state.scene->GetNodeById(p_node.childIds[i])), ownership, bind_xforms);
+	}
 }
 
 void ComChibifireFbxImporter::_generate_skeletons(ImportState state, RawNode p_node, Dictionary ownership, Dictionary skeleton_map, Dictionary bind_xforms) {
@@ -412,14 +448,7 @@ void ComChibifireFbxImporter::_generate_skeletons(ImportState state, RawNode p_n
 void ComChibifireFbxImporter::_generate_node(const RawModel p_scene, const RawNode p_node, Node *p_parent, Node *p_owner, Array &p_skeletons, Array &r_bone_name) {
 	Spatial *node = NULL;
 	String node_name = _convert_name(p_node.name);
-	Transform xform;
-	float angle = 0.0f;
-	Vec3f axis = Vec3f();
-	xform.basis.rotate(Vector3(axis.x, axis.y, axis.z), angle);
-	xform.basis.scale(Vector3(p_node.scale.x, p_node.scale.y, p_node.scale.z));
-	p_node.rotation.ToAngleAxis(&angle, &axis);
-	xform.origin = Vector3(p_node.translation.x, p_node.translation.y, p_node.translation.z);
-	xform.orthonormalize();
+	Transform xform = _get_global_node_transform(p_node.rotation, p_node.scale, p_node.translation);
 	if (!p_node.isJoint) {
 		node = Spatial::_new();
 		node->set_name(node_name);
@@ -454,4 +483,17 @@ void ComChibifireFbxImporter::_generate_node(const RawModel p_scene, const RawNo
 
 String ComChibifireFbxImporter::_convert_name(const std::string str) {
 	return String(str.c_str()).replace(".", "");
+}
+
+godot::Transform ComChibifireFbxImporter::_get_global_node_transform(Quatf rotation, Vec3f scale, Vec3f translation) {
+	Transform xform;
+	float angle = 0.0f;
+	Vec3f axis = Vec3f();
+	rotation.ToAngleAxis(&angle, &axis);
+	xform.basis.rotate(Vector3(axis.x, axis.y, axis.z), angle);
+	xform.basis.scale(Vector3(scale.x, scale.y, scale.z));
+	xform.origin = Vector3(translation.x, translation.y, translation.z);
+	xform.orthonormalize();
+
+	return xform;
 }
