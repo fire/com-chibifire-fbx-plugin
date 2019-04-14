@@ -328,9 +328,8 @@ Node *ComChibifireFbxImporter::_import_scene(const String path, const int64_t fl
 	for (const auto &surface_model : material_models) {
 		assert(surface_model.GetSurfaceCount() == 1);
 		for (size_t i = 0; i < surface_model.GetSurfaceCount(); i++) {
-			const long surfaceId = surface_model.GetSurface(0).id;
 			String name = _convert_name(surface_model.GetSurface(0).name);
-			Godot::print("FBX processing: " + name);
+			Godot::print("FBX instancing mesh: " + name);
 
 			Ref<ArrayMesh> arr_mesh;
 			arr_mesh.instance();
@@ -344,7 +343,8 @@ Node *ComChibifireFbxImporter::_import_scene(const String path, const int64_t fl
 				continue;
 			}
 			if (mesh_cache.has(name)) {
-				mi->set_mesh(mesh_cache[name]);
+				Ref<ArrayMesh> arr = mesh_cache[name];
+				mi->set_mesh(arr->duplicate(true));
 				continue;
 			}
 
@@ -584,8 +584,7 @@ void ComChibifireFbxImporter::_generate_node(const ImportState &state, const Raw
 		MeshInstance *mi = MeshInstance::_new();
 		p_parent->add_child(mi);
 		mi->set_owner(p_owner);
-		String surface_name = state.scene->GetSurface(state.scene->GetSurfaceById(p_node.surfaceId)).name.c_str();
-		mi->set_name(surface_name);
+		mi->set_name(node_name);
 		mi->set_transform(xform);
 		//Skeleton *s = Object::cast_to<Skeleton>(Object::___get_from_variant(state.skeleton));
 		//mi->set_skeleton_path(mi->get_path_to(state.skeleton));
