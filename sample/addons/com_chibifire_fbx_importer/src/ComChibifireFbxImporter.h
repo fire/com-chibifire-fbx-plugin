@@ -110,6 +110,31 @@ private:
 	void _find_texture_path(const String &p_path, godot::Directory *dir, String &path, bool &found, String extension);
 	Ref<godot::Material> _generate_material_from_index(const ImportState &p_state, const RawMaterial p_raw_material, const RawMaterialType p_raw_material_type);
 	Ref<godot::Texture> _load_texture(const ImportState &p_state, const String p_path);
+	using pixel = std::array<float, 4>; // pixel components are floats in [0, 1]
+	using pixel_merger = std::function<pixel(const std::vector<const pixel *>)>;
+	struct TexInfo {
+		explicit TexInfo(int rawTexIx) :
+				rawTexIx(rawTexIx) {}
+
+		const int rawTexIx;
+		int width{};
+		int height{};
+		int channels{};
+		uint8_t *pixels{};
+	};
+	std::vector<TexInfo> combine(
+			const RawModel &p_scene,
+			const std::vector<int> &ixVec,
+			const std::string &tag,
+			const pixel_merger &mergeFunction,
+			bool transparency);
+	static std::string texIndicesKey(const std::vector<int> &ixVec, const std::string &tag) {
+		std::string result = tag;
+		for (int ix : ixVec) {
+			result += "_" + std::to_string(ix);
+		}
+		return result;
+	};
 
 public:
 	enum ImportFlags {

@@ -45,10 +45,15 @@
 
 #include "Engine.hpp"
 #include <Godot.hpp>
+#include <ImageTexture.hpp>
 #include <PoolArrays.hpp>
 #include <ProjectSettings.hpp>
 #include <Skeleton.hpp>
 #include <SpatialMaterial.hpp>
+
+#include "gltf/TextureBuilder.hpp"
+#include "stb_image.h"
+#include "utils/String_Utils.hpp"
 
 #ifndef CLAMP
 #define CLAMP(m_a, m_min, m_max) (((m_a) < (m_min)) ? (m_min) : (((m_a) > (m_max)) ? m_max : m_a))
@@ -311,20 +316,20 @@ Node *ComChibifireFbxImporter::_import_scene(const String path, const int64_t fl
 	////generates the skeletons when bones are found in the hierarchy, and follows them (including gaps/holes).
 	//_generate_skeletons(state, raw_root_node, ownership, skeleton_map, bind_xforms);
 	//TODO(Ernest) Draco compression
-	std::vector<RawModel> materialModels;
+	std::vector<RawModel> material_models;
 	raw.CreateMaterialModels(
-			materialModels,
+			material_models,
 			false,
 			-1,
-			false);
+			true);
 
 	_generate_node(state, raw_root_node, root, root, bone_names);
 	Dictionary mesh_cache;
-	for (const auto &surfaceModel : materialModels) {
-		assert(surfaceModel.GetSurfaceCount() == 1);
-		for (size_t i = 0; i < surfaceModel.GetSurfaceCount(); i++) {
-			const long surfaceId = surfaceModel.GetSurface(0).id;
-			String name = _convert_name(surfaceModel.GetSurface(0).name);
+	for (const auto &surface_model : material_models) {
+		assert(surface_model.GetSurfaceCount() == 1);
+		for (size_t i = 0; i < surface_model.GetSurfaceCount(); i++) {
+			const long surfaceId = surface_model.GetSurface(0).id;
+			String name = _convert_name(surface_model.GetSurface(0).name);
 			Godot::print("FBX processing: " + name);
 
 			Ref<ArrayMesh> arr_mesh;
@@ -347,8 +352,7 @@ Node *ComChibifireFbxImporter::_import_scene(const String path, const int64_t fl
 			arrays.resize(ArrayMesh::ARRAY_MAX);
 
 			PoolVector3Array normals = PoolVector3Array();
-			int32_t attribute_flags = surfaceModel.GetVertexAttributes();
-			if ((surfaceModel.GetVertexAttributes() & RAW_VERTEX_ATTRIBUTE_NORMAL) != 0) {
+			if ((surface_model.GetVertexAttributes() & RAW_VERTEX_ATTRIBUTE_NORMAL) != 0) {
 				const AttributeDefinition<Vec3f> ATTR_NORMAL(
 						"NORMAL",
 						&RawVertex::normal,
@@ -356,7 +360,7 @@ Node *ComChibifireFbxImporter::_import_scene(const String path, const int64_t fl
 						draco::GeometryAttribute::NORMAL,
 						draco::DT_FLOAT32);
 				std::vector<Vec3f> attribArrUV0;
-				surfaceModel.GetAttributeArray<Vec3f>(attribArrUV0, ATTR_NORMAL.rawAttributeIx);
+				surface_model.GetAttributeArray<Vec3f>(attribArrUV0, ATTR_NORMAL.rawAttributeIx);
 
 				for (auto a : attribArrUV0) {
 					normals.push_back(Vector3(a.x, a.y, a.z));
@@ -364,8 +368,25 @@ Node *ComChibifireFbxImporter::_import_scene(const String path, const int64_t fl
 				arrays[ArrayMesh::ARRAY_NORMAL] = normals;
 			}
 
+			PoolColorArray colors = PoolColorArray();
+			if ((surface_model.GetVertexAttributes() & RAW_VERTEX_ATTRIBUTE_COLOR) != 0) {
+				const AttributeDefinition<Vec4f> ATTR_COLORS(
+						"COLOR",
+						&RawVertex::color,
+						GLT_VEC4F,
+						draco::GeometryAttribute::COLOR,
+						draco::DT_FLOAT32);
+				std::vector<Vec4f> attribArrColor;
+				surface_model.GetAttributeArray<Vec4f>(attribArrColor, ATTR_COLORS.rawAttributeIx);
+
+				for (auto a : attribArrColor) {
+					colors.push_back(Color(a.x, a.y, a.z, a.w));
+				}
+				arrays[ArrayMesh::ARRAY_COLOR] = colors;
+			}
+
 			PoolVector2Array uv0s = PoolVector2Array();
-			if ((surfaceModel.GetVertexAttributes() & RAW_VERTEX_ATTRIBUTE_UV0) != 0) {
+			if ((surface_model.GetVertexAttributes() & RAW_VERTEX_ATTRIBUTE_UV0) != 0) {
 				const AttributeDefinition<Vec2f> ATTR_TEXCOORD_0(
 						"TEXCOORD_0",
 						&RawVertex::uv0,
@@ -373,7 +394,7 @@ Node *ComChibifireFbxImporter::_import_scene(const String path, const int64_t fl
 						draco::GeometryAttribute::TEX_COORD,
 						draco::DT_FLOAT32);
 				std::vector<Vec2f> attribArrUV0;
-				surfaceModel.GetAttributeArray<Vec2f>(attribArrUV0, ATTR_TEXCOORD_0.rawAttributeIx);
+				surface_model.GetAttributeArray<Vec2f>(attribArrUV0, ATTR_TEXCOORD_0.rawAttributeIx);
 
 				for (auto a : attribArrUV0) {
 					uv0s.push_back(Vector2(a.x, a.y));
@@ -381,7 +402,7 @@ Node *ComChibifireFbxImporter::_import_scene(const String path, const int64_t fl
 				arrays[ArrayMesh::ARRAY_TEX_UV] = uv0s;
 			}
 			PoolVector2Array uv1s = PoolVector2Array();
-			if ((surfaceModel.GetVertexAttributes() & RAW_VERTEX_ATTRIBUTE_UV1) != 0) {
+			if ((surface_model.GetVertexAttributes() & RAW_VERTEX_ATTRIBUTE_UV1) != 0) {
 				const AttributeDefinition<Vec2f> ATTR_TEXCOORD_1(
 						"TEXCOORD_1",
 						&RawVertex::uv1,
@@ -389,7 +410,7 @@ Node *ComChibifireFbxImporter::_import_scene(const String path, const int64_t fl
 						draco::GeometryAttribute::TEX_COORD,
 						draco::DT_FLOAT32);
 				std::vector<Vec2f> attribArrUV1;
-				surfaceModel.GetAttributeArray<Vec2f>(attribArrUV1, ATTR_TEXCOORD_1.rawAttributeIx);
+				surface_model.GetAttributeArray<Vec2f>(attribArrUV1, ATTR_TEXCOORD_1.rawAttributeIx);
 
 				for (auto a : attribArrUV1) {
 					uv1s.push_back(Vector2(a.x, a.y));
@@ -397,7 +418,7 @@ Node *ComChibifireFbxImporter::_import_scene(const String path, const int64_t fl
 				arrays[ArrayMesh::ARRAY_TEX_UV2] = uv1s;
 			}
 			PoolVector3Array vertices = PoolVector3Array();
-			if ((surfaceModel.GetVertexAttributes() & RAW_VERTEX_ATTRIBUTE_POSITION) != 0) {
+			if ((surface_model.GetVertexAttributes() & RAW_VERTEX_ATTRIBUTE_POSITION) != 0) {
 				const AttributeDefinition<Vec3f> ATTR_POSITION(
 						"POSITION",
 						&RawVertex::position,
@@ -405,7 +426,7 @@ Node *ComChibifireFbxImporter::_import_scene(const String path, const int64_t fl
 						draco::GeometryAttribute::POSITION,
 						draco::DT_FLOAT32);
 				std::vector<Vec3f> attribArr;
-				surfaceModel.GetAttributeArray<Vec3f>(attribArr, ATTR_POSITION.rawAttributeIx);
+				surface_model.GetAttributeArray<Vec3f>(attribArr, ATTR_POSITION.rawAttributeIx);
 
 				for (auto a : attribArr) {
 					vertices.push_back(Vector3(a.x, a.y, a.z));
@@ -459,10 +480,10 @@ Node *ComChibifireFbxImporter::_import_scene(const String path, const int64_t fl
 			//	arrays[ArrayMesh::ARRAY_WEIGHTS] = bone_weights;
 			//}
 			PoolIntArray idxs = PoolIntArray();
-			for (int i = 0; i < surfaceModel.GetTriangleCount(); i++) {
-				idxs.push_back(surfaceModel.GetTriangle(i).verts[2]);
-				idxs.push_back(surfaceModel.GetTriangle(i).verts[1]);
-				idxs.push_back(surfaceModel.GetTriangle(i).verts[0]);
+			for (int i = 0; i < surface_model.GetTriangleCount(); i++) {
+				idxs.push_back(surface_model.GetTriangle(i).verts[2]);
+				idxs.push_back(surface_model.GetTriangle(i).verts[1]);
+				idxs.push_back(surface_model.GetTriangle(i).verts[0]);
 			}
 			arrays[ArrayMesh::ARRAY_INDEX] = idxs;
 			int32_t idx = arr_mesh->get_surface_count();
@@ -470,7 +491,7 @@ Node *ComChibifireFbxImporter::_import_scene(const String path, const int64_t fl
 			arr_mesh->surface_set_name(idx, name);
 
 			// TODO(Ernest) Cache code
-			Ref<Material> material = _generate_material_from_index(state, surfaceModel.GetMaterial(0), surfaceModel.GetMaterial(0).type);
+			Ref<Material> material = _generate_material_from_index(state, surface_model.GetMaterial(0), surface_model.GetMaterial(0).type);
 			arr_mesh->surface_set_material(idx, material);
 			if (mi) {
 				mi->set_mesh(arr_mesh);
@@ -697,6 +718,88 @@ Ref<godot::Material> ComChibifireFbxImporter::_generate_material_from_index(cons
 		user_properties.push_back(prop);
 	}
 
+	if (p_raw_material.info->shadingModel != RAW_SHADING_MODEL_PBR_MET_ROUGH) {
+
+		//TODO(Ernest) Legacy materials
+		//auto simpleTex = [&](RawTextureUsage usage) -> std::shared_ptr<TextureData> {
+		//	return (p_raw_material.textures[usage] >= 0) ? simple(p_raw_material.textures[usage], "simple") : nullptr;
+		//};
+		Vec4f diffuseFactor;
+		float metallic, roughness;
+		std::vector<ComChibifireFbxImporter::TexInfo> aoMetRoughTex;
+		const RawTraditionalMatProps *props = ((RawTraditionalMatProps *)p_raw_material.info.get());
+		diffuseFactor = props->diffuseFactor;
+
+		if (p_raw_material.info->shadingModel == RAW_SHADING_MODEL_BLINN ||
+				p_raw_material.info->shadingModel == RAW_SHADING_MODEL_PHONG) {
+			// blinn/phong hardcoded to 0.4 metallic
+			metallic = 0.4f;
+
+			// fairly arbitrary conversion equation, with properties:
+			//   shininess 0 -> roughness 1
+			//   shininess 2 -> roughness ~0.7
+			//   shininess 6 -> roughness 0.5
+			//   shininess 16 -> roughness ~0.33
+			//   as shininess ==> oo, roughness ==> 0
+			auto getRoughness = [&](float shininess) { return sqrtf(2.0f / (2.0f + shininess)); };
+
+			aoMetRoughTex = combine(
+					*p_state.scene,
+					{
+							p_raw_material.textures[RAW_TEXTURE_USAGE_SHININESS],
+					},
+					"ao_met_rough",
+					[&](const std::vector<const TextureBuilder::pixel *> pixels)
+							-> TextureBuilder::pixel {
+						// do not multiply with props->shininess; that doesn't work like the other
+						// factors.
+						float shininess = props->shininess * (*pixels[0])[0];
+						return { { 0, getRoughness(shininess), metallic, 1 } };
+					},
+					false);
+
+			if (aoMetRoughTex.size() != 0) {
+				// if we successfully built a texture, factors are just multiplicative identity
+				metallic = roughness = 1.0f;
+
+				Ref<Image> img;
+				img.instance();
+				PoolByteArray arr;
+				uint32_t size = aoMetRoughTex[0].width * aoMetRoughTex[0].height;
+				arr.resize(size);
+				memcpy(arr.write().ptr(), aoMetRoughTex[0].pixels, size);
+				ERR_FAIL_COND_V(arr.size() % 4 != 0, Ref<Texture>());
+				//ARGB8888 to RGBA8888
+				//for (int32_t i = 0; i < arr.size() / 4; i++) {
+				//	arr.write().ptr()[(4 * i) + 3] = arr[(4 * i) + 0];
+				//	arr.write().ptr()[(4 * i) + 0] = arr[(4 * i) + 1];
+				//	arr.write().ptr()[(4 * i) + 1] = arr[(4 * i) + 2];
+				//	arr.write().ptr()[(4 * i) + 2] = arr[(4 * i) + 3];
+				//}
+				img->create_from_data(aoMetRoughTex[0].width, aoMetRoughTex[0].height, true, Image::FORMAT_RGBA8, arr);
+				ERR_FAIL_COND_V(img.is_null(), Ref<Texture>());
+
+				Ref<ImageTexture> t;
+				t.instance();
+				t->create_from_image(img);
+				t->set_storage(ImageTexture::STORAGE_COMPRESS_LOSSY);
+				mat->set_texture(SpatialMaterial::TEXTURE_METALLIC, t);
+				mat->set_texture(SpatialMaterial::TEXTURE_ROUGHNESS, t);
+				mat->set_texture(SpatialMaterial::TEXTURE_AMBIENT_OCCLUSION, t);
+
+			} else {
+				// no shininess texture,
+				roughness = getRoughness(props->shininess);
+			}
+
+		} else {
+			metallic = 0.2f;
+			roughness = 0.8f;
+		}
+		mat->set_metallic(metallic);
+		mat->set_roughness(roughness);
+	}
+
 	//RAW_TEXTURE_USAGE_AMBIENT
 	//RAW_TEXTURE_USAGE_SPECULAR
 	//RAW_TEXTURE_USAGE_SHININESS
@@ -862,4 +965,84 @@ Ref<godot::Texture> ComChibifireFbxImporter::_load_texture(const ImportState &p_
 	//}
 	Ref<Texture> p_texture = ResourceLoader::get_singleton()->load(p_path, "Texture");
 	return p_texture;
+}
+
+std::vector<ComChibifireFbxImporter::TexInfo> ComChibifireFbxImporter::combine(const RawModel &p_scene, const std::vector<int> &ixVec, const std::string &tag, const pixel_merger &mergeFunction, bool transparency) {
+
+	int width = -1, height = -1;
+	std::string mergedFilename = tag;
+	std::vector<TexInfo> texes{};
+	for (const int rawTexIx : ixVec) {
+		TexInfo info(rawTexIx);
+		if (rawTexIx >= 0) {
+			const RawTexture &rawTex = p_scene.GetTexture(rawTexIx);
+			const std::string &fileLoc = rawTex.fileLocation;
+			const std::string &name =
+					StringUtils::GetFileBaseString(StringUtils::GetFileNameString(fileLoc));
+			if (!fileLoc.empty()) {
+				info.pixels = stbi_load(fileLoc.c_str(), &info.width, &info.height, &info.channels, 0);
+				if (!info.pixels) {
+					fmt::printf("Warning: merge texture [%d](%s) could not be loaded.\n", rawTexIx, name);
+				} else {
+					if (width < 0) {
+						width = info.width;
+						height = info.height;
+					} else if (width != info.width || height != info.height) {
+						fmt::printf(
+								"Warning: texture %s (%d, %d) can't be merged with previous texture(s) of dimension (%d, %d)\n",
+								name,
+								info.width,
+								info.height,
+								width,
+								height);
+						// this is bad enough that we abort the whole merge
+						return std::vector<TexInfo>();
+					}
+					mergedFilename += "_" + name;
+				}
+			}
+		}
+		texes.push_back(info);
+	}
+	// at the moment, the best choice of filename is also the best choice of name
+	const std::string mergedName = mergedFilename;
+
+	if (width < 0) {
+		// no textures to merge; bail
+		return std::vector<TexInfo>();
+	}
+	// TODO: which channel combinations make sense in input files?
+
+	// write 3 or 4 channels depending on whether or not we need transparency
+	int channels = transparency ? 4 : 3;
+
+	std::vector<uint8_t> mergedPixels(static_cast<size_t>(channels * width * height));
+	std::vector<pixel> pixels(texes.size());
+	std::vector<const pixel *> pixelPointers(texes.size());
+	for (int xx = 0; xx < width; xx++) {
+		for (int yy = 0; yy < height; yy++) {
+			pixels.clear();
+			for (int jj = 0; jj < texes.size(); jj++) {
+				const TexInfo &tex = texes[jj];
+				// each texture's structure will depend on its channel count
+				int ii = tex.channels * (xx + yy * width);
+				int kk = 0;
+				if (tex.pixels != nullptr) {
+					for (; kk < tex.channels; kk++) {
+						pixels[jj][kk] = tex.pixels[ii++] / 255.0f;
+					}
+				}
+				for (; kk < pixels[jj].size(); kk++) {
+					pixels[jj][kk] = 1.0f;
+				}
+				pixelPointers[jj] = &pixels[jj];
+			}
+			const pixel merged = mergeFunction(pixelPointers);
+			int ii = channels * (xx + yy * width);
+			for (int jj = 0; jj < channels; jj++) {
+				mergedPixels[ii + jj] = static_cast<uint8_t>(fmax(0, fmin(255.0f, merged[jj] * 255.0f)));
+			}
+		}
+	}
+	return texes;
 }
