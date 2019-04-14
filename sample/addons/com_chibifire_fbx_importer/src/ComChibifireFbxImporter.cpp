@@ -296,7 +296,7 @@ Node *ComChibifireFbxImporter::import_scene(const String path, const int64_t fla
 	Skeleton *s = Skeleton::_new();
 	root->add_child(s);
 	s->set_owner(root);
-	skeletons.push_back(s);
+	state.skeleton = s;
 	//Map<String, Transform>
 	Dictionary bind_xforms; //temporary map to store bind transforms
 	//guess the skeletons, since assimp does not really support them directly
@@ -309,7 +309,7 @@ Node *ComChibifireFbxImporter::import_scene(const String path, const int64_t fla
 	Dictionary skeleton_map; //maps previously created groups to actual skeletons
 	//generates the skeletons when bones are found in the hierarchy, and follows them (including gaps/holes).
 	_generate_skeletons(state, raw_root_node, ownership, skeleton_map, bind_xforms);
-	_generate_node(raw, raw_root_node, root, root, skeletons, bone_names);
+	_generate_node(state, raw, raw_root_node, root, root, bone_names);
 
 	//TODO(Ernest) Draco compression
 	std::vector<RawModel> materialModels;
@@ -320,7 +320,7 @@ Node *ComChibifireFbxImporter::import_scene(const String path, const int64_t fla
 			true);
 
 	for (const auto &surfaceModel : materialModels) {
-		if (surfaceModel.GetSurfaceCount() != 1) {
+		if (surfaceModel.GetSurfaceCount() == 0) {
 			continue;
 		}
 		const RawSurface &rawSurface = surfaceModel.GetSurface(0);
@@ -334,23 +334,12 @@ Node *ComChibifireFbxImporter::import_scene(const String path, const int64_t fla
 		if (!mi) {
 			continue;
 		}
-		SurfaceTool *st = SurfaceTool::_new();
-		st->begin(Mesh::PRIMITIVE_TRIANGLES);
 
-		if ((surfaceModel.GetVertexAttributes() & RAW_VERTEX_ATTRIBUTE_POSITION) != 0) {
-			const AttributeDefinition<Vec3f> ATTR_POSITION(
-					"POSITION",
-					&RawVertex::position,
-					GLT_VEC3F,
-					draco::GeometryAttribute::POSITION,
-					draco::DT_FLOAT32);
-			std::vector<Vec3f> attribArr;
-			surfaceModel.GetAttributeArray<Vec3f>(attribArr, ATTR_POSITION.rawAttributeIx);
-
-			for (auto a : attribArr) {
-				st->add_vertex(Vector3(a.x, a.y, a.z));
-			}
-		}
+		Ref<ArrayMesh> arr_mesh;
+		arr_mesh.instance();
+		Array arrays;
+		arrays.resize(ArrayMesh::ARRAY_MAX);
+		PoolVector2Array uv0s = PoolVector2Array();
 		if ((surfaceModel.GetVertexAttributes() & RAW_VERTEX_ATTRIBUTE_UV0) != 0) {
 			const AttributeDefinition<Vec2f> ATTR_TEXCOORD_0(
 					"TEXCOORD_0",
@@ -362,9 +351,11 @@ Node *ComChibifireFbxImporter::import_scene(const String path, const int64_t fla
 			surfaceModel.GetAttributeArray<Vec2f>(attribArrUV0, ATTR_TEXCOORD_0.rawAttributeIx);
 
 			for (auto a : attribArrUV0) {
-				st->add_uv(Vector2(a.x, a.y));
+				uv0s.push_back(Vector2(a.x, a.y));
 			}
+			arrays[ArrayMesh::ARRAY_TEX_UV] = uv0s;
 		}
+		PoolVector2Array uv1s = PoolVector2Array();
 		if ((surfaceModel.GetVertexAttributes() & RAW_VERTEX_ATTRIBUTE_UV1) != 0) {
 			const AttributeDefinition<Vec2f> ATTR_TEXCOORD_1(
 					"TEXCOORD_1",
@@ -376,19 +367,55 @@ Node *ComChibifireFbxImporter::import_scene(const String path, const int64_t fla
 			surfaceModel.GetAttributeArray<Vec2f>(attribArrUV1, ATTR_TEXCOORD_1.rawAttributeIx);
 
 			for (auto a : attribArrUV1) {
-				st->add_uv2(Vector2(a.x, a.y));
+				uv1s.push_back(Vector2(a.x, a.y));
 			}
-		}
+			arrays[ArrayMesh::ARRAY_TEX_UV2] = uv1s;
+		}			
+		PoolVector3Array vertices = PoolVector3Array();
+		if ((surfaceModel.GetVertexAttributes() & RAW_VERTEX_ATTRIBUTE_POSITION) != 0) {
+			const AttributeDefinition<Vec3f> ATTR_POSITION(
+					"POSITION",
+					&RawVertex::position,
+					GLT_VEC3F,
+					draco::GeometryAttribute::POSITION,
+					draco::DT_FLOAT32);
+			std::vector<Vec3f> attribArr;
+			surfaceModel.GetAttributeArray<Vec3f>(attribArr, ATTR_POSITION.rawAttributeIx);
 
-		typedef uint32_t TriangleIndex;
+			for (auto a : attribArr) {
+				vertices.push_back(Vector3(a.x, a.y, a.z));
+			}
+			arrays[ArrayMesh::ARRAY_VERTEX] = vertices;
+		}
+		PoolRealArray bone_indices = PoolRealArray();
+		if ((surfaceModel.GetVertexAttributes() & RAW_VERTEX_ATTRIBUTE_JOINT_INDICES) != 0) {
+			const AttributeDefinition<Vec4i> ATTR_JOINTS(
+					"JOINTS_0",
+					&RawVertex::jointIndices,
+					GLT_VEC3F,
+					draco::GeometryAttribute::GENERIC,
+					draco::DT_UINT16);
+			std::vector<Vec4i> attribArr;
+			surfaceModel.GetAttributeArray<Vec4i>(attribArr, ATTR_JOINTS.rawAttributeIx);
+
+			for (auto a : attribArr) {
+				bone_indices.push_back(a.x);
+				bone_indices.push_back(a.y);
+				bone_indices.push_back(a.z);
+				bone_indices.push_back(a.w);
+			}
+			arrays[ArrayMesh::ARRAY_BONES] = bone_indices;
+		}
 		Array result;
-
+		PoolIntArray idxs = PoolIntArray();
 		for (int i = 0; i < surfaceModel.GetTriangleCount(); i++) {
-			st->add_index((TriangleIndex)surfaceModel.GetTriangle(i).verts[2]);
-			st->add_index((TriangleIndex)surfaceModel.GetTriangle(i).verts[1]);
-			st->add_index((TriangleIndex)surfaceModel.GetTriangle(i).verts[0]);
+			idxs.push_back(surfaceModel.GetTriangle(i).verts[0]);
+			idxs.push_back(surfaceModel.GetTriangle(i).verts[1]);
+			idxs.push_back(surfaceModel.GetTriangle(i).verts[2]);
 		}
-		mi->set_mesh(st->commit());
+		arrays[ArrayMesh::ARRAY_INDEX] = idxs;
+		arr_mesh->add_surface_from_arrays(Mesh::PRIMITIVE_TRIANGLES, arrays);
+		mi->set_mesh(arr_mesh);
 	}
 
 	return root;
@@ -405,47 +432,71 @@ void ComChibifireFbxImporter::_register_methods() {
 	register_method("_import_animation", &ComChibifireFbxImporter::import_animation);
 }
 
-void ComChibifireFbxImporter::_generate_bone_groups(ImportState state, RawNode p_node, Dictionary ownership, Dictionary bind_xforms) {
+void ComChibifireFbxImporter::_generate_bone_groups(ImportState &p_state, RawNode p_node, Dictionary p_ownership, Dictionary p_bind_xforms) {
 	Transform mesh_offset = _get_global_node_transform(p_node.rotation, p_node.scale, p_node.translation);
-	//for (uint32_t i = 0; i < p_assimp_node->mNumMeshes; i++) {
-	//	const aiMesh *mesh = state.assimp_scene->mMeshes[i];
-	//	int owned_by = -1;
-	//	for (uint32_t j = 0; j < mesh->mNumBones; j++) {
-	//		const aiBone *bone = mesh->mBones[j];
-	//		String name = _assimp_get_string(bone->mName);
+	for (uint32_t i = 0; i < p_state.scene->GetSurfaceCount(); i++) {
+		const RawSurface mesh = p_state.scene->GetSurface(i);
 
-	//		if (ownership.has(name)) {
-	//			owned_by = ownership[name];
-	//			break;
-	//		}
-	//	}
+		Dictionary inverseBindMatrices;
+		for (size_t i = 0; i < mesh.jointIds.size(); i++) {
+			int32_t node = p_state.scene->GetNodeById(mesh.jointIds[i]);
+			const RawNode bone = p_state.scene->GetNode(node);
+			if (p_state.skeleton->find_bone(_convert_name(bone.name)) != -1) {
+				continue;
+			}
+			p_state.skeleton->add_bone(_convert_name(bone.name));
+			Transform xform;
+			Mat4f m = mesh.inverseBindMatrices[i];
+			xform.set(m.GetColumn(0).x, m.GetColumn(0).y, m.GetColumn(0).z, m.GetColumn(1).x, m.GetColumn(1).y, m.GetColumn(1).z, m.GetColumn(2).x, m.GetColumn(2).y, m.GetColumn(2).z, m.GetColumn(3).x, m.GetColumn(3).y, m.GetColumn(3).z);
+			int32_t bone_idx = p_state.skeleton->find_bone(_convert_name(bone.name));
+			p_state.skeleton->set_bone_rest(bone_idx, xform.affine_inverse());
+		}
 
-	//	if (owned_by == -1) { //no owned, create new unique id
-	//		owned_by = 1;
-	//		for (Map<String, int>::Element *E = ownership.front(); E; E = E->next()) {
-	//			owned_by = MAX(E->get() + 1, owned_by);
-	//		}
-	//	}
+		//std::vector<uint32_t> jointIndexes;
+		//for (const auto &jointId : mesh.jointIds) {
+		//	jointIndexes.push_back(p_state.scene->GetNode(p_state.scene->GetNodeById(jointId)).ix);
+		//}
 
-	//	for (uint32_t j = 0; j < mesh->mNumBones; j++) {
-	//		const aiBone *bone = mesh->mBones[j];
-	//		String name = _assimp_get_string(bone->mName);
-	//		ownership[name] = owned_by;
-	//		//store the full path for the bone transform
-	//		//when skeleton finds it's place in the tree, it will be restored
-	//		bind_xforms[name] = mesh_offset * _assimp_matrix_transform(bone->mOffsetMatrix);
-	//	}
-	//}
+		//int owned_by = -1;
+		//for (uint32_t j = 0; j < mesh.jointIds.size(); j++) {
+		//	const int64_t bone = mesh.jointIds[j];
+		//	const RawNode node = p_state.scene->GetNode(p_state.scene->GetNodeById(bone));
+		//	String name = _convert_name(node.name);
+
+		//	if (p_ownership.has(name)) {
+		//		owned_by = p_ownership[name];
+		//		break;
+		//	}
+		//}
+
+		//if (owned_by == -1) { //no owned, create new unique id
+		//	owned_by = 1;
+		//	//for (Map<String, int>::Element *E = p_ownership.front(); E; E = E->next()) {
+		//	//	owned_by = MAX(E->get() + 1, owned_by);
+		//	//}
+		//}
+
+		//for (uint32_t j = 0; j < mesh.jointIds.size(); j++) {
+		//	const int64_t bone = mesh.jointIds[j];
+		//	const RawNode node = p_state.scene->GetNode(p_state.scene->GetNodeById(bone));
+		//	String name = _convert_name(node.name);
+		//	p_ownership[name] = owned_by;
+		//	//store the full path for the bone transform
+		//	//when skeleton finds it's place in the tree, it will be restored
+		//	p_bind_xforms[name] = mesh_offset * _get_global_node_transform(mesh.inverseBindMatrices);
+		//}
+	}
 
 	for (size_t i = 0; i < p_node.childIds.size(); i++) {
-		_generate_bone_groups(state, state.scene->GetNode(state.scene->GetNodeById(p_node.childIds[i])), ownership, bind_xforms);
+		_generate_bone_groups(p_state, p_state.scene->GetNode(p_state.scene->GetNodeById(p_node.childIds[i])), p_ownership, p_bind_xforms);
 	}
 }
 
-void ComChibifireFbxImporter::_generate_skeletons(ImportState state, RawNode p_node, Dictionary ownership, Dictionary skeleton_map, Dictionary bind_xforms) {
+void ComChibifireFbxImporter::_generate_skeletons(ImportState &state, RawNode p_node, Dictionary ownership, Dictionary skeleton_map, Dictionary bind_xforms) {
+	
 }
 
-void ComChibifireFbxImporter::_generate_node(const RawModel p_scene, const RawNode p_node, Node *p_parent, Node *p_owner, Array &p_skeletons, Array &r_bone_name) {
+void ComChibifireFbxImporter::_generate_node(ImportState &state, const RawModel p_scene, const RawNode p_node, Node *p_parent, Node *p_owner, Array &r_bone_name) {
 	Spatial *node = NULL;
 	String node_name = _convert_name(p_node.name);
 	Transform xform = _get_global_node_transform(p_node.rotation, p_node.scale, p_node.translation);
@@ -461,23 +512,18 @@ void ComChibifireFbxImporter::_generate_node(const RawModel p_scene, const RawNo
 	}
 
 	if (p_node.surfaceId > 0) {
-		for (size_t k = 0; k < p_skeletons.size(); k++) {
-			Skeleton *s = Object::cast_to<Skeleton>(Object::___get_from_variant(p_skeletons[k]));
-			node->get_parent()->remove_child(Object::cast_to<Node>(node));
-			MeshInstance *mi = MeshInstance::_new();
-			p_parent->add_child(mi);
-			mi->set_owner(p_owner);
-			mi->set_name(node_name);
-			mi->set_transform(xform);
-			if (s->get_bone_count() > 0) {
-				mi->set_skeleton_path(mi->get_path_to(s));
-			}
-			p_skeletons[k] = s;
-		}
+		Skeleton *s = Object::cast_to<Skeleton>(Object::___get_from_variant(state.skeleton));
+		node->get_parent()->remove_child(Object::cast_to<Node>(node));
+		MeshInstance *mi = MeshInstance::_new();
+		p_parent->add_child(mi);
+		mi->set_owner(p_owner);
+		mi->set_name(node_name);
+		mi->set_transform(xform);
+		mi->set_skeleton_path(mi->get_path_to(state.skeleton));
 	}
 
 	for (size_t i = 0; i < p_node.childIds.size(); i++) {
-		_generate_node(p_scene, p_scene.GetNode(p_scene.GetNodeById(p_node.childIds[i])), node, p_owner, p_skeletons, r_bone_name);
+		_generate_node(state, p_scene, p_scene.GetNode(p_scene.GetNodeById(p_node.childIds[i])), node, p_owner, r_bone_name);
 	}
 }
 
@@ -490,10 +536,9 @@ godot::Transform ComChibifireFbxImporter::_get_global_node_transform(Quatf rotat
 	float angle = 0.0f;
 	Vec3f axis = Vec3f();
 	rotation.ToAngleAxis(&angle, &axis);
-	xform.basis.rotate(Vector3(axis.x, axis.y, axis.z), angle);
 	xform.basis.scale(Vector3(scale.x, scale.y, scale.z));
+	xform.basis.rotate(Vector3(axis.x, axis.y, axis.z), angle);
 	xform.origin = Vector3(translation.x, translation.y, translation.z);
 	xform.orthonormalize();
-
 	return xform;
 }
