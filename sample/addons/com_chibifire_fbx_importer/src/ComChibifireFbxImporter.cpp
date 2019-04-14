@@ -310,8 +310,6 @@ Node *ComChibifireFbxImporter::_import_scene(const String path, const int64_t fl
 	//Dictionary skeleton_map; //maps previously created groups to actual skeletons
 	////generates the skeletons when bones are found in the hierarchy, and follows them (including gaps/holes).
 	//_generate_skeletons(state, raw_root_node, ownership, skeleton_map, bind_xforms);
-	_generate_node(state, raw, raw_root_node, root, root, bone_names);
-
 	//TODO(Ernest) Draco compression
 	std::vector<RawModel> materialModels;
 	raw.CreateMaterialModels(
@@ -320,20 +318,28 @@ Node *ComChibifireFbxImporter::_import_scene(const String path, const int64_t fl
 			-1,
 			false);
 
+	_generate_node(state, raw_root_node, root, root, bone_names);
+	Dictionary mesh_cache;
 	for (const auto &surfaceModel : materialModels) {
-		Ref<ArrayMesh> arr_mesh;
-		arr_mesh.instance();
-		MeshInstance *mi = NULL;
+		assert(surfaceModel.GetSurfaceCount() == 1);
 		for (size_t i = 0; i < surfaceModel.GetSurfaceCount(); i++) {
-			const RawSurface &rawSurface = surfaceModel.GetSurface(i);
-			const long surfaceId = rawSurface.id;
-			String name = _convert_name(rawSurface.name);
+			const long surfaceId = surfaceModel.GetSurface(0).id;
+			String name = _convert_name(surfaceModel.GetSurface(0).name);
+			Godot::print("FBX processing: " + name);
+
+			Ref<ArrayMesh> arr_mesh;
+			arr_mesh.instance();
+			MeshInstance *mi = NULL;
 			Node *node = root->find_node(name);
 			if (!node) {
 				continue;
 			}
 			mi = Object::cast_to<MeshInstance>(node);
 			if (!mi) {
+				continue;
+			}
+			if (mesh_cache.has(name)) {
+				mi->set_mesh(mesh_cache[name]);
 				continue;
 			}
 
@@ -463,15 +469,15 @@ Node *ComChibifireFbxImporter::_import_scene(const String path, const int64_t fl
 			arr_mesh->add_surface_from_arrays(Mesh::PRIMITIVE_TRIANGLES, arrays);
 			arr_mesh->surface_set_name(idx, name);
 
-			// TODO(Ernest) Cache again
+			// TODO(Ernest) Cache code
 			Ref<Material> material = _generate_material_from_index(state, surfaceModel.GetMaterial(0), surfaceModel.GetMaterial(0).type);
 			arr_mesh->surface_set_material(idx, material);
-		}
-		if (mi) {
-			mi->set_mesh(arr_mesh);
+			if (mi) {
+				mi->set_mesh(arr_mesh);
+			}
+			mesh_cache[name] = arr_mesh;
 		}
 	}
-
 	return root;
 }
 
@@ -486,7 +492,7 @@ void ComChibifireFbxImporter::_register_methods() {
 	register_method("_import_animation", &ComChibifireFbxImporter::_import_animation);
 }
 
-void ComChibifireFbxImporter::_generate_bone_groups(ImportState &p_state, RawNode p_node, Dictionary p_ownership, Dictionary p_bind_xforms) {
+void ComChibifireFbxImporter::_generate_bone_groups(const ImportState &p_state, const RawNode &p_node, const Dictionary &p_ownership, Dictionary p_bind_xforms) {
 	Transform mesh_offset = _get_global_node_transform(p_node.rotation, p_node.scale, p_node.translation);
 	for (uint32_t i = 0; i < p_state.scene->GetSurfaceCount(); i++) {
 		const RawSurface mesh = p_state.scene->GetSurface(i);
@@ -546,37 +552,35 @@ void ComChibifireFbxImporter::_generate_bone_groups(ImportState &p_state, RawNod
 	}
 }
 
-void ComChibifireFbxImporter::_generate_skeletons(ImportState &state, RawNode p_node, Dictionary ownership, Dictionary skeleton_map, Dictionary bind_xforms) {
+void ComChibifireFbxImporter::_generate_skeletons(ImportState &state, RawNode &p_node, Dictionary ownership, Dictionary skeleton_map, Dictionary bind_xforms) {
 }
 
-void ComChibifireFbxImporter::_generate_node(ImportState &state, const RawModel p_scene, const RawNode p_node, Node *p_parent, Node *p_owner, Array &r_bone_name) {
-	Spatial *node = NULL;
+void ComChibifireFbxImporter::_generate_node(const ImportState &state, const RawNode &p_node, Node *p_parent, Node *p_owner, Array &r_bone_name) {
 	String node_name = _convert_name(p_node.name);
 	Transform xform = _get_global_node_transform(p_node.rotation, p_node.scale, p_node.translation);
-	if (!p_node.isJoint) {
-		node = Spatial::_new();
-		node->set_name(node_name);
-		p_parent->add_child(Object::cast_to<Node>(node));
-		node->set_transform(xform);
-		node->set_owner(p_owner);
-		bool has_uvs = false;
-	} else {
-		node = Object::cast_to<Spatial>(p_parent);
-	}
-
-	if (p_node.surfaceId > 0) {
-		node->get_parent()->remove_child(Object::cast_to<Node>(node));
+	Node *node = NULL;
+	if (p_node.surfaceId != 0) {
 		MeshInstance *mi = MeshInstance::_new();
 		p_parent->add_child(mi);
 		mi->set_owner(p_owner);
-		mi->set_name(node_name);
+		String surface_name = state.scene->GetSurface(state.scene->GetSurfaceById(p_node.surfaceId)).name.c_str();
+		mi->set_name(surface_name);
 		mi->set_transform(xform);
 		//Skeleton *s = Object::cast_to<Skeleton>(Object::___get_from_variant(state.skeleton));
 		//mi->set_skeleton_path(mi->get_path_to(state.skeleton));
+		node = mi;
+	} else {
+		Spatial *spatial = Spatial::_new();
+		p_parent->add_child(Object::cast_to<Node>(spatial));
+		spatial->set_owner(p_owner);
+		spatial->set_name(node_name);
+		spatial->set_transform(xform);
+		//bool has_uvs = false;
+		node = spatial;
 	}
 
 	for (size_t i = 0; i < p_node.childIds.size(); i++) {
-		_generate_node(state, p_scene, p_scene.GetNode(p_scene.GetNodeById(p_node.childIds[i])), node, p_owner, r_bone_name);
+		_generate_node(state, state.scene->GetNode(state.scene->GetNodeById(p_node.childIds[i])), node, p_owner, r_bone_name);
 	}
 }
 
@@ -605,6 +609,7 @@ void ComChibifireFbxImporter::_find_texture_path(const String &r_p_path, String 
 	exts.push_back(String("jpg"));
 	exts.push_back(String("png"));
 	exts.push_back(String("jpeg"));
+	exts.push_back(String("dds"));
 	//Engine::get_singleton()->get_singleton("ResourceFormatLoaderResourceImage")->call("get_recognized_extensions");
 
 	//Array split_path = r_path.get_basename().split("*");
@@ -670,7 +675,7 @@ void ComChibifireFbxImporter::_find_texture_path(const String &p_path, godot::Di
 	}
 }
 
-Ref<Material> ComChibifireFbxImporter::_generate_material_from_index(ImportState p_state, RawMaterial p_raw_material, RawMaterialType p_raw_material_type) {
+Ref<godot::Material> ComChibifireFbxImporter::_generate_material_from_index(const ImportState &p_state, const RawMaterial p_raw_material, const RawMaterialType p_raw_material_type) {
 	Ref<SpatialMaterial> mat = SpatialMaterial::_new();
 	mat->set_name(p_raw_material.name.c_str());
 
@@ -764,7 +769,7 @@ Ref<Material> ComChibifireFbxImporter::_generate_material_from_index(ImportState
 	return mat;
 }
 
-Ref<godot::Texture> ComChibifireFbxImporter::_load_texture(ImportState &p_state, String p_path) {
+Ref<godot::Texture> ComChibifireFbxImporter::_load_texture(const ImportState &p_state, const String p_path) {
 	//Array split_path = p_path.get_basename().split("*");
 	//if (split_path.size() == 2) {
 	//	size_t texture_idx = String(split_path[1]).to_int();

@@ -101,15 +101,15 @@ private:
 		const String path;
 		godot::Skeleton *skeleton;
 	};
-	void _generate_bone_groups(ImportState &p_state, RawNode p_node, Dictionary p_ownership, Dictionary p_bind_xforms);
-	void _generate_skeletons(ImportState &state, RawNode p_node, Dictionary ownership, Dictionary skeleton_map, Dictionary bind_xforms);
-	void _generate_node(ImportState &state, const RawModel p_scene, const RawNode p_node, Node *p_parent, Node *p_owner, Array &r_bone_name);
+	void _generate_bone_groups(const ImportState &p_state, const RawNode &p_node, const Dictionary &p_ownership, Dictionary p_bind_xforms);
+	void _generate_skeletons(ImportState &state, RawNode &p_node, Dictionary ownership, Dictionary skeleton_map, Dictionary bind_xforms);
+	void _generate_node(const ImportState &state, const RawNode &p_node, Node *p_parent, Node *p_owner, Array &r_bone_name);
 	String _convert_name(const std::string str);
 	godot::Transform _get_global_node_transform(Quatf rotation, Vec3f scale, Vec3f translation);
 	void _find_texture_path(const String &r_p_path, String &r_path, bool &r_found);
 	void _find_texture_path(const String &p_path, godot::Directory *dir, String &path, bool &found, String extension);
-	Ref<godot::Material> _generate_material_from_index(ImportState p_state, RawMaterial p_raw_material, RawMaterialType p_raw_material_type);
-	Ref<godot::Texture> _load_texture(ImportState &p_state, String p_path);
+	Ref<godot::Material> _generate_material_from_index(const ImportState &p_state, const RawMaterial p_raw_material, const RawMaterialType p_raw_material_type);
+	Ref<godot::Texture> _load_texture(const ImportState &p_state, const String p_path);
 
 public:
 	enum ImportFlags {
