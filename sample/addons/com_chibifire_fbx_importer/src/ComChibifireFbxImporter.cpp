@@ -701,7 +701,22 @@ Ref<godot::Material> ComChibifireFbxImporter::_generate_material_from_index(cons
 	//RAW_TEXTURE_USAGE_SPECULAR
 	//RAW_TEXTURE_USAGE_SHININESS
 	//RAW_TEXTURE_USAGE_REFLECTION
-	//RAW_TEXTURE_USAGE_OCCLUSION
+
+	if (p_raw_material.textures[RAW_TEXTURE_USAGE_OCCLUSION] != -1) {
+		const RawTexture raw_texture = p_state.scene->GetTexture(p_raw_material.textures[RAW_TEXTURE_USAGE_OCCLUSION]);
+		String filename = raw_texture.fileName.c_str();
+		String path = raw_texture.fileLocation.c_str();
+		bool found = false;
+		_find_texture_path(p_state.path, path, found);
+		if (found) {
+			Ref<Texture> texture = _load_texture(p_state, path);
+
+			if (texture != NULL) {
+				mat->set_feature(SpatialMaterial::FEATURE_AMBIENT_OCCLUSION, true);
+				mat->set_texture(SpatialMaterial::TEXTURE_AMBIENT_OCCLUSION, texture);
+			}
+		}
+	}
 
 	if (p_raw_material.textures[RAW_TEXTURE_USAGE_NORMAL] != -1) {
 		const RawTexture raw_texture = p_state.scene->GetTexture(p_raw_material.textures[RAW_TEXTURE_USAGE_NORMAL]);
@@ -713,9 +728,6 @@ Ref<godot::Material> ComChibifireFbxImporter::_generate_material_from_index(cons
 			Ref<Texture> texture = _load_texture(p_state, path);
 
 			if (texture != NULL) {
-				//if (map_mode != NULL) {
-				//	_set_texture_mapping_mode(map_mode, texture);
-				//}
 				mat->set_feature(SpatialMaterial::Feature::FEATURE_NORMAL_MAPPING, true);
 				mat->set_texture(SpatialMaterial::TEXTURE_NORMAL, texture);
 			}
@@ -765,7 +777,20 @@ Ref<godot::Material> ComChibifireFbxImporter::_generate_material_from_index(cons
 			}
 		}
 	}
-	//RAW_TEXTURE_USAGE_METALLIC
+	if (p_raw_material.textures[RAW_TEXTURE_USAGE_METALLIC] != -1) {
+		const RawTexture raw_texture = p_state.scene->GetTexture(p_raw_material.textures[RAW_TEXTURE_USAGE_METALLIC]);
+		String filename = raw_texture.fileName.c_str();
+		String path = raw_texture.fileLocation.c_str();
+		bool found = false;
+		_find_texture_path(p_state.path, path, found);
+		if (found) {
+			Ref<Texture> texture = _load_texture(p_state, path);
+
+			if (texture != NULL) {
+				mat->set_texture(SpatialMaterial::TEXTURE_ROUGHNESS, texture);
+			}
+		}
+	}
 	return mat;
 }
 
