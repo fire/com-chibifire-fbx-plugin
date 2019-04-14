@@ -116,4 +116,6 @@ public:
 
 	static void _register_methods();
 	void _generate_node(const RawModel p_scene, const RawNode p_node, Node *p_parent, Node *p_owner, Array &p_skeletons, Array &r_bone_name);
+
+	String _convert_name(const std::string str);
 };

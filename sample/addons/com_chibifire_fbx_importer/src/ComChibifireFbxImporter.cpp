@@ -312,7 +312,7 @@ Node *ComChibifireFbxImporter::import_scene(const String path, const int64_t fla
 		assert(surfaceModel.GetSurfaceCount() == 1);
 		const RawSurface &rawSurface = surfaceModel.GetSurface(0);
 		const long surfaceId = rawSurface.id;
-		String name = rawSurface.name.c_str();
+		String name = _convert_name(rawSurface.name);
 		Node *node = root->find_node(name);
 		if (!node) {
 			continue;
@@ -394,7 +394,7 @@ void ComChibifireFbxImporter::_register_methods() {
 
 void ComChibifireFbxImporter::_generate_node(const RawModel p_scene, const RawNode p_node, Node *p_parent, Node *p_owner, Array &p_skeletons, Array &r_bone_name) {
 	Spatial *node = NULL;
-	String node_name = p_node.name.c_str();
+	String node_name = _convert_name(p_node.name);
 	Transform xform;
 	float angle = 0.0f;
 	Vec3f axis = Vec3f();
@@ -423,9 +423,7 @@ void ComChibifireFbxImporter::_generate_node(const RawModel p_scene, const RawNo
 			mi->set_owner(p_owner);
 			mi->set_name(node_name);
 			mi->set_transform(xform);
-			if (s->get_bone_count() > 0) {
-				mi->set_skeleton_path(mi->get_path_to(s));
-			}
+			mi->set_skeleton_path(mi->get_path_to(s));
 			p_skeletons[k] = s;
 		}
 	}
@@ -433,4 +431,8 @@ void ComChibifireFbxImporter::_generate_node(const RawModel p_scene, const RawNo
 	for (size_t i = 0; i < p_node.childIds.size(); i++) {
 		_generate_node(p_scene, p_scene.GetNode(p_scene.GetNodeById(p_node.childIds[i])), node, p_owner, p_skeletons, r_bone_name);
 	}
+}
+
+String ComChibifireFbxImporter::_convert_name(const std::string str) {
+	return String(str.c_str()).replace(".", "");
 }
