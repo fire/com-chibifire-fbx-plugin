@@ -405,52 +405,52 @@ Node *ComChibifireFbxImporter::import_scene(const String path, const int64_t fla
 				}
 				arrays[ArrayMesh::ARRAY_VERTEX] = vertices;
 			}
-			PoolRealArray bone_indices = PoolRealArray();
-			if ((surfaceModel.GetVertexAttributes() & RAW_VERTEX_ATTRIBUTE_JOINT_INDICES) != 0) {
-				const AttributeDefinition<Vec4i> ATTR_JOINTS(
-						"JOINTS_0",
-						&RawVertex::jointIndices,
-						GLT_VEC3F,
-						draco::GeometryAttribute::GENERIC,
-						draco::DT_UINT16);
-				std::vector<Vec4i> attribArr;
-				surfaceModel.GetAttributeArray<Vec4i>(attribArr, ATTR_JOINTS.rawAttributeIx);
+			//PoolRealArray bone_indices = PoolRealArray();
+			//if ((surfaceModel.GetVertexAttributes() & RAW_VERTEX_ATTRIBUTE_JOINT_INDICES) != 0) {
+			//	const AttributeDefinition<Vec4i> ATTR_JOINTS(
+			//			"JOINTS_0",
+			//			&RawVertex::jointIndices,
+			//			GLT_VEC3F,
+			//			draco::GeometryAttribute::GENERIC,
+			//			draco::DT_UINT16);
+			//	std::vector<Vec4i> attribArr;
+			//	surfaceModel.GetAttributeArray<Vec4i>(attribArr, ATTR_JOINTS.rawAttributeIx);
 
-				for (auto a : attribArr) {
-					RawNode raw_node = state.scene->GetNode(state.scene->GetNodeById(rawSurface.jointIds[a.x]));
-					real_t bone_idx = state.skeleton->find_bone(_convert_name(raw_node.name));
-					bone_indices.push_back(bone_idx);
-					raw_node = state.scene->GetNode(state.scene->GetNodeById(rawSurface.jointIds[a.y]));
-					bone_idx = state.skeleton->find_bone(_convert_name(raw_node.name));
-					bone_indices.push_back(bone_idx);
-					raw_node = state.scene->GetNode(state.scene->GetNodeById(rawSurface.jointIds[a.z]));
-					bone_idx = state.skeleton->find_bone(_convert_name(raw_node.name));
-					bone_indices.push_back(bone_idx);
-					raw_node = state.scene->GetNode(state.scene->GetNodeById(rawSurface.jointIds[a.w]));
-					bone_idx = state.skeleton->find_bone(_convert_name(raw_node.name));
-					bone_indices.push_back(bone_idx);
-				}
-				arrays[ArrayMesh::ARRAY_BONES] = bone_indices;
-			}
-			PoolRealArray bone_weights = PoolRealArray();
-			if ((surfaceModel.GetVertexAttributes() & RAW_VERTEX_ATTRIBUTE_JOINT_WEIGHTS) != 0) {
-				const AttributeDefinition<Vec4f> ATTR_WEIGHTS(
-						"WEIGHTS_0",
-						&RawVertex::jointWeights,
-						GLT_VEC3F,
-						draco::GeometryAttribute::GENERIC,
-						draco::DT_UINT16);
-				std::vector<Vec4f> attribArr;
-				surfaceModel.GetAttributeArray<Vec4f>(attribArr, ATTR_WEIGHTS.rawAttributeIx);
+			//	for (auto a : attribArr) {
+			//		RawNode raw_node = state.scene->GetNode(rawSurface.jointIds[a.x]);
+			//		real_t bone_idx = state.skeleton->find_bone(_convert_name(raw_node.name));
+			//		bone_indices.push_back(bone_idx);
+			//		raw_node = state.scene->GetNode(rawSurface.jointIds[a.y]);
+			//		bone_idx = state.skeleton->find_bone(_convert_name(raw_node.name));
+			//		bone_indices.push_back(bone_idx);
+			//		raw_node = state.scene->GetNode(rawSurface.jointIds[a.z]);
+			//		bone_idx = state.skeleton->find_bone(_convert_name(raw_node.name));
+			//		bone_indices.push_back(bone_idx);
+			//		raw_node = state.scene->GetNode(rawSurface.jointIds[a.w]);
+			//		bone_idx = state.skeleton->find_bone(_convert_name(raw_node.name));
+			//		bone_indices.push_back(bone_idx);
+			//	}
+			//	arrays[ArrayMesh::ARRAY_BONES] = bone_indices;
+			//}
+			//PoolRealArray bone_weights = PoolRealArray();
+			//if ((surfaceModel.GetVertexAttributes() & RAW_VERTEX_ATTRIBUTE_JOINT_WEIGHTS) != 0) {
+			//	const AttributeDefinition<Vec4f> ATTR_WEIGHTS(
+			//			"WEIGHTS_0",
+			//			&RawVertex::jointWeights,
+			//			GLT_VEC3F,
+			//			draco::GeometryAttribute::GENERIC,
+			//			draco::DT_UINT16);
+			//	std::vector<Vec4f> attribArr;
+			//	surfaceModel.GetAttributeArray<Vec4f>(attribArr, ATTR_WEIGHTS.rawAttributeIx);
 
-				for (auto a : attribArr) {
-					bone_weights.push_back(a.x);
-					bone_weights.push_back(a.y);
-					bone_weights.push_back(a.z);
-					bone_weights.push_back(a.w);
-				}
-				arrays[ArrayMesh::ARRAY_WEIGHTS] = bone_weights;
-			}
+			//	for (auto a : attribArr) {
+			//		bone_weights.push_back(a.x);
+			//		bone_weights.push_back(a.y);
+			//		bone_weights.push_back(a.z);
+			//		bone_weights.push_back(a.w);
+			//	}
+			//	arrays[ArrayMesh::ARRAY_WEIGHTS] = bone_weights;
+			//}
 			PoolIntArray idxs = PoolIntArray();
 			for (int i = 0; i < surfaceModel.GetTriangleCount(); i++) {
 				idxs.push_back(surfaceModel.GetTriangle(i).verts[2]);
