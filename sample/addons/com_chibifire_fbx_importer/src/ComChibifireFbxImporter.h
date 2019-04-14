@@ -90,8 +90,15 @@ enum Presets {
 class ComChibifireFbxImporter : public EditorSceneImporter {
 private:
 	GODOT_CLASS(ComChibifireFbxImporter, EditorSceneImporter);
+	struct ImportState {
+	};
+	void _generate_bone_groups(ImportState state, RawNode p_node, Dictionary ownership, Dictionary bind_xforms);
+	void _generate_skeletons(ImportState state, RawNode p_node, Dictionary ownership, Dictionary skeleton_map, Dictionary bind_xforms);
+	void _generate_node(const RawModel p_scene, const RawNode p_node, Node *p_parent, Node *p_owner, Array &p_skeletons, Array &r_bone_name);
+	String _convert_name(const std::string str);
 
 public:
+
 	enum ImportFlags {
 		IMPORT_SCENE = 1,
 		IMPORT_ANIMATION = 2,
@@ -115,7 +122,4 @@ public:
 	godot::Ref<godot::Animation> import_animation(const String path, const int64_t flags, const int64_t bake_fps);
 
 	static void _register_methods();
-	void _generate_node(const RawModel p_scene, const RawNode p_node, Node *p_parent, Node *p_owner, Array &p_skeletons, Array &r_bone_name);
-
-	String _convert_name(const std::string str);
 };

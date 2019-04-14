@@ -249,6 +249,8 @@ int64_t ComChibifireFbxImporter::get_import_flags() const {
 }
 
 Node *ComChibifireFbxImporter::import_scene(const String path, const int64_t flags, const int64_t bake_fps) {
+	ImportState state;
+
 	GltfOptions gltfOptions;
 	gltfOptions.keepAttribs = -1;
 	gltfOptions.outputBinary = true;
@@ -295,10 +297,19 @@ Node *ComChibifireFbxImporter::import_scene(const String path, const int64_t fla
 	root->add_child(s);
 	s->set_owner(root);
 	skeletons.push_back(s);
-	//_generate_node_bone(p_path, scene, scene->mRootNode, root, skeletons, bone_names, light_names, camera_names);
-
-	RawNode node = raw.GetNode(raw.GetNodeById(raw.GetRootNode()));
-	_generate_node(raw, node, root, root, skeletons, bone_names);
+	//Map<String, Transform>
+	Dictionary bind_xforms; //temporary map to store bind transforms
+	//guess the skeletons, since assimp does not really support them directly
+	//Map<String, int>
+	Dictionary ownership; //bone names to groups
+	RawNode raw_root_node = raw.GetNode(raw.GetNodeById(raw.GetRootNode()));
+	//fill this map with bone names and which group where they detected to, going mesh by mesh
+	_generate_bone_groups(state, raw_root_node, ownership, bind_xforms);
+	//Map<int, int>
+	Dictionary skeleton_map; //maps previously created groups to actual skeletons
+	//generates the skeletons when bones are found in the hierarchy, and follows them (including gaps/holes).
+	_generate_skeletons(state, raw_root_node, ownership, skeleton_map, bind_xforms);
+	_generate_node(raw, raw_root_node, root, root, skeletons, bone_names);
 
 	//TODO(Ernest) Draco compression
 	std::vector<RawModel> materialModels;
@@ -392,6 +403,12 @@ void ComChibifireFbxImporter::_register_methods() {
 	register_method("_import_animation", &ComChibifireFbxImporter::import_animation);
 }
 
+void ComChibifireFbxImporter::_generate_bone_groups(ImportState state, RawNode p_node, Dictionary ownership, Dictionary bind_xforms) {
+}
+
+void ComChibifireFbxImporter::_generate_skeletons(ImportState state, RawNode p_node, Dictionary ownership, Dictionary skeleton_map, Dictionary bind_xforms) {
+}
+
 void ComChibifireFbxImporter::_generate_node(const RawModel p_scene, const RawNode p_node, Node *p_parent, Node *p_owner, Array &p_skeletons, Array &r_bone_name) {
 	Spatial *node = NULL;
 	String node_name = _convert_name(p_node.name);
@@ -423,7 +440,9 @@ void ComChibifireFbxImporter::_generate_node(const RawModel p_scene, const RawNo
 			mi->set_owner(p_owner);
 			mi->set_name(node_name);
 			mi->set_transform(xform);
-			mi->set_skeleton_path(mi->get_path_to(s));
+			if (s->get_bone_count() > 0) {
+				mi->set_skeleton_path(mi->get_path_to(s));
+			}
 			p_skeletons[k] = s;
 		}
 	}
