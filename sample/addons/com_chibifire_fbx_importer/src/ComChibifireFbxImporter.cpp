@@ -293,22 +293,22 @@ Node *ComChibifireFbxImporter::import_scene(const String path, const int64_t fla
 	Array skeletons;
 	Array bone_names;
 
-	Skeleton *s = Skeleton::_new();
-	root->add_child(s);
-	s->set_owner(root);
-	state.skeleton = s;
-	//Map<String, Transform>
-	Dictionary bind_xforms; //temporary map to store bind transforms
-	//guess the skeletons, since assimp does not really support them directly
-	//Map<String, int>
-	Dictionary ownership; //bone names to groups
+	//Skeleton *s = Skeleton::_new();
+	//root->add_child(s);
+	//s->set_owner(root);
+	//state.skeleton = s;
+	////Map<String, Transform>
+	//Dictionary bind_xforms; //temporary map to store bind transforms
+	////guess the skeletons, since assimp does not really support them directly
+	////Map<String, int>
+	//Dictionary ownership; //bone names to groups
 	RawNode raw_root_node = raw.GetNode(raw.GetNodeById(raw.GetRootNode()));
-	//fill this map with bone names and which group where they detected to, going mesh by mesh
-	_generate_bone_groups(state, raw_root_node, ownership, bind_xforms);
-	//Map<int, int>
-	Dictionary skeleton_map; //maps previously created groups to actual skeletons
-	//generates the skeletons when bones are found in the hierarchy, and follows them (including gaps/holes).
-	_generate_skeletons(state, raw_root_node, ownership, skeleton_map, bind_xforms);
+	////fill this map with bone names and which group where they detected to, going mesh by mesh
+	//_generate_bone_groups(state, raw_root_node, ownership, bind_xforms);
+	////Map<int, int>
+	//Dictionary skeleton_map; //maps previously created groups to actual skeletons
+	////generates the skeletons when bones are found in the hierarchy, and follows them (including gaps/holes).
+	//_generate_skeletons(state, raw_root_node, ownership, skeleton_map, bind_xforms);
 	_generate_node(state, raw, raw_root_node, root, root, bone_names);
 
 	//TODO(Ernest) Draco compression
@@ -322,7 +322,7 @@ Node *ComChibifireFbxImporter::import_scene(const String path, const int64_t fla
 	for (const auto &surfaceModel : materialModels) {
 		Ref<ArrayMesh> arr_mesh;
 		arr_mesh.instance();
-		MeshInstance *mi;
+		MeshInstance *mi = NULL;
 		for (size_t i = 0; i < surfaceModel.GetSurfaceCount(); i++) {
 			const RawSurface &rawSurface =  surfaceModel.GetSurface(i);
 			const long surfaceId = rawSurface.id;
@@ -462,7 +462,9 @@ Node *ComChibifireFbxImporter::import_scene(const String path, const int64_t fla
 			arr_mesh->add_surface_from_arrays(Mesh::PRIMITIVE_TRIANGLES, arrays);
 			arr_mesh->surface_set_name(count, name);
 		}
-		mi->set_mesh(arr_mesh);
+		if (mi) {
+			mi->set_mesh(arr_mesh);
+		}
 	}
 
 	return root;
@@ -558,14 +560,14 @@ void ComChibifireFbxImporter::_generate_node(ImportState &state, const RawModel 
 	}
 
 	if (p_node.surfaceId > 0) {
-		Skeleton *s = Object::cast_to<Skeleton>(Object::___get_from_variant(state.skeleton));
 		node->get_parent()->remove_child(Object::cast_to<Node>(node));
 		MeshInstance *mi = MeshInstance::_new();
 		p_parent->add_child(mi);
 		mi->set_owner(p_owner);
 		mi->set_name(node_name);
 		mi->set_transform(xform);
-		mi->set_skeleton_path(mi->get_path_to(state.skeleton));
+		//Skeleton *s = Object::cast_to<Skeleton>(Object::___get_from_variant(state.skeleton));
+		//mi->set_skeleton_path(mi->get_path_to(state.skeleton));
 	}
 
 	for (size_t i = 0; i < p_node.childIds.size(); i++) {
