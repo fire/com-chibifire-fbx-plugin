@@ -563,9 +563,8 @@ String ComChibifireFbxImporter::_convert_name(const std::string str) {
 
 godot::Transform ComChibifireFbxImporter::_get_global_node_transform(Quatf rotation, Vec3f scale, Vec3f translation) {
 	Transform xform;
-	Mat3f m = rotation.ToMatrix();
+	Mat3f m = rotation.ToMatrix().Transpose();
 	xform.basis.set(m[0], m[1], m[2], m[3], m[4], m[5], m[6], m[7], m[8]);
-	xform.basis.transpose();
 	xform.basis.scale(Vector3(scale.x, scale.y, scale.z));
 	xform.origin = Vector3(translation.x, translation.y, translation.z);
 	return xform;
