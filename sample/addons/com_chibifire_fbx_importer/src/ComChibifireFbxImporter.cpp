@@ -249,24 +249,24 @@ int64_t ComChibifireFbxImporter::get_import_flags() const {
 }
 
 Node *ComChibifireFbxImporter::import_scene(const String path, const int64_t flags, const int64_t bake_fps) {
-	GltfOptions gltfOptions;
-	gltfOptions.keepAttribs = -1;
-	gltfOptions.outputBinary = true;
-	gltfOptions.embedResources = true;
-	gltfOptions.draco.enabled = false;
-	gltfOptions.draco.compressionLevel = -1;
-	gltfOptions.draco.quantBitsPosition = -1;
-	gltfOptions.draco.quantBitsTexCoord = -1;
-	gltfOptions.draco.quantBitsNormal = -1;
-	gltfOptions.draco.quantBitsColor = -1;
-	gltfOptions.draco.quantBitsGeneric = -1;
-	gltfOptions.useKHRMatUnlit = false;
-	gltfOptions.usePBRMetRough = true;
-	gltfOptions.useBlendShapeNormals = false;
-	gltfOptions.useBlendShapeTangents = false;
-	gltfOptions.computeNormals = ComputeNormalsOption::MISSING;
+	//GltfOptions gltfOptions;
+	//gltfOptions.keepAttribs = RAW_VERTEX_ATTRIBUTE_AUTO;
+	//gltfOptions.outputBinary = true;
+	//gltfOptions.embedResources = true;
+	//gltfOptions.draco.enabled = false;
+	//gltfOptions.draco.compressionLevel = -1;
+	//gltfOptions.draco.quantBitsPosition = -1;
+	//gltfOptions.draco.quantBitsTexCoord = -1;
+	//gltfOptions.draco.quantBitsNormal = -1;
+	//gltfOptions.draco.quantBitsColor = -1;
+	//gltfOptions.draco.quantBitsGeneric = -1;
+	//gltfOptions.useKHRMatUnlit = false;
+	//gltfOptions.usePBRMetRough = true;
+	//gltfOptions.useBlendShapeNormals = false;
+	//gltfOptions.useBlendShapeTangents = false;
+	//gltfOptions.computeNormals = ComputeNormalsOption::MISSING;
 	// compute vertex normals from geometry.
-	gltfOptions.useLongIndices = UseLongIndicesOptions::AUTO; // When to use 32-bit indices.
+	//gltfOptions.useLongIndices = UseLongIndicesOptions::AUTO; // When to use 32-bit indices.
 
 	RawModel raw;
 
@@ -285,7 +285,7 @@ Node *ComChibifireFbxImporter::import_scene(const String path, const int64_t fla
 	}
 
 	raw.Condense();
-	raw.TransformGeometry(gltfOptions.computeNormals);
+	raw.TransformGeometry(ComputeNormalsOption::MISSING);
 	ImportState state;
 	state.scene = &raw;
 	Spatial *root = Spatial::_new();
@@ -315,132 +315,153 @@ Node *ComChibifireFbxImporter::import_scene(const String path, const int64_t fla
 	std::vector<RawModel> materialModels;
 	raw.CreateMaterialModels(
 			materialModels,
-			true,
-			true,
-			true);
+			false,
+			-1,
+			false);
 
 	for (const auto &surfaceModel : materialModels) {
-		if (surfaceModel.GetSurfaceCount() == 0) {
-			continue;
-		}
-		const RawSurface &rawSurface = surfaceModel.GetSurface(0);
-		const long surfaceId = rawSurface.id;
-		String name = _convert_name(rawSurface.name);
-		Node *node = root->find_node(name);
-		if (!node) {
-			continue;
-		}
-		MeshInstance *mi = Object::cast_to<MeshInstance>(node);
-		if (!mi) {
-			continue;
-		}
-
 		Ref<ArrayMesh> arr_mesh;
 		arr_mesh.instance();
-		Array arrays;
-		arrays.resize(ArrayMesh::ARRAY_MAX);
-		PoolVector2Array uv0s = PoolVector2Array();
-		if ((surfaceModel.GetVertexAttributes() & RAW_VERTEX_ATTRIBUTE_UV0) != 0) {
-			const AttributeDefinition<Vec2f> ATTR_TEXCOORD_0(
-					"TEXCOORD_0",
-					&RawVertex::uv0,
-					GLT_VEC2F,
-					draco::GeometryAttribute::TEX_COORD,
-					draco::DT_FLOAT32);
-			std::vector<Vec2f> attribArrUV0;
-			surfaceModel.GetAttributeArray<Vec2f>(attribArrUV0, ATTR_TEXCOORD_0.rawAttributeIx);
-
-			for (auto a : attribArrUV0) {
-				uv0s.push_back(Vector2(a.x, a.y));
+		MeshInstance *mi;
+		for (size_t i = 0; i < surfaceModel.GetSurfaceCount(); i++) {
+			const RawSurface &rawSurface =  surfaceModel.GetSurface(i);
+			const long surfaceId = rawSurface.id;
+			String name = _convert_name(rawSurface.name);
+			Node *node = root->find_node(name);
+			if (!node) {
+				continue;
 			}
-			arrays[ArrayMesh::ARRAY_TEX_UV] = uv0s;
-		}
-		PoolVector2Array uv1s = PoolVector2Array();
-		if ((surfaceModel.GetVertexAttributes() & RAW_VERTEX_ATTRIBUTE_UV1) != 0) {
-			const AttributeDefinition<Vec2f> ATTR_TEXCOORD_1(
-					"TEXCOORD_1",
-					&RawVertex::uv1,
-					GLT_VEC2F,
-					draco::GeometryAttribute::TEX_COORD,
-					draco::DT_FLOAT32);
-			std::vector<Vec2f> attribArrUV1;
-			surfaceModel.GetAttributeArray<Vec2f>(attribArrUV1, ATTR_TEXCOORD_1.rawAttributeIx);
-
-			for (auto a : attribArrUV1) {
-				uv1s.push_back(Vector2(a.x, a.y));
+			mi = Object::cast_to<MeshInstance>(node);
+			if (!mi) {
+				continue;
 			}
-			arrays[ArrayMesh::ARRAY_TEX_UV2] = uv1s;
-		}
-		PoolVector3Array vertices = PoolVector3Array();
-		if ((surfaceModel.GetVertexAttributes() & RAW_VERTEX_ATTRIBUTE_POSITION) != 0) {
-			const AttributeDefinition<Vec3f> ATTR_POSITION(
-					"POSITION",
-					&RawVertex::position,
-					GLT_VEC3F,
-					draco::GeometryAttribute::POSITION,
-					draco::DT_FLOAT32);
-			std::vector<Vec3f> attribArr;
-			surfaceModel.GetAttributeArray<Vec3f>(attribArr, ATTR_POSITION.rawAttributeIx);
 
-			for (auto a : attribArr) {
-				vertices.push_back(Vector3(a.x, a.y, a.z));
-			}
-			arrays[ArrayMesh::ARRAY_VERTEX] = vertices;
-		}
-		PoolRealArray bone_indices = PoolRealArray();
-		if ((surfaceModel.GetVertexAttributes() & RAW_VERTEX_ATTRIBUTE_JOINT_INDICES) != 0) {
-			const AttributeDefinition<Vec4i> ATTR_JOINTS(
-					"JOINTS_0",
-					&RawVertex::jointIndices,
-					GLT_VEC3F,
-					draco::GeometryAttribute::GENERIC,
-					draco::DT_UINT16);
-			std::vector<Vec4i> attribArr;
-			surfaceModel.GetAttributeArray<Vec4i>(attribArr, ATTR_JOINTS.rawAttributeIx);
+			Array arrays;
+			arrays.resize(ArrayMesh::ARRAY_MAX);
+			
+			PoolVector3Array normals = PoolVector3Array();
+			int32_t attribute_flags = surfaceModel.GetVertexAttributes();
+			if ((surfaceModel.GetVertexAttributes() & RAW_VERTEX_ATTRIBUTE_NORMAL) != 0) {
+				const AttributeDefinition<Vec3f> ATTR_NORMAL(
+						"NORMAL",
+						&RawVertex::normal,
+						GLT_VEC3F,
+						draco::GeometryAttribute::NORMAL,
+						draco::DT_FLOAT32);
+				std::vector<Vec3f> attribArrUV0;
+				surfaceModel.GetAttributeArray<Vec3f>(attribArrUV0, ATTR_NORMAL.rawAttributeIx);
 
-			for (auto a : attribArr) {
-				RawNode raw_node = state.scene->GetNode(state.scene->GetNodeById(rawSurface.jointIds[a.x]));
-				int32_t bone_idx = state.skeleton->find_bone(_convert_name(raw_node.name));
-				bone_indices.push_back(bone_idx);
-				raw_node = state.scene->GetNode(state.scene->GetNodeById(rawSurface.jointIds[a.y]));
-				bone_idx = state.skeleton->find_bone(_convert_name(raw_node.name));
-				bone_indices.push_back(bone_idx);
-				raw_node = state.scene->GetNode(state.scene->GetNodeById(rawSurface.jointIds[a.z]));
-				bone_idx = state.skeleton->find_bone(_convert_name(raw_node.name));
-				bone_indices.push_back(bone_idx);
-				raw_node = state.scene->GetNode(state.scene->GetNodeById(rawSurface.jointIds[a.w]));
-				bone_idx = state.skeleton->find_bone(_convert_name(raw_node.name));
-				bone_indices.push_back(bone_idx);
+				for (auto a : attribArrUV0) {
+					normals.push_back(Vector3(a.x, a.y, a.z));
+				}
+				arrays[ArrayMesh::ARRAY_NORMAL] = normals;
 			}
-			arrays[ArrayMesh::ARRAY_BONES] = bone_indices;
-		}
-		PoolRealArray bone_weights = PoolRealArray();
-		if ((surfaceModel.GetVertexAttributes() & RAW_VERTEX_ATTRIBUTE_JOINT_WEIGHTS) != 0) {
-			const AttributeDefinition<Vec4f> ATTR_WEIGHTS(
-					"WEIGHTS_0",
-					&RawVertex::jointWeights,
-					GLT_VEC3F,
-					draco::GeometryAttribute::GENERIC,
-					draco::DT_UINT16);
-			std::vector<Vec4f> attribArr;
-			surfaceModel.GetAttributeArray<Vec4f>(attribArr, ATTR_WEIGHTS.rawAttributeIx);
 
-			for (auto a : attribArr) {
-				bone_weights.push_back(a.x);
-				bone_weights.push_back(a.y);
-				bone_weights.push_back(a.z);
-				bone_weights.push_back(a.w);
+			PoolVector2Array uv0s = PoolVector2Array();
+			if ((surfaceModel.GetVertexAttributes() & RAW_VERTEX_ATTRIBUTE_UV0) != 0) {
+				const AttributeDefinition<Vec2f> ATTR_TEXCOORD_0(
+						"TEXCOORD_0",
+						&RawVertex::uv0,
+						GLT_VEC2F,
+						draco::GeometryAttribute::TEX_COORD,
+						draco::DT_FLOAT32);
+				std::vector<Vec2f> attribArrUV0;
+				surfaceModel.GetAttributeArray<Vec2f>(attribArrUV0, ATTR_TEXCOORD_0.rawAttributeIx);
+
+				for (auto a : attribArrUV0) {
+					uv0s.push_back(Vector2(a.x, a.y));
+				}
+				arrays[ArrayMesh::ARRAY_TEX_UV] = uv0s;
 			}
-			arrays[ArrayMesh::ARRAY_WEIGHTS] = bone_weights;
+			PoolVector2Array uv1s = PoolVector2Array();
+			if ((surfaceModel.GetVertexAttributes() & RAW_VERTEX_ATTRIBUTE_UV1) != 0) {
+				const AttributeDefinition<Vec2f> ATTR_TEXCOORD_1(
+						"TEXCOORD_1",
+						&RawVertex::uv1,
+						GLT_VEC2F,
+						draco::GeometryAttribute::TEX_COORD,
+						draco::DT_FLOAT32);
+				std::vector<Vec2f> attribArrUV1;
+				surfaceModel.GetAttributeArray<Vec2f>(attribArrUV1, ATTR_TEXCOORD_1.rawAttributeIx);
+
+				for (auto a : attribArrUV1) {
+					uv1s.push_back(Vector2(a.x, a.y));
+				}
+				arrays[ArrayMesh::ARRAY_TEX_UV2] = uv1s;
+			}
+			PoolVector3Array vertices = PoolVector3Array();
+			if ((surfaceModel.GetVertexAttributes() & RAW_VERTEX_ATTRIBUTE_POSITION) != 0) {
+				const AttributeDefinition<Vec3f> ATTR_POSITION(
+						"POSITION",
+						&RawVertex::position,
+						GLT_VEC3F,
+						draco::GeometryAttribute::POSITION,
+						draco::DT_FLOAT32);
+				std::vector<Vec3f> attribArr;
+				surfaceModel.GetAttributeArray<Vec3f>(attribArr, ATTR_POSITION.rawAttributeIx);
+
+				for (auto a : attribArr) {
+					vertices.push_back(Vector3(a.x, a.y, a.z));
+				}
+				arrays[ArrayMesh::ARRAY_VERTEX] = vertices;
+			}
+			PoolRealArray bone_indices = PoolRealArray();
+			if ((surfaceModel.GetVertexAttributes() & RAW_VERTEX_ATTRIBUTE_JOINT_INDICES) != 0) {
+				const AttributeDefinition<Vec4i> ATTR_JOINTS(
+						"JOINTS_0",
+						&RawVertex::jointIndices,
+						GLT_VEC3F,
+						draco::GeometryAttribute::GENERIC,
+						draco::DT_UINT16);
+				std::vector<Vec4i> attribArr;
+				surfaceModel.GetAttributeArray<Vec4i>(attribArr, ATTR_JOINTS.rawAttributeIx);
+
+				for (auto a : attribArr) {
+					RawNode raw_node = state.scene->GetNode(state.scene->GetNodeById(rawSurface.jointIds[a.x]));
+					real_t bone_idx = state.skeleton->find_bone(_convert_name(raw_node.name));
+					bone_indices.push_back(bone_idx);
+					raw_node = state.scene->GetNode(state.scene->GetNodeById(rawSurface.jointIds[a.y]));
+					bone_idx = state.skeleton->find_bone(_convert_name(raw_node.name));
+					bone_indices.push_back(bone_idx);
+					raw_node = state.scene->GetNode(state.scene->GetNodeById(rawSurface.jointIds[a.z]));
+					bone_idx = state.skeleton->find_bone(_convert_name(raw_node.name));
+					bone_indices.push_back(bone_idx);
+					raw_node = state.scene->GetNode(state.scene->GetNodeById(rawSurface.jointIds[a.w]));
+					bone_idx = state.skeleton->find_bone(_convert_name(raw_node.name));
+					bone_indices.push_back(bone_idx);
+				}
+				arrays[ArrayMesh::ARRAY_BONES] = bone_indices;
+			}
+			PoolRealArray bone_weights = PoolRealArray();
+			if ((surfaceModel.GetVertexAttributes() & RAW_VERTEX_ATTRIBUTE_JOINT_WEIGHTS) != 0) {
+				const AttributeDefinition<Vec4f> ATTR_WEIGHTS(
+						"WEIGHTS_0",
+						&RawVertex::jointWeights,
+						GLT_VEC3F,
+						draco::GeometryAttribute::GENERIC,
+						draco::DT_UINT16);
+				std::vector<Vec4f> attribArr;
+				surfaceModel.GetAttributeArray<Vec4f>(attribArr, ATTR_WEIGHTS.rawAttributeIx);
+
+				for (auto a : attribArr) {
+					bone_weights.push_back(a.x);
+					bone_weights.push_back(a.y);
+					bone_weights.push_back(a.z);
+					bone_weights.push_back(a.w);
+				}
+				arrays[ArrayMesh::ARRAY_WEIGHTS] = bone_weights;
+			}
+			PoolIntArray idxs = PoolIntArray();
+			for (int i = 0; i < surfaceModel.GetTriangleCount(); i++) {
+				idxs.push_back(surfaceModel.GetTriangle(i).verts[2]);
+				idxs.push_back(surfaceModel.GetTriangle(i).verts[1]);
+				idxs.push_back(surfaceModel.GetTriangle(i).verts[0]);
+			}
+			arrays[ArrayMesh::ARRAY_INDEX] = idxs;
+			int32_t count = arr_mesh->get_surface_count();
+			arr_mesh->add_surface_from_arrays(Mesh::PRIMITIVE_TRIANGLES, arrays);
+			arr_mesh->surface_set_name(count, name);
 		}
-		PoolIntArray idxs = PoolIntArray();
-		for (int i = 0; i < surfaceModel.GetTriangleCount(); i++) {
-			idxs.push_back(surfaceModel.GetTriangle(i).verts[2]);
-			idxs.push_back(surfaceModel.GetTriangle(i).verts[1]);
-			idxs.push_back(surfaceModel.GetTriangle(i).verts[0]);
-		}
-		arrays[ArrayMesh::ARRAY_INDEX] = idxs;
-		arr_mesh->add_surface_from_arrays(Mesh::PRIMITIVE_TRIANGLES, arrays);
 		mi->set_mesh(arr_mesh);
 	}
 
