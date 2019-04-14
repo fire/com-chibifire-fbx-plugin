@@ -48,7 +48,7 @@
 #include <PoolArrays.hpp>
 #include <ProjectSettings.hpp>
 #include <Skeleton.hpp>
-#include <Material.hpp>
+#include <SpatialMaterial.hpp>
 
 #ifndef CLAMP
 #define CLAMP(m_a, m_min, m_max) (((m_a) < (m_min)) ? (m_min) : (((m_a) > (m_max)) ? m_max : m_a))
@@ -288,8 +288,7 @@ Node *ComChibifireFbxImporter::_import_scene(const String path, const int64_t fl
 
 	raw.Condense();
 	raw.TransformGeometry(ComputeNormalsOption::MISSING);
-	ImportState state;
-	state.scene = &raw;
+	ImportState state = { &raw, path, NULL };
 	Spatial *root = Spatial::_new();
 
 	Array skeletons;
@@ -465,7 +464,7 @@ Node *ComChibifireFbxImporter::_import_scene(const String path, const int64_t fl
 			arr_mesh->surface_set_name(idx, name);
 
 			// TODO(Ernest) Cache again
-			 Ref<Material> material = _generate_material_from_index(state, surfaceModel.GetMaterial(0), surfaceModel.GetMaterial(0).type);
+			Ref<Material> material = _generate_material_from_index(state, surfaceModel.GetMaterial(0), surfaceModel.GetMaterial(0).type);
 			arr_mesh->surface_set_material(idx, material);
 		}
 		if (mi) {
@@ -600,17 +599,21 @@ godot::Transform ComChibifireFbxImporter::_get_global_node_transform(Quatf rotat
 }
 
 void ComChibifireFbxImporter::_find_texture_path(const String &r_p_path, String &r_path, bool &r_found) {
-	Directory dir;
+	Directory *dir = Directory::_new();
 
-	Array exts = Engine::get_singleton()->get_singleton("ResourceFormatLoaderResourceImage")->call("get_recognized_extensions");
+	Array exts;
+	exts.push_back(String("jpg"));
+	exts.push_back(String("png"));
+	exts.push_back(String("jpeg"));
+	//Engine::get_singleton()->get_singleton("ResourceFormatLoaderResourceImage")->call("get_recognized_extensions");
 
-	Array split_path = r_path.get_basename().split("*");
-	if (split_path.size() == 2) {
-		r_found = true;
-		return;
-	}
-
-	if (dir.file_exists(r_p_path.get_base_dir() + r_path.get_file())) {
+	//Array split_path = r_path.get_basename().split("*");
+	//if (split_path.size() == 2) {
+	//	r_found = true;
+	//	return;
+	//}
+	String file = r_p_path.get_base_dir() + r_path.get_file();
+	if (dir->file_exists(file)) {
 		r_path = r_p_path.get_base_dir() + r_path.get_file();
 		r_found = true;
 		return;
@@ -626,41 +629,41 @@ void ComChibifireFbxImporter::_find_texture_path(const String &r_p_path, String 
 	}
 }
 
-void ComChibifireFbxImporter::_find_texture_path(const String &p_path, godot::Directory &dir, String &path, bool &found, String extension) {
+void ComChibifireFbxImporter::_find_texture_path(const String &p_path, godot::Directory *dir, String &path, bool &found, String extension) {
 	String name = path.get_basename() + extension;
-	if (dir.file_exists(name)) {
+	if (dir->file_exists(name)) {
 		found = true;
 		path = name;
 		return;
 	}
 	String name_ignore_sub_directory = p_path.get_base_dir() + "/" + path.get_file().get_basename() + extension;
-	if (dir.file_exists(name_ignore_sub_directory)) {
+	if (dir->file_exists(name_ignore_sub_directory)) {
 		found = true;
 		path = name_ignore_sub_directory;
 		return;
 	}
 
 	String name_find_texture_sub_directory = p_path.get_base_dir() + "/textures/" + path.get_file().get_basename() + extension;
-	if (dir.file_exists(name_find_texture_sub_directory)) {
+	if (dir->file_exists(name_find_texture_sub_directory)) {
 		found = true;
 		path = name_find_texture_sub_directory;
 		return;
 	}
 	String name_find_texture_upper_sub_directory = p_path.get_base_dir() + "/Textures/" + path.get_file().get_basename() + extension;
-	if (dir.file_exists(name_find_texture_upper_sub_directory)) {
+	if (dir->file_exists(name_find_texture_upper_sub_directory)) {
 		found = true;
 		path = name_find_texture_upper_sub_directory;
 		return;
 	}
 	String name_find_texture_outside_sub_directory = p_path.get_base_dir() + "/../textures/" + path.get_file().get_basename() + extension;
-	if (dir.file_exists(name_find_texture_outside_sub_directory)) {
+	if (dir->file_exists(name_find_texture_outside_sub_directory)) {
 		found = true;
 		path = name_find_texture_outside_sub_directory;
 		return;
 	}
 
 	String name_find_upper_texture_outside_sub_directory = p_path.get_base_dir() + "/../Textures/" + path.get_file().get_basename() + extension;
-	if (dir.file_exists(name_find_upper_texture_outside_sub_directory)) {
+	if (dir->file_exists(name_find_upper_texture_outside_sub_directory)) {
 		found = true;
 		path = name_find_upper_texture_outside_sub_directory;
 		return;
@@ -668,7 +671,165 @@ void ComChibifireFbxImporter::_find_texture_path(const String &p_path, godot::Di
 }
 
 Ref<Material> ComChibifireFbxImporter::_generate_material_from_index(ImportState p_state, RawMaterial p_raw_material, RawMaterialType p_raw_material_type) {
-	Ref<Material> mat = Material::_new();
+	Ref<SpatialMaterial> mat = SpatialMaterial::_new();
 	mat->set_name(p_raw_material.name.c_str());
+
+	//int32_t mat_two_sided = 0;
+	//if (p_raw_material.userProperties) {
+	//	if (mat_two_sided > 0) {
+	//		mat->set_cull_mode(SpatialMaterial::CULL_DISABLED);
+	//	}
+	//}
+
+	if (p_raw_material_type == RAW_MATERIAL_TYPE_TRANSPARENT || p_raw_material_type == RAW_MATERIAL_TYPE_SKINNED_TRANSPARENT) {
+		mat->set_feature(SpatialMaterial::FEATURE_TRANSPARENT, true);
+		mat->set_depth_draw_mode(SpatialMaterial::DepthDrawMode::DEPTH_DRAW_ALPHA_OPAQUE_PREPASS);
+	}
+
+	Array user_properties;
+	for (size_t i = 0; i < p_raw_material.userProperties.size(); i++) {
+		String prop = String(p_raw_material.userProperties[i].c_str());
+		user_properties.push_back(prop);
+	}
+
+	//RAW_TEXTURE_USAGE_AMBIENT
+	//RAW_TEXTURE_USAGE_SPECULAR
+	//RAW_TEXTURE_USAGE_SHININESS
+	//RAW_TEXTURE_USAGE_REFLECTION
+	//RAW_TEXTURE_USAGE_OCCLUSION
+
+	if (p_raw_material.textures[RAW_TEXTURE_USAGE_NORMAL] != -1) {
+		const RawTexture raw_texture = p_state.scene->GetTexture(p_raw_material.textures[RAW_TEXTURE_USAGE_NORMAL]);
+		String filename = raw_texture.fileName.c_str();
+		String path = raw_texture.fileLocation.c_str();
+		bool found = false;
+		_find_texture_path(p_state.path, path, found);
+		if (found) {
+			Ref<Texture> texture = _load_texture(p_state, path);
+
+			if (texture != NULL) {
+				//if (map_mode != NULL) {
+				//	_set_texture_mapping_mode(map_mode, texture);
+				//}
+				mat->set_feature(SpatialMaterial::Feature::FEATURE_NORMAL_MAPPING, true);
+				mat->set_texture(SpatialMaterial::TEXTURE_NORMAL, texture);
+			}
+		}
+	}
+
+	if (p_raw_material.textures[RAW_TEXTURE_USAGE_EMISSIVE] != -1) {
+		const RawTexture raw_texture = p_state.scene->GetTexture(p_raw_material.textures[RAW_TEXTURE_USAGE_EMISSIVE]);
+		String filename = raw_texture.fileName.c_str();
+		String path = raw_texture.fileLocation.c_str();
+		bool found = false;
+		_find_texture_path(p_state.path, path, found);
+		if (found) {
+			Ref<Texture> texture = _load_texture(p_state, path);
+
+			if (texture != NULL) {
+				mat->set_feature(SpatialMaterial::FEATURE_EMISSION, true);
+				mat->set_texture(SpatialMaterial::TEXTURE_EMISSION, texture);
+			}
+		}
+	}
+	if (p_raw_material.textures[RAW_TEXTURE_USAGE_DIFFUSE] != -1) {
+		const RawTexture raw_texture = p_state.scene->GetTexture(p_raw_material.textures[RAW_TEXTURE_USAGE_DIFFUSE]);
+		String filename = raw_texture.fileName.c_str();
+		String path = raw_texture.fileLocation.c_str();
+		bool found = false;
+		_find_texture_path(p_state.path, path, found);
+		if (found) {
+			Ref<Texture> texture = _load_texture(p_state, path);
+
+			if (texture != NULL) {
+				mat->set_texture(SpatialMaterial::TEXTURE_ALBEDO, texture);
+			}
+		}
+	}
+	if (p_raw_material.textures[RAW_TEXTURE_USAGE_ROUGHNESS] != -1) {
+		const RawTexture raw_texture = p_state.scene->GetTexture(p_raw_material.textures[RAW_TEXTURE_USAGE_ROUGHNESS]);
+		String filename = raw_texture.fileName.c_str();
+		String path = raw_texture.fileLocation.c_str();
+		bool found = false;
+		_find_texture_path(p_state.path, path, found);
+		if (found) {
+			Ref<Texture> texture = _load_texture(p_state, path);
+
+			if (texture != NULL) {
+				mat->set_texture(SpatialMaterial::TEXTURE_ROUGHNESS, texture);
+			}
+		}
+	}
+	//RAW_TEXTURE_USAGE_METALLIC
 	return mat;
+}
+
+Ref<godot::Texture> ComChibifireFbxImporter::_load_texture(ImportState &p_state, String p_path) {
+	//Array split_path = p_path.get_basename().split("*");
+	//if (split_path.size() == 2) {
+	//	size_t texture_idx = String(split_path[1]).to_int();
+	//	if (texture_idx >= p_state.scene.GetTextureCount()) {
+	//		return Ref<Texture>();
+	//	}
+	//	aiTexture *tex = p_state.assimp_scene->mTextures[texture_idx];
+	//	String filename = _assimp_raw_string_to_string(tex->mFilename);
+	//	filename = filename.get_file();
+	//	print_verbose("Open Asset Import: Loading embedded texture " + filename);
+	//	if (tex->mHeight == 0) {
+	//		if (tex->CheckFormat("png")) {
+	//			Ref<Image> img = Image::_png_mem_loader_func((uint8_t *)tex->pcData, tex->mWidth);
+	//			ERR_FAIL_COND_V(img.is_null(), Ref<Texture>());
+
+	//			Ref<ImageTexture> t;
+	//			t.instance();
+	//			t->create_from_image(img);
+	//			t->set_storage(ImageTexture::STORAGE_COMPRESS_LOSSY);
+	//			return t;
+	//		} else if (tex->CheckFormat("jpg")) {
+	//			Ref<Image> img = Image::_jpg_mem_loader_func((uint8_t *)tex->pcData, tex->mWidth);
+	//			ERR_FAIL_COND_V(img.is_null(), Ref<Texture>());
+	//			Ref<ImageTexture> t;
+	//			t.instance();
+	//			t->create_from_image(img);
+	//			t->set_storage(ImageTexture::STORAGE_COMPRESS_LOSSY);
+	//			return t;
+	//		} else if (tex->CheckFormat("dds")) {
+	//			ERR_EXPLAIN("Open Asset Import: Embedded dds not implemented");
+	//			ERR_FAIL_COND_V(true, Ref<Texture>());
+	//			//Ref<Image> img = Image::_dds_mem_loader_func((uint8_t *)tex->pcData, tex->mWidth);
+	//			//ERR_FAIL_COND_V(img.is_null(), Ref<Texture>());
+	//			//Ref<ImageTexture> t;
+	//			//t.instance();
+	//			//t->create_from_image(img);
+	//			//t->set_storage(ImageTexture::STORAGE_COMPRESS_LOSSY);
+	//			//return t;
+	//		}
+	//	} else {
+	//		Ref<Image> img;
+	//		img.instance();
+	//		PoolByteArray arr;
+	//		uint32_t size = tex->mWidth * tex->mHeight;
+	//		arr.resize(size);
+	//		memcpy(arr.write().ptr(), tex->pcData, size);
+	//		ERR_FAIL_COND_V(arr.size() % 4 != 0, Ref<Texture>());
+	//		//ARGB8888 to RGBA8888
+	//		for (int32_t i = 0; i < arr.size() / 4; i++) {
+	//			arr.write().ptr()[(4 * i) + 3] = arr[(4 * i) + 0];
+	//			arr.write().ptr()[(4 * i) + 0] = arr[(4 * i) + 1];
+	//			arr.write().ptr()[(4 * i) + 1] = arr[(4 * i) + 2];
+	//			arr.write().ptr()[(4 * i) + 2] = arr[(4 * i) + 3];
+	//		}
+	//		img->create(tex->mWidth, tex->mHeight, true, Image::FORMAT_RGBA8, arr);
+	//		ERR_FAIL_COND_V(img.is_null(), Ref<Texture>());
+
+	//		Ref<ImageTexture> t;
+	//		t.instance();
+	//		t->create_from_image(img);
+	//		t->set_storage(ImageTexture::STORAGE_COMPRESS_LOSSY);
+	//		return t;
+	//	}
+	//	return Ref<Texture>();
+	//}
+	Ref<Texture> p_texture = ResourceLoader::get_singleton()->load(p_path, "Texture");
+	return p_texture;
 }

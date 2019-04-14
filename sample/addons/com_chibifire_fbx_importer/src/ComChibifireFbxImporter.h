@@ -29,16 +29,17 @@
 #include <EditorPlugin.hpp>
 #include <EditorSceneImporter.hpp>
 #include <Engine.hpp>
+#include <Material.hpp>
 #include <Node.hpp>
 #include <Ref.hpp>
 #include <Reference.hpp>
 #include <Skeleton.hpp>
 #include <String.hpp>
+#include <Texture.hpp>
 #include <Transform.hpp>
 #include <core/Godot.hpp>
 #include <core/GodotGlobal.hpp>
 #include <raw/RawModel.hpp>
-#include <Material.hpp>
 
 using godot::Array;
 using godot::ArrayMesh;
@@ -97,6 +98,7 @@ private:
 	GODOT_CLASS(ComChibifireFbxImporter, EditorSceneImporter);
 	struct ImportState {
 		const RawModel *scene;
+		const String path;
 		godot::Skeleton *skeleton;
 	};
 	void _generate_bone_groups(ImportState &p_state, RawNode p_node, Dictionary p_ownership, Dictionary p_bind_xforms);
@@ -105,8 +107,9 @@ private:
 	String _convert_name(const std::string str);
 	godot::Transform _get_global_node_transform(Quatf rotation, Vec3f scale, Vec3f translation);
 	void _find_texture_path(const String &r_p_path, String &r_path, bool &r_found);
-	void _find_texture_path(const String &p_path, godot::Directory &dir, String &path, bool &found, String extension);
+	void _find_texture_path(const String &p_path, godot::Directory *dir, String &path, bool &found, String extension);
 	Ref<godot::Material> _generate_material_from_index(ImportState p_state, RawMaterial p_raw_material, RawMaterialType p_raw_material_type);
+	Ref<godot::Texture> _load_texture(ImportState &p_state, String p_path);
 
 public:
 	enum ImportFlags {
