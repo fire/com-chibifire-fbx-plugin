@@ -516,56 +516,39 @@ void ComChibifireFbxImporter::_register_methods() {
 
 void ComChibifireFbxImporter::_generate_bone_groups(const ImportState &p_state, const RawNode &p_node, Dictionary &p_ownership, Dictionary p_bind_xforms) {
 	Transform mesh_offset = _get_transform(p_node.rotation, p_node.scale, p_node.translation);
-	for (uint32_t i = 0; i < p_state.scene->GetSurfaceCount(); i++) {
-		Transform mesh_offset = _get_global_node_transform(p_state, p_node);
-		const RawSurface &surface = p_state.scene->GetSurface(i);
 
-		//Dictionary inverseBindMatrices;
-		//for (size_t i = 0; i < mesh.jointIds.size(); i++) {
-		//	int32_t node = p_state.scene->GetNodeById(mesh.jointIds[i]);
-		//	const RawNode bone = p_state.scene->GetNode(node);
-		//	if (p_state.skeleton->find_bone(_convert_name(bone.name)) == -1) {
-		//		p_state.skeleton->add_bone(_convert_name(bone.name));
-		//		Transform xform;
-		//		Mat4f m = mesh.inverseBindMatrices[i];
-		//		xform.set(m.GetColumn(0).x, m.GetColumn(0).y, m.GetColumn(0).z, m.GetColumn(1).x, m.GetColumn(1).y, m.GetColumn(1).z, m.GetColumn(2).x, m.GetColumn(2).y, m.GetColumn(2).z, m.GetColumn(3).x, m.GetColumn(3).y, m.GetColumn(3).z);
-		//		int32_t bone_idx = p_state.skeleton->find_bone(_convert_name(bone.name));
-		//		p_state.skeleton->set_bone_rest(bone_idx, xform.affine_inverse());
-		//	}
-		//}
-
-		for (uint32_t i = 0; i < p_state.scene->GetSurfaceCount(); i++) {
-			int owned_by = -1;
-			for (uint32_t j = 0; j < surface.jointIds.size(); j++) {
-				const int64_t bone_id = surface.jointIds[j];
-				if (p_ownership.has(bone_id)) {
-					owned_by = p_ownership[bone_id];
-					break;
-				}
-			}
-
-			if (owned_by == -1) { //not owned, create new unique id
-				owned_by = 1;
-				for (size_t i = 0; i < p_ownership.size(); i++) {
-					owned_by = MAX(int64_t(p_ownership[i]) + 1, owned_by);
-				}
-			}
-
-			for (uint32_t j = 0; j < surface.jointIds.size(); j++) {
-				const int64_t bone_id = surface.jointIds[j];
-				p_ownership[bone_id] = owned_by;
-				//store the full path for the bone transform
-				//when skeleton finds its place in the tree, it will be restored
-				Mat4f m = surface.inverseBindMatrices[i];
-				Transform xform;
-				xform.set(m.GetColumn(0).x, m.GetColumn(0).y, m.GetColumn(0).z, m.GetColumn(1).x, m.GetColumn(1).y, m.GetColumn(1).z, m.GetColumn(2).x, m.GetColumn(2).y, m.GetColumn(2).z, m.GetColumn(3).x, m.GetColumn(3).y, m.GetColumn(3).z);
-				p_bind_xforms[bone_id] = mesh_offset * xform;
+	for (uint32_t l = 0; l < p_state.scene->GetSurfaceCount(); l++) {
+		const RawSurface &surface = p_state.scene->GetSurface(l);
+		int owned_by = -1;
+		for (uint32_t j = 0; j < surface.jointIds.size(); j++) {
+			const int64_t bone_id = surface.jointIds[j];
+			if (p_ownership.has(bone_id)) {
+				owned_by = p_ownership[bone_id];
+				break;
 			}
 		}
 
-		for (size_t i = 0; i < p_node.childIds.size(); i++) {
-			_generate_bone_groups(p_state, p_state.scene->GetNode(p_state.scene->GetNodeById(p_node.childIds[i])), p_ownership, p_bind_xforms);
+		if (owned_by == -1) { //not owned, create new unique id
+			owned_by = 1;
+			for (size_t i = 0; i < p_ownership.size(); i++) {
+				owned_by = MAX(int64_t(p_ownership[i]) + 1, owned_by);
+			}
 		}
+
+		for (uint32_t j = 0; j < surface.jointIds.size(); j++) {
+			const int64_t bone_id = surface.jointIds[j];
+			p_ownership[bone_id] = owned_by;
+			//store the full path for the bone transform
+			//when skeleton finds its place in the tree, it will be restored
+			Mat4f m = surface.inverseBindMatrices[l];
+			Transform xform;
+			xform.set(m.GetColumn(0).x, m.GetColumn(0).y, m.GetColumn(0).z, m.GetColumn(1).x, m.GetColumn(1).y, m.GetColumn(1).z, m.GetColumn(2).x, m.GetColumn(2).y, m.GetColumn(2).z, m.GetColumn(3).x, m.GetColumn(3).y, m.GetColumn(3).z);
+			p_bind_xforms[bone_id] = mesh_offset * xform;
+		}
+	}
+
+	for (size_t k = 0; k < p_node.childIds.size(); k++) {
+		_generate_bone_groups(p_state, p_state.scene->GetNode(p_state.scene->GetNodeById(p_node.childIds[k])), p_ownership, p_bind_xforms);
 	}
 }
 
