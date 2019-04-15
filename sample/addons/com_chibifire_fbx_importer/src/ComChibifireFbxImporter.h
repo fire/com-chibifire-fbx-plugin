@@ -112,8 +112,8 @@ private:
 		godot::Transform pose;
 		RawNode &node;
 	};
-	void _generate_bone_groups(ImportState &p_state, const RawNode &p_node, Dictionary &p_ownership, Dictionary p_bind_xforms);
-	void _generate_skeletons(ImportState &p_state, const RawNode &p_node, Dictionary ownership, Dictionary skeleton_map, Dictionary bind_xforms);
+	void _generate_bone_groups(ImportState &p_state, const RawNode &p_node, Dictionary &p_ownership, Dictionary &p_bind_xforms);
+	void _generate_skeletons(ImportState &p_state, const RawNode &p_node, Dictionary& ownership, Dictionary& skeleton_map, Dictionary& bind_xforms);
 	void _generate_node(ImportState &p_state, const RawNode &p_node, Node *p_parent, Node *p_owner, Array &r_bone_name);
 	String _convert_name(const std::string str);
 	godot::Transform _get_transform(Quatf rotation, Vec3f scale, Vec3f translation);

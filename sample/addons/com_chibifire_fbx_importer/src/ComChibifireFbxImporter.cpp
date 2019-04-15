@@ -502,7 +502,8 @@ Node *ComChibifireFbxImporter::_import_scene(const String path, const int64_t fl
 	//assign skeletons to nodes
 	for (auto &ms : state.mesh_skeletons) {
 		NodePath skeleton_path = ms.first->get_path_to(ms.second);
-		ms.first->set_skeleton_path(skeleton_path);
+		//Todo(Ernest) Restore skeleton path
+		//ms.first->set_skeleton_path(skeleton_path);
 	}
 
 	return root;
@@ -519,7 +520,7 @@ void ComChibifireFbxImporter::_register_methods() {
 	register_method("_import_animation", &ComChibifireFbxImporter::_import_animation);
 }
 
-void ComChibifireFbxImporter::_generate_bone_groups(ImportState &p_state, const RawNode &p_node, Dictionary &p_ownership, Dictionary p_bind_xforms) {
+void ComChibifireFbxImporter::_generate_bone_groups(ImportState &p_state, const RawNode &p_node, Dictionary &p_ownership, Dictionary &p_bind_xforms) {
 	Transform mesh_offset = _get_transform(p_node.rotation, p_node.scale, p_node.translation);
 
 	for (uint32_t l = 0; l < p_state.scene->GetSurfaceCount(); l++) {
@@ -536,7 +537,7 @@ void ComChibifireFbxImporter::_generate_bone_groups(ImportState &p_state, const 
 		if (owned_by == -1) { //not owned, create new unique id
 			owned_by = 1;
 			for (size_t i = 0; i < p_ownership.size(); i++) {
-				owned_by = MAX(int64_t(p_ownership[i]) + 1, owned_by);
+				owned_by = MAX(int64_t(p_ownership.keys()[i]) + 1, owned_by);
 			}
 		}
 
@@ -557,7 +558,7 @@ void ComChibifireFbxImporter::_generate_bone_groups(ImportState &p_state, const 
 	}
 }
 
-void ComChibifireFbxImporter::_generate_skeletons(ImportState &p_state, const RawNode &p_node, Dictionary ownership, Dictionary skeleton_map, Dictionary bind_xforms) {
+void ComChibifireFbxImporter::_generate_skeletons(ImportState &p_state, const RawNode &p_node, Dictionary& ownership, Dictionary& skeleton_map, Dictionary& bind_xforms) {
 
 	//find skeletons at this level, there may be multiple root nodes for each
 	//Map<int, List<aiNode *> >
