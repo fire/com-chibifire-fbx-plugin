@@ -100,6 +100,7 @@ private:
 		const RawModel *scene;
 		const String path;
 		Array skeletons;
+		Dictionary bone_owners; //maps bones to skeleton index owned by
 	};
 	struct SkeletonHole { //nodes may be part of the skeleton by used by vertex
 		String name;
@@ -135,7 +136,7 @@ private:
 			const pixel_merger &mergeFunction,
 			bool transparency);
 	godot::Transform _get_global_node_transform(const ImportState &p_state, const RawNode &p_node);
-	void _fill_node_relationships(ImportState &p_state, RawNode &p_raw_node, Dictionary ownership, Dictionary skeleton_map, int p_skeleton_id, godot::Skeleton *skeleton, String parent_name, int holecount, godot::Array p_holes, Dictionary bind_xforms);
+	void _fill_node_relationships(ImportState &p_state, int64_t node, Dictionary ownership, Dictionary skeleton_map, int p_skeleton_id, godot::Skeleton *p_skeleton, String parent_name, int holecount, godot::Array p_holes, Dictionary bind_xforms);
 
 public:
 	enum ImportFlags {
