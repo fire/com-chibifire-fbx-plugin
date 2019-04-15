@@ -99,13 +99,19 @@ private:
 	struct ImportState {
 		const RawModel *scene;
 		const String path;
-		godot::Skeleton *skeleton;
+		Array skeletons;
 	};
-	void _generate_bone_groups(const ImportState &p_state, const RawNode &p_node, const Dictionary &p_ownership, Dictionary p_bind_xforms);
-	void _generate_skeletons(ImportState &state, RawNode &p_node, Dictionary ownership, Dictionary skeleton_map, Dictionary bind_xforms);
-	void _generate_node(const ImportState &state, const RawNode &p_node, Node *p_parent, Node *p_owner, Array &r_bone_name);
+	struct SkeletonHole { //nodes may be part of the skeleton by used by vertex
+		String name;
+		String parent;
+		godot::Transform pose;
+		RawNode &node;
+	};
+	void ComChibifireFbxImporter::_generate_bone_groups(const ImportState &p_state, const RawNode &p_node, Dictionary &p_ownership, Dictionary p_bind_xforms);
+	void _generate_skeletons(ImportState &p_state, const RawNode &p_node, Dictionary ownership, Dictionary skeleton_map, Dictionary bind_xforms);
+	void _generate_node(const ImportState &p_state, const RawNode &p_node, Node *p_parent, Node *p_owner, Array &r_bone_name);
 	String _convert_name(const std::string str);
-	godot::Transform _get_global_node_transform(Quatf rotation, Vec3f scale, Vec3f translation);
+	godot::Transform _get_transform(Quatf rotation, Vec3f scale, Vec3f translation);
 	void _find_texture_path(const String &r_p_path, String &r_path, bool &r_found);
 	void _find_texture_path(const String &p_path, godot::Directory *dir, String &path, bool &found, String extension);
 	Ref<godot::Material> _generate_material_from_index(const ImportState &p_state, const RawMaterial p_raw_material, const RawMaterialType p_raw_material_type);
@@ -128,13 +134,8 @@ private:
 			const std::string &tag,
 			const pixel_merger &mergeFunction,
 			bool transparency);
-	static std::string texIndicesKey(const std::vector<int> &ixVec, const std::string &tag) {
-		std::string result = tag;
-		for (int ix : ixVec) {
-			result += "_" + std::to_string(ix);
-		}
-		return result;
-	};
+	godot::Transform _get_global_node_transform(const ImportState &p_state, const RawNode &p_node);
+	void _fill_node_relationships(ImportState &p_state, RawNode &p_raw_node, Dictionary ownership, Dictionary skeleton_map, int p_skeleton_id, godot::Skeleton *skeleton, String parent_name, int holecount, godot::Array p_holes, Dictionary bind_xforms);
 
 public:
 	enum ImportFlags {
