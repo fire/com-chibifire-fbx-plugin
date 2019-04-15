@@ -30,6 +30,7 @@
 #include <EditorSceneImporter.hpp>
 #include <Engine.hpp>
 #include <Material.hpp>
+#include <MeshInstance.hpp>
 #include <Node.hpp>
 #include <Ref.hpp>
 #include <Reference.hpp>
@@ -39,10 +40,9 @@
 #include <Transform.hpp>
 #include <core/Godot.hpp>
 #include <core/GodotGlobal.hpp>
-#include <raw/RawModel.hpp>
-#include <Skeleton.hpp>
-#include <MeshInstance.hpp>
 #include <map>
+#include <raw/RawModel.hpp>
+#include <vector>
 
 using godot::Array;
 using godot::ArrayMesh;
@@ -102,9 +102,9 @@ private:
 	struct ImportState {
 		const RawModel *scene;
 		const godot::String path;
-		godot::Array skeletons;
-		godot::Dictionary bone_owners; //maps bones to skeleton index owned by
-		std::map<godot::MeshInstance*,godot::Skeleton*> mesh_skeletons;
+		std::vector<godot::Skeleton *> skeletons;
+		std::map<godot::String, int> bone_owners; //maps bones to skeleton index owned by
+		std::map<godot::MeshInstance *, godot::Skeleton *> mesh_skeletons;
 	};
 	struct SkeletonHole { //nodes may be part of the skeleton by used by vertex
 		String name;
@@ -112,7 +112,7 @@ private:
 		godot::Transform pose;
 		RawNode &node;
 	};
-	void ComChibifireFbxImporter::_generate_bone_groups(const ImportState &p_state, const RawNode &p_node, Dictionary &p_ownership, Dictionary p_bind_xforms);
+	void _generate_bone_groups(ImportState &p_state, const RawNode &p_node, Dictionary &p_ownership, Dictionary p_bind_xforms);
 	void _generate_skeletons(ImportState &p_state, const RawNode &p_node, Dictionary ownership, Dictionary skeleton_map, Dictionary bind_xforms);
 	void _generate_node(ImportState &p_state, const RawNode &p_node, Node *p_parent, Node *p_owner, Array &r_bone_name);
 	String _convert_name(const std::string str);
@@ -140,7 +140,7 @@ private:
 			const pixel_merger &mergeFunction,
 			bool transparency);
 	godot::Transform _get_global_node_transform(ImportState &p_state, const RawNode &p_node);
-	void _fill_node_relationships(ImportState &p_state, int64_t node, Dictionary ownership, Dictionary skeleton_map, int p_skeleton_id, godot::Skeleton *p_skeleton, String parent_name, int holecount, godot::Array p_holes, Dictionary bind_xforms);
+	void _fill_node_relationships(ImportState &p_state, const RawNode *p_node, Dictionary &ownership, Dictionary &skeleton_map, int p_skeleton_id, godot::Skeleton *p_skeleton, String &parent_name, int &holecount, godot::Array& p_holes, Dictionary& bind_xforms);
 
 public:
 	enum ImportFlags {

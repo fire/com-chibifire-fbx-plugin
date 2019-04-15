@@ -298,10 +298,9 @@ Node *ComChibifireFbxImporter::_import_scene(const String path, const int64_t fl
 	raw.Condense();
 	raw.TransformGeometry(ComputeNormalsOption::MISSING);
 
-	ImportState state = { &raw, path, Array() };
+	ImportState state = { &raw, path, std::vector<Skeleton *>() };
 	Spatial *root = Spatial::_new();
 
-	Array skeletons;
 	Array bone_names;
 
 	//Map<String, Transform>
@@ -520,16 +519,16 @@ void ComChibifireFbxImporter::_register_methods() {
 	register_method("_import_animation", &ComChibifireFbxImporter::_import_animation);
 }
 
-void ComChibifireFbxImporter::_generate_bone_groups(const ImportState &p_state, const RawNode &p_node, Dictionary &p_ownership, Dictionary p_bind_xforms) {
+void ComChibifireFbxImporter::_generate_bone_groups(ImportState &p_state, const RawNode &p_node, Dictionary &p_ownership, Dictionary p_bind_xforms) {
 	Transform mesh_offset = _get_transform(p_node.rotation, p_node.scale, p_node.translation);
 
 	for (uint32_t l = 0; l < p_state.scene->GetSurfaceCount(); l++) {
 		const RawSurface &surface = p_state.scene->GetSurface(l);
 		int owned_by = -1;
 		for (uint32_t j = 0; j < surface.jointIds.size(); j++) {
-			const int64_t bone_id = surface.jointIds[j];
-			if (p_ownership.has(bone_id)) {
-				owned_by = p_ownership[bone_id];
+			const String bone_name = _convert_name(p_state.scene->GetNode(p_state.scene->GetNodeById(surface.jointIds[j])).name);
+			if (p_ownership.has(bone_name)) {
+				owned_by = p_ownership[bone_name];
 				break;
 			}
 		}
@@ -542,14 +541,14 @@ void ComChibifireFbxImporter::_generate_bone_groups(const ImportState &p_state, 
 		}
 
 		for (uint32_t j = 0; j < surface.jointIds.size(); j++) {
-			const int64_t bone_id = surface.jointIds[j];
-			p_ownership[bone_id] = owned_by;
+			const String bone_name = _convert_name(p_state.scene->GetNode(p_state.scene->GetNodeById(surface.jointIds[j])).name);
+			p_ownership[bone_name] = owned_by;
 			//store the full path for the bone transform
 			//when skeleton finds its place in the tree, it will be restored
 			Mat4f m = surface.inverseBindMatrices[l];
 			Transform xform;
 			xform.set(m.GetColumn(0).x, m.GetColumn(0).y, m.GetColumn(0).z, m.GetColumn(1).x, m.GetColumn(1).y, m.GetColumn(1).z, m.GetColumn(2).x, m.GetColumn(2).y, m.GetColumn(2).z, m.GetColumn(3).x, m.GetColumn(3).y, m.GetColumn(3).z);
-			p_bind_xforms[bone_id] = mesh_offset * xform;
+			p_bind_xforms[bone_name] = mesh_offset * xform;
 		}
 	}
 
@@ -562,23 +561,23 @@ void ComChibifireFbxImporter::_generate_skeletons(ImportState &p_state, const Ra
 
 	//find skeletons at this level, there may be multiple root nodes for each
 	//Map<int, List<aiNode *> >
-	Dictionary skeletons_found;
+	std::map<int, std::vector<const RawNode *> > skeletons_found;
 	for (size_t i = 0; i < p_node.childIds.size(); i++) {
-		int64_t id = p_state.scene->GetNode(p_state.scene->GetNodeById(p_node.childIds[i])).id;
-		if (ownership.has(id)) {
-			int skeleton = ownership[id];
-			if (!skeletons_found.has(skeleton)) {
-				skeletons_found[skeleton] = Array();
+		String name = _convert_name(p_state.scene->GetNode(p_state.scene->GetNodeById(p_node.childIds[i])).name);
+		if (ownership.has(name)) {
+			int skeleton = ownership[name];
+			if (skeletons_found.find(skeleton) == skeletons_found.end()) {
+				skeletons_found[skeleton] = std::vector<const RawNode *>();
 			}
-			Array(skeletons_found[skeleton]).push_back(p_state.scene->GetNode(p_state.scene->GetNodeById(p_node.childIds[i])).id);
+			std::vector<const RawNode *> vec = skeletons_found[skeleton];
+			vec.push_back(&p_state.scene->GetNode(p_state.scene->GetNodeById(p_node.childIds[i])));
+			skeletons_found[skeleton] = vec;
 		}
 	}
 
 	//go via the potential skeletons found and generate the actual skeleton
-	//for (Map<int, List<aiNode *> >::Element *E = skeletons_found.front(); E; E = E->next()) {
-
-	for (size_t i = 0; i < skeletons_found.size(); i++) {
-		int64_t id = skeletons_found.keys()[i];
+	for (auto & s_f : skeletons_found) {
+		int id = s_f.first;
 		if (skeleton_map.has(id)) {
 			//skeleton already exists? this can't be.. skip
 			continue;
@@ -586,14 +585,12 @@ void ComChibifireFbxImporter::_generate_skeletons(ImportState &p_state, const Ra
 		Skeleton *skeleton = Skeleton::_new();
 		//this the only way to reliably use multiple meshes with one skeleton, at the cost of less precision
 		//skeleton->set_use_bones_in_world_transform(true);
-		skeleton_map[skeletons_found.keys()[i]] = p_state.skeletons.size();
+		skeleton_map[s_f.first] = p_state.skeletons.size();
 		p_state.skeletons.push_back(skeleton);
 		int holecount = 1;
-		//fill the bones and their relationships
-		// TODO(Ernest) Fix
-		Array arr = skeletons_found[id];
-		for (size_t j = 0; j < arr.size(); j++) {
-			_fill_node_relationships(p_state, arr[j], ownership, skeleton_map, skeletons_found.keys()[i], skeleton, "", holecount, Array(), bind_xforms);
+		std::vector<const RawNode *> vec = skeletons_found[id];
+		for (auto &v : vec) {
+			_fill_node_relationships(p_state, v, ownership, skeleton_map, s_f.first, skeleton, String(""), holecount, Array(), bind_xforms);
 		}
 	}
 	//go to the children
@@ -627,8 +624,8 @@ void ComChibifireFbxImporter::_generate_node(ImportState &p_state, const RawNode
 					for (uint32_t j = 0; j < surface.jointIds.size(); j++) {
 						const RawNode &bone = p_state.scene->GetNode(p_state.scene->GetNodeById(surface.jointIds[j]));
 						String bone_name = _convert_name(bone.name);
-						if (p_state.bone_owners.has(bone.id)) {
-							skeleton = Object::cast_to<Skeleton>(Object::___get_from_variant(p_state.skeletons[p_state.bone_owners[bone.id]]));
+						if (p_state.bone_owners.find(bone_name) != p_state.bone_owners.end()) {
+							skeleton = p_state.skeletons[p_state.bone_owners[bone_name]];
 							break;
 						}
 					}
@@ -666,10 +663,10 @@ void ComChibifireFbxImporter::_generate_node(ImportState &p_state, const RawNode
 		if (skeleton) {
 			p_state.mesh_skeletons.insert_or_assign(mi, skeleton);
 		}
-	} else if (p_state.bone_owners.has(p_node.id)) {
+	} else if (p_state.bone_owners.find(_convert_name(p_node.name)) != p_state.bone_owners.end()) {
 
 		//have to actually put the skeleton somewhere, you know.
-		Skeleton *skeleton = Object::cast_to<Skeleton>(Object::___get_from_variant(p_state.skeletons[p_state.bone_owners[p_node.id]]));
+		Skeleton *skeleton = p_state.skeletons[p_state.bone_owners[_convert_name(p_node.name)]];
 		if (skeleton->get_parent()) {
 			//a bone for a skeleton already added..
 			//could go downwards here to add meshes children of skeleton bones
@@ -737,34 +734,34 @@ godot::Transform ComChibifireFbxImporter::_get_global_node_transform(ImportState
 	return xform;
 }
 
-void ComChibifireFbxImporter::_fill_node_relationships(ImportState &p_state, int64_t node_idx, Dictionary ownership, Dictionary skeleton_map, int p_skeleton_id, godot::Skeleton *p_skeleton, String parent_name, int holecount, godot::Array p_holes, Dictionary bind_xforms) {
-	int64_t id = node_idx;
+void ComChibifireFbxImporter::_fill_node_relationships(ImportState &p_state, const RawNode *p_node, Dictionary &ownership, Dictionary &skeleton_map, int p_skeleton_id, godot::Skeleton *p_skeleton, String &parent_name, int &holecount, godot::Array& p_holes, Dictionary& bind_xforms) {
+	String name = _convert_name(p_node->name);
 	//if (id == -1) {
 	//	id = "AuxiliaryBone" + itos(holecount++);
 	//}
-	const RawNode &raw_node = p_state.scene->GetNode(p_state.scene->GetNodeById(id));
+	const RawNode &raw_node = *p_node;
 	Transform pose = _get_transform(raw_node.rotation, raw_node.scale, raw_node.translation);
 
-	if (!ownership.has(id)) {
+	if (!ownership.has(name)) {
 		//not a bone, it's a hole
 		Array holes = p_holes;
 		Dictionary hole;
-		hole["id"] = id;
+		hole["name"] = name;
 		hole["parent_name"] = parent_name;
 		hole["pose"] = pose;
 		hole["node"] = raw_node.id;
 		holes.push_back(hole);
 
 		for (size_t i = 0; i < raw_node.childIds.size(); i++) {
-			_fill_node_relationships(p_state, raw_node.childIds[i], ownership, skeleton_map, p_skeleton_id, p_skeleton, id, holecount, holes, bind_xforms);
+			_fill_node_relationships(p_state, p_node, ownership, skeleton_map, p_skeleton_id, p_skeleton, name, holecount, holes, bind_xforms);
 		}
 
 		return;
-	} else if (int64_t(ownership[id]) != p_skeleton_id) {
+	} else if (int64_t(ownership[name]) != p_skeleton_id) {
 		//oh, it's from another skeleton? fine.. reparent all bones to this skeleton.
-		int prev_owner = ownership[id];
+		int prev_owner = ownership[name];
 		if (skeleton_map.has(prev_owner)) {
-			Godot::print(String("A previous skeleton exists for bone '") + String(id) + String("', this type of skeleton layout is unsupported."));
+			Godot::print(String("A previous skeleton exists for bone '") + String(name) + String("', this type of skeleton layout is unsupported."));
 			return;
 		}
 		for (size_t i = 0; i < ownership.size(); i++) {
@@ -789,13 +786,14 @@ void ComChibifireFbxImporter::_fill_node_relationships(ImportState &p_state, int
 		Transform pose_transform = _get_transform(node.rotation, node.scale, node.translation);
 		p_skeleton->set_bone_rest(bone_idx, pose_transform);
 
-		p_state.bone_owners[p_holes[i]["id"]] = skeleton_map[p_skeleton_id];
+		p_state.bone_owners[p_holes[i]["name"]] = skeleton_map[p_skeleton_id];
 	}
 
 	//finally fill bone
 
 	int bone_idx = p_skeleton->get_bone_count();
-	const RawNode &node = p_state.scene->GetNode(p_state.scene->GetNodeById(id));
+	//TODO(Ernest) Remove
+	const RawNode &node = *p_node;
 	String node_name = _convert_name(node.name);
 	p_skeleton->add_bone(node_name);
 	int parent_idx = p_skeleton->find_bone(parent_name);
@@ -803,15 +801,15 @@ void ComChibifireFbxImporter::_fill_node_relationships(ImportState &p_state, int
 		p_skeleton->set_bone_parent(bone_idx, parent_idx);
 	}
 	//p_skeleton->set_bone_pose(bone_idx, pose);
-	if (bind_xforms.has(id)) {
+	if (bind_xforms.has(name)) {
 		//for now this is the full path to the bone in rest pose
 		//when skeleton finds it's place in the tree, it will get fixed
-		p_skeleton->set_bone_rest(bone_idx, bind_xforms[id]);
+		p_skeleton->set_bone_rest(bone_idx, bind_xforms[name]);
 	}
-	p_state.bone_owners[id] = skeleton_map[p_skeleton_id];
+	p_state.bone_owners[name] = skeleton_map[p_skeleton_id];
 	//go to children
-	for (size_t i = 0; i < raw_node.childIds.size(); i++) {
-		_fill_node_relationships(p_state, raw_node.childIds[i], ownership, skeleton_map, p_skeleton_id, p_skeleton, node_name, holecount, Array(), bind_xforms);
+	for (size_t i = 0; i < p_node->childIds.size(); i++) {
+		_fill_node_relationships(p_state, &p_state.scene->GetNode(p_state.scene->GetNodeById(p_node->childIds[i])), ownership, skeleton_map, p_skeleton_id, p_skeleton, node_name, holecount, Array(), bind_xforms);
 	}
 }
 
