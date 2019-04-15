@@ -293,24 +293,23 @@ Node *ComChibifireFbxImporter::_import_scene(const String path, const int64_t fl
 
 	raw.Condense();
 	raw.TransformGeometry(ComputeNormalsOption::MISSING);
-	ImportState state = { &raw, path, NULL };
+
+	ImportState state = { &raw, path, Skeleton::_new() };
 	Spatial *root = Spatial::_new();
 
 	Array skeletons;
 	Array bone_names;
 
-	//Skeleton *s = Skeleton::_new();
-	//root->add_child(s);
-	//s->set_owner(root);
-	//state.skeleton = s;
-	////Map<String, Transform>
-	//Dictionary bind_xforms; //temporary map to store bind transforms
-	////guess the skeletons, since assimp does not really support them directly
-	////Map<String, int>
-	//Dictionary ownership; //bone names to groups
+	root->add_child(state.skeleton);
+	state.skeleton->set_owner(root);
+	//Map<String, Transform>
+	Dictionary bind_xforms; //temporary map to store bind transforms
+	//guess the skeletons, since assimp does not really support them directly
+	//Map<String, int>
+	Dictionary ownership; //bone names to groups
 	RawNode raw_root_node = raw.GetNode(raw.GetNodeById(raw.GetRootNode()));
-	////fill this map with bone names and which group where they detected to, going mesh by mesh
-	//_generate_bone_groups(state, raw_root_node, ownership, bind_xforms);
+	//fill this map with bone names and which group where they detected to, going mesh by mesh
+	_generate_bone_groups(state, raw_root_node, ownership, bind_xforms);
 	////Map<int, int>
 	//Dictionary skeleton_map; //maps previously created groups to actual skeletons
 	////generates the skeletons when bones are found in the hierarchy, and follows them (including gaps/holes).
@@ -433,52 +432,52 @@ Node *ComChibifireFbxImporter::_import_scene(const String path, const int64_t fl
 				}
 				arrays[ArrayMesh::ARRAY_VERTEX] = vertices;
 			}
-			//PoolRealArray bone_indices = PoolRealArray();
-			//if ((surfaceModel.GetVertexAttributes() & RAW_VERTEX_ATTRIBUTE_JOINT_INDICES) != 0) {
-			//	const AttributeDefinition<Vec4i> ATTR_JOINTS(
-			//			"JOINTS_0",
-			//			&RawVertex::jointIndices,
-			//			GLT_VEC3F,
-			//			draco::GeometryAttribute::GENERIC,
-			//			draco::DT_UINT16);
-			//	std::vector<Vec4i> attribArr;
-			//	surfaceModel.GetAttributeArray<Vec4i>(attribArr, ATTR_JOINTS.rawAttributeIx);
+			PoolRealArray bone_indices = PoolRealArray();
+			if ((surface_model.GetVertexAttributes() & RAW_VERTEX_ATTRIBUTE_JOINT_INDICES) != 0) {
+				const AttributeDefinition<Vec4i> ATTR_JOINTS(
+						"JOINTS_0",
+						&RawVertex::jointIndices,
+						GLT_VEC3F,
+						draco::GeometryAttribute::GENERIC,
+						draco::DT_UINT16);
+				std::vector<Vec4i> attribArr;
+				surface_model.GetAttributeArray<Vec4i>(attribArr, ATTR_JOINTS.rawAttributeIx);
 
-			//	for (auto a : attribArr) {
-			//		RawNode raw_node = state.scene->GetNode(rawSurface.jointIds[a.x]);
-			//		real_t bone_idx = state.skeleton->find_bone(_convert_name(raw_node.name));
-			//		bone_indices.push_back(bone_idx);
-			//		raw_node = state.scene->GetNode(rawSurface.jointIds[a.y]);
-			//		bone_idx = state.skeleton->find_bone(_convert_name(raw_node.name));
-			//		bone_indices.push_back(bone_idx);
-			//		raw_node = state.scene->GetNode(rawSurface.jointIds[a.z]);
-			//		bone_idx = state.skeleton->find_bone(_convert_name(raw_node.name));
-			//		bone_indices.push_back(bone_idx);
-			//		raw_node = state.scene->GetNode(rawSurface.jointIds[a.w]);
-			//		bone_idx = state.skeleton->find_bone(_convert_name(raw_node.name));
-			//		bone_indices.push_back(bone_idx);
-			//	}
-			//	arrays[ArrayMesh::ARRAY_BONES] = bone_indices;
-			//}
-			//PoolRealArray bone_weights = PoolRealArray();
-			//if ((surfaceModel.GetVertexAttributes() & RAW_VERTEX_ATTRIBUTE_JOINT_WEIGHTS) != 0) {
-			//	const AttributeDefinition<Vec4f> ATTR_WEIGHTS(
-			//			"WEIGHTS_0",
-			//			&RawVertex::jointWeights,
-			//			GLT_VEC3F,
-			//			draco::GeometryAttribute::GENERIC,
-			//			draco::DT_UINT16);
-			//	std::vector<Vec4f> attribArr;
-			//	surfaceModel.GetAttributeArray<Vec4f>(attribArr, ATTR_WEIGHTS.rawAttributeIx);
+				for (auto a : attribArr) {
+					//RawNode raw_node = state.scene->GetNode(rawSurface.jointIds[a.x]);
+					real_t bone_idx = 0; //state.skeleton->find_bone(_convert_name(raw_node.name));
+					bone_indices.push_back(bone_idx);
+					//raw_node = state.scene->GetNode(rawSurface.jointIds[a.y]);
+					//bone_idx = state.skeleton->find_bone(_convert_name(raw_node.name));
+					bone_indices.push_back(bone_idx);
+					//raw_node = state.scene->GetNode(rawSurface.jointIds[a.z]);
+					//bone_idx = state.skeleton->find_bone(_convert_name(raw_node.name));
+					bone_indices.push_back(bone_idx);
+					//raw_node = state.scene->GetNode(rawSurface.jointIds[a.w]);
+					//bone_idx = state.skeleton->find_bone(_convert_name(raw_node.name));
+					bone_indices.push_back(bone_idx);
+				}
+				arrays[ArrayMesh::ARRAY_BONES] = bone_indices;
+			}
+			PoolRealArray bone_weights = PoolRealArray();
+			if ((surface_model.GetVertexAttributes() & RAW_VERTEX_ATTRIBUTE_JOINT_WEIGHTS) != 0) {
+				const AttributeDefinition<Vec4f> ATTR_WEIGHTS(
+						"WEIGHTS_0",
+						&RawVertex::jointWeights,
+						GLT_VEC3F,
+						draco::GeometryAttribute::GENERIC,
+						draco::DT_UINT16);
+				std::vector<Vec4f> attribArr;
+				surface_model.GetAttributeArray<Vec4f>(attribArr, ATTR_WEIGHTS.rawAttributeIx);
 
-			//	for (auto a : attribArr) {
-			//		bone_weights.push_back(a.x);
-			//		bone_weights.push_back(a.y);
-			//		bone_weights.push_back(a.z);
-			//		bone_weights.push_back(a.w);
-			//	}
-			//	arrays[ArrayMesh::ARRAY_WEIGHTS] = bone_weights;
-			//}
+				for (auto a : attribArr) {
+					bone_weights.push_back(0.0f);
+					bone_weights.push_back(0.0f);
+					bone_weights.push_back(0.0f);
+					bone_weights.push_back(0.0f);
+				}
+				arrays[ArrayMesh::ARRAY_WEIGHTS] = bone_weights;
+			}
 			PoolIntArray idxs = PoolIntArray();
 			for (int i = 0; i < surface_model.GetTriangleCount(); i++) {
 				idxs.push_back(surface_model.GetTriangle(i).verts[2]);
@@ -522,15 +521,14 @@ void ComChibifireFbxImporter::_generate_bone_groups(const ImportState &p_state, 
 		for (size_t i = 0; i < mesh.jointIds.size(); i++) {
 			int32_t node = p_state.scene->GetNodeById(mesh.jointIds[i]);
 			const RawNode bone = p_state.scene->GetNode(node);
-			if (p_state.skeleton->find_bone(_convert_name(bone.name)) != -1) {
-				continue;
+			if (p_state.skeleton->find_bone(_convert_name(bone.name)) == -1) {
+				p_state.skeleton->add_bone(_convert_name(bone.name));
+				Transform xform;
+				Mat4f m = mesh.inverseBindMatrices[i];
+				xform.set(m.GetColumn(0).x, m.GetColumn(0).y, m.GetColumn(0).z, m.GetColumn(1).x, m.GetColumn(1).y, m.GetColumn(1).z, m.GetColumn(2).x, m.GetColumn(2).y, m.GetColumn(2).z, m.GetColumn(3).x, m.GetColumn(3).y, m.GetColumn(3).z);
+				int32_t bone_idx = p_state.skeleton->find_bone(_convert_name(bone.name));
+				p_state.skeleton->set_bone_rest(bone_idx, xform.affine_inverse());
 			}
-			p_state.skeleton->add_bone(_convert_name(bone.name));
-			Transform xform;
-			Mat4f m = mesh.inverseBindMatrices[i];
-			xform.set(m.GetColumn(0).x, m.GetColumn(0).y, m.GetColumn(0).z, m.GetColumn(1).x, m.GetColumn(1).y, m.GetColumn(1).z, m.GetColumn(2).x, m.GetColumn(2).y, m.GetColumn(2).z, m.GetColumn(3).x, m.GetColumn(3).y, m.GetColumn(3).z);
-			int32_t bone_idx = p_state.skeleton->find_bone(_convert_name(bone.name));
-			p_state.skeleton->set_bone_rest(bone_idx, xform.affine_inverse());
 		}
 
 		//std::vector<uint32_t> jointIndexes;
@@ -586,7 +584,7 @@ void ComChibifireFbxImporter::_generate_node(const ImportState &state, const Raw
 		mi->set_owner(p_owner);
 		mi->set_name(node_name);
 		mi->set_transform(xform);
-		//Skeleton *s = Object::cast_to<Skeleton>(Object::___get_from_variant(state.skeleton));
+		Skeleton *s = Object::cast_to<Skeleton>(Object::___get_from_variant(state.skeleton));
 		//mi->set_skeleton_path(mi->get_path_to(state.skeleton));
 		node = mi;
 	} else {
