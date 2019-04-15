@@ -110,7 +110,7 @@ private:
 		String name;
 		String parent;
 		godot::Transform pose;
-		RawNode &node;
+		const RawNode &node;
 	};
 	void _generate_bone_groups(ImportState &p_state, const RawNode &p_node, Dictionary &p_ownership, Dictionary &p_bind_xforms);
 	void _generate_skeletons(ImportState &p_state, const RawNode &p_node, Dictionary& ownership, Dictionary& skeleton_map, Dictionary& bind_xforms);
@@ -140,7 +140,7 @@ private:
 			const pixel_merger &mergeFunction,
 			bool transparency);
 	godot::Transform _get_global_node_transform(ImportState &p_state, const RawNode &p_node);
-	void _fill_node_relationships(ImportState &p_state, const RawNode *p_node, Dictionary &ownership, Dictionary &skeleton_map, int p_skeleton_id, godot::Skeleton *p_skeleton, String &parent_name, int &holecount, godot::Array& p_holes, Dictionary& bind_xforms);
+	void _fill_node_relationships(ImportState &p_state, const RawNode *p_node, Dictionary &ownership, Dictionary &skeleton_map, int p_skeleton_id, godot::Skeleton *p_skeleton, String &parent_name, int &holecount, std::vector<SkeletonHole>& p_holes, Dictionary& bind_xforms);
 
 public:
 	enum ImportFlags {
