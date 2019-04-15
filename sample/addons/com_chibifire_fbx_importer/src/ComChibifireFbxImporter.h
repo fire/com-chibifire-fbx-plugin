@@ -40,6 +40,9 @@
 #include <core/Godot.hpp>
 #include <core/GodotGlobal.hpp>
 #include <raw/RawModel.hpp>
+#include <Skeleton.hpp>
+#include <MeshInstance.hpp>
+#include <map>
 
 using godot::Array;
 using godot::ArrayMesh;
@@ -98,9 +101,10 @@ private:
 	GODOT_CLASS(ComChibifireFbxImporter, EditorSceneImporter);
 	struct ImportState {
 		const RawModel *scene;
-		const String path;
-		Array skeletons;
-		Dictionary bone_owners; //maps bones to skeleton index owned by
+		const godot::String path;
+		godot::Array skeletons;
+		godot::Dictionary bone_owners; //maps bones to skeleton index owned by
+		std::map<godot::MeshInstance*,godot::Skeleton*> mesh_skeletons;
 	};
 	struct SkeletonHole { //nodes may be part of the skeleton by used by vertex
 		String name;
@@ -110,7 +114,7 @@ private:
 	};
 	void ComChibifireFbxImporter::_generate_bone_groups(const ImportState &p_state, const RawNode &p_node, Dictionary &p_ownership, Dictionary p_bind_xforms);
 	void _generate_skeletons(ImportState &p_state, const RawNode &p_node, Dictionary ownership, Dictionary skeleton_map, Dictionary bind_xforms);
-	void _generate_node(const ImportState &p_state, const RawNode &p_node, Node *p_parent, Node *p_owner, Array &r_bone_name);
+	void _generate_node(ImportState &p_state, const RawNode &p_node, Node *p_parent, Node *p_owner, Array &r_bone_name);
 	String _convert_name(const std::string str);
 	godot::Transform _get_transform(Quatf rotation, Vec3f scale, Vec3f translation);
 	void _find_texture_path(const String &r_p_path, String &r_path, bool &r_found);
@@ -135,7 +139,7 @@ private:
 			const std::string &tag,
 			const pixel_merger &mergeFunction,
 			bool transparency);
-	godot::Transform _get_global_node_transform(const ImportState &p_state, const RawNode &p_node);
+	godot::Transform _get_global_node_transform(ImportState &p_state, const RawNode &p_node);
 	void _fill_node_relationships(ImportState &p_state, int64_t node, Dictionary ownership, Dictionary skeleton_map, int p_skeleton_id, godot::Skeleton *p_skeleton, String parent_name, int holecount, godot::Array p_holes, Dictionary bind_xforms);
 
 public:

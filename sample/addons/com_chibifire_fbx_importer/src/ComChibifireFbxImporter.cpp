@@ -280,9 +280,9 @@ Node *ComChibifireFbxImporter::_import_scene(const String path, const int64_t fl
 	// compute vertex normals from geometry.
 	//gltfOptions.useLongIndices = UseLongIndicesOptions::AUTO; // When to use 32-bit indices.
 	RawModel raw;
-
-	const String fbx_file = Engine::get_singleton()->get_singleton("ProjectSettings")->call("globalize_path", path);
-	const String path_dir_global = Engine::get_singleton()->get_singleton("ProjectSettings")->call("globalize_path", path.get_base_dir());
+	ProjectSettings *project_settings = ProjectSettings::get_singleton();
+	const String fbx_file = project_settings->globalize_path(path);
+	const String path_dir_global = project_settings->globalize_path(path.get_base_dir());
 
 	if (!LoadFBXFile(raw, fbx_file.alloc_c_string(), godot::String("png;jpg;jpeg").alloc_c_string())) {
 		return nullptr;
@@ -500,6 +500,12 @@ Node *ComChibifireFbxImporter::_import_scene(const String path, const int64_t fl
 			mesh_cache[name] = arr_mesh;
 		}
 	}
+	//assign skeletons to nodes
+	for (auto &ms : state.mesh_skeletons) {
+		NodePath skeleton_path = ms.first->get_path_to(ms.second);
+		ms.first->set_skeleton_path(skeleton_path);
+	}
+
 	return root;
 }
 
@@ -600,15 +606,66 @@ void ComChibifireFbxImporter::_generate_skeletons(ImportState &p_state, const Ra
 	}
 }
 
-void ComChibifireFbxImporter::_generate_node(const ImportState &p_state, const RawNode &p_node, Node *p_parent, Node *p_owner, Array &r_bone_name) {
+void ComChibifireFbxImporter::_generate_node(ImportState &p_state, const RawNode &p_node, Node *p_parent, Node *p_owner, Array &r_bone_name) {
 	String node_name = _convert_name(p_node.name);
 	Transform xform = _get_transform(p_node.rotation, p_node.scale, p_node.translation);
 	Node *node = NULL;
 	if (p_node.surfaceId != 0) {
+		Skeleton *skeleton = NULL;
+		{
+
+			//see if we have mesh cache for this.
+			//Vector<int> surface_indices;
+			for (uint32_t i = 0; i < p_state.scene->GetSurfaceCount(); i++) {
+				//int mesh_index = p_state.scene->GetSurface(i);
+				//surface_indices.push_back(mesh_index);
+
+				//take the chance and attempt to find the skeleton from the bones
+				if (!skeleton) {
+					//aiMesh *ai_mesh = state.assimp_scene->mMeshes[p_assimp_node->mMeshes[i]];
+					const RawSurface &surface = p_state.scene->GetSurface(i);
+					for (uint32_t j = 0; j < surface.jointIds.size(); j++) {
+						const RawNode &bone = p_state.scene->GetNode(p_state.scene->GetNodeById(surface.jointIds[j]));
+						String bone_name = _convert_name(bone.name);
+						if (p_state.bone_owners.has(bone.id)) {
+							skeleton = Object::cast_to<Skeleton>(Object::___get_from_variant(p_state.skeletons[p_state.bone_owners[bone.id]]));
+							break;
+						}
+					}
+				}
+			}
+			//surface_indices.sort();
+			//String mesh_key;
+			//for (int i = 0; i < surface_indices.size(); i++) {
+			//	if (i > 0) {
+			//		mesh_key += ":";
+			//	}
+			//	mesh_key += itos(surface_indices[i]);
+			//}
+
+			//if (!state.mesh_cache.has(mesh_key)) {
+			//	//adding cache
+			//	aiString cull_mode; //cull is on mesh, which is kind of stupid tbh
+			//	bool double_sided_material = false;
+			//	if (p_assimp_node->mMetaData) {
+			//		p_assimp_node->mMetaData->Get("Culling", cull_mode);
+			//	}
+			//	if (cull_mode.length != 0 && cull_mode == aiString("CullingOff")) {
+			//		double_sided_material = true;
+			//	}
+
+			//	mesh = _generate_mesh_from_surface_indices(state, surface_indices, skeleton, double_sided_material);
+			//	state.mesh_cache[mesh_key] = mesh;
+			//}
+
+			//mesh = state.mesh_cache[mesh_key];
+		}
 		MeshInstance *mi = MeshInstance::_new();
-		//Skeleton *s = Object::cast_to<Skeleton>(Object::___get_from_variant(p_state.skeletons));
-		//mi->set_skeleton_path(mi->get_path_to(state.skeleton));
 		node = mi;
+
+		if (skeleton) {
+			p_state.mesh_skeletons.insert_or_assign(mi, skeleton);
+		}
 	} else if (p_state.bone_owners.has(p_node.id)) {
 
 		//have to actually put the skeleton somewhere, you know.
@@ -629,9 +686,9 @@ void ComChibifireFbxImporter::_generate_node(const ImportState &p_state, const R
 			skeleton->set_bone_rest(i, rest.affine_inverse());
 		}
 
-		//skeleton->localize_rests();
+		skeleton->localize_rests();
 		node_name = "Skeleton"; //don't use the bone root name
-		xform = Transform(); //dont transform
+		xform = Transform(); //don't transform
 
 		node = skeleton;
 	} else {
@@ -669,7 +726,7 @@ godot::Transform ComChibifireFbxImporter::_get_transform(Quatf rotation, Vec3f s
 	return xform;
 }
 
-godot::Transform ComChibifireFbxImporter::_get_global_node_transform(const ImportState &p_state, const RawNode &p_node) {
+godot::Transform ComChibifireFbxImporter::_get_global_node_transform(ImportState &p_state, const RawNode &p_node) {
 	int64_t current_node = p_node.id;
 	Transform xform;
 	while (current_node != p_state.scene->GetRootNode()) {

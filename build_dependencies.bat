@@ -1,4 +1,4 @@
 set current=%cd%
 set godot=%current%\thirdparty\godot
-call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Professional\VC\Auxiliary\Build\vcvarsall.bat" x64 && cd /D %godot% &&call scons p=windows target=release_debug separate_debug_symbols=true -j%NUMBER_OF_PROCESSORS% use_lto=no gdnative_wrapper=yes vsproj=yes deprecated=no && cd /D %current% && cd /D thirdparty/godot-cpp && call scons -j%NUMBER_OF_PROCESSORS% p=windows generate_bindings=yes target=release && cd /D %current%
+cd /D %godot% && call scons p=windows target=release_debug separate_debug_symbols=true -j%NUMBER_OF_PROCESSORS% use_lto=no gdnative_wrapper=yes vsproj=yes deprecated=no && cd /D %current% && %godot%/bin/godot.windows.opt.tools.64.exe --gdnative-generate-json-api thirdparty/godot-cpp/godot_api.json && cd /D thirdparty/godot-cpp && scons -j%NUMBER_OF_PROCESSORS% use_custom_api_file=yes custom_api_file=godot_api.json p=windows generate_bindings=yes target=release && cd /D %current%
 cd /D thirdparty/godot-cpp && call scons -j%NUMBER_OF_PROCESSORS% p=windows generate_bindings=yes target=debug && cd /D %current%
