@@ -553,6 +553,7 @@ void ComChibifireFbxImporter::_generate_bone_groups(ImportState &p_state, const 
 			xform.basis.set_row(0, Vector3(m.GetColumn(0).x, m.GetColumn(0).y, m.GetColumn(0).z));
 			xform.basis.set_row(1, Vector3(m.GetColumn(1).x, m.GetColumn(1).y, m.GetColumn(1).z));
 			xform.basis.set_row(2, Vector3(m.GetColumn(2).x, m.GetColumn(2).y, m.GetColumn(2).z));
+			xform.basis.transpose();
 			xform.origin = Vector3(m.GetColumn(3).x, m.GetColumn(3).y, m.GetColumn(3).z);
 			p_bind_xforms[name] = mesh_offset * xform;
 		}
