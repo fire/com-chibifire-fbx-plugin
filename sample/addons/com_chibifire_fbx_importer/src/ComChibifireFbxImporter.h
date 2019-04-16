@@ -163,6 +163,184 @@ public:
 	Array get_extensions() const;
 	int64_t get_import_flags() const;
 	Node *_import_scene(const String path, const int64_t flags, const int64_t bake_fps);
+
+	void _generate_material(std::vector<RawModel> material_models, Spatial *root, Dictionary &mesh_cache, ImportState state) {
+		for (const auto &surface_model : material_models) {
+			assert(surface_model.GetSurfaceCount() == 1);
+			for (size_t i = 0; i < surface_model.GetSurfaceCount(); i++) {
+				String name = _convert_name(surface_model.GetSurface(0).name);
+				Godot::print("FBX instancing mesh: " + name);
+
+				Ref<ArrayMesh> arr_mesh;
+				arr_mesh.instance();
+				MeshInstance *mi = NULL;
+				Node *node = root->find_node(name);
+				if (!node) {
+					continue;
+				}
+				mi = Object::cast_to<MeshInstance>(node);
+				if (!mi) {
+					continue;
+				}
+				if (mesh_cache.has(name)) {
+					Ref<ArrayMesh> arr = mesh_cache[name];
+					mi->set_mesh(arr->duplicate(true));
+					continue;
+				}
+
+				Array arrays;
+				arrays.resize(ArrayMesh::ARRAY_MAX);
+
+				PoolVector3Array normals = PoolVector3Array();
+				if ((surface_model.GetVertexAttributes() & RAW_VERTEX_ATTRIBUTE_NORMAL) != 0) {
+					const AttributeDefinition<Vec3f> ATTR_NORMAL(
+							"NORMAL",
+							&RawVertex::normal,
+							GLT_VEC3F,
+							draco::GeometryAttribute::NORMAL,
+							draco::DT_FLOAT32);
+					std::vector<Vec3f> attribArrUV0;
+					surface_model.GetAttributeArray<Vec3f>(attribArrUV0, ATTR_NORMAL.rawAttributeIx);
+
+					for (auto a : attribArrUV0) {
+						normals.push_back(Vector3(a.x, a.y, a.z));
+					}
+					arrays[ArrayMesh::ARRAY_NORMAL] = normals;
+				}
+
+				PoolColorArray colors = PoolColorArray();
+				if ((surface_model.GetVertexAttributes() & RAW_VERTEX_ATTRIBUTE_COLOR) != 0) {
+					const AttributeDefinition<Vec4f> ATTR_COLORS(
+							"COLOR",
+							&RawVertex::color,
+							GLT_VEC4F,
+							draco::GeometryAttribute::COLOR,
+							draco::DT_FLOAT32);
+					std::vector<Vec4f> attribArrColor;
+					surface_model.GetAttributeArray<Vec4f>(attribArrColor, ATTR_COLORS.rawAttributeIx);
+
+					for (auto a : attribArrColor) {
+						colors.push_back(Color(a.x, a.y, a.z, a.w));
+					}
+					arrays[ArrayMesh::ARRAY_COLOR] = colors;
+				}
+
+				PoolVector2Array uv0s = PoolVector2Array();
+				if ((surface_model.GetVertexAttributes() & RAW_VERTEX_ATTRIBUTE_UV0) != 0) {
+					const AttributeDefinition<Vec2f> ATTR_TEXCOORD_0(
+							"TEXCOORD_0",
+							&RawVertex::uv0,
+							GLT_VEC2F,
+							draco::GeometryAttribute::TEX_COORD,
+							draco::DT_FLOAT32);
+					std::vector<Vec2f> attribArrUV0;
+					surface_model.GetAttributeArray<Vec2f>(attribArrUV0, ATTR_TEXCOORD_0.rawAttributeIx);
+
+					for (auto a : attribArrUV0) {
+						uv0s.push_back(Vector2(a.x, a.y));
+					}
+					arrays[ArrayMesh::ARRAY_TEX_UV] = uv0s;
+				}
+				PoolVector2Array uv1s = PoolVector2Array();
+				if ((surface_model.GetVertexAttributes() & RAW_VERTEX_ATTRIBUTE_UV1) != 0) {
+					const AttributeDefinition<Vec2f> ATTR_TEXCOORD_1(
+							"TEXCOORD_1",
+							&RawVertex::uv1,
+							GLT_VEC2F,
+							draco::GeometryAttribute::TEX_COORD,
+							draco::DT_FLOAT32);
+					std::vector<Vec2f> attribArrUV1;
+					surface_model.GetAttributeArray<Vec2f>(attribArrUV1, ATTR_TEXCOORD_1.rawAttributeIx);
+
+					for (auto a : attribArrUV1) {
+						uv1s.push_back(Vector2(a.x, a.y));
+					}
+					arrays[ArrayMesh::ARRAY_TEX_UV2] = uv1s;
+				}
+				PoolVector3Array vertices = PoolVector3Array();
+				if ((surface_model.GetVertexAttributes() & RAW_VERTEX_ATTRIBUTE_POSITION) != 0) {
+					const AttributeDefinition<Vec3f> ATTR_POSITION(
+							"POSITION",
+							&RawVertex::position,
+							GLT_VEC3F,
+							draco::GeometryAttribute::POSITION,
+							draco::DT_FLOAT32);
+					std::vector<Vec3f> attribArr;
+					surface_model.GetAttributeArray<Vec3f>(attribArr, ATTR_POSITION.rawAttributeIx);
+
+					for (auto a : attribArr) {
+						vertices.push_back(Vector3(a.x, a.y, a.z));
+					}
+					arrays[ArrayMesh::ARRAY_VERTEX] = vertices;
+				}
+				PoolRealArray bone_indices = PoolRealArray();
+				if ((surface_model.GetVertexAttributes() & RAW_VERTEX_ATTRIBUTE_JOINT_INDICES) != 0) {
+					const AttributeDefinition<Vec4i> ATTR_JOINTS(
+							"JOINTS_0",
+							&RawVertex::jointIndices,
+							GLT_VEC3F,
+							draco::GeometryAttribute::GENERIC,
+							draco::DT_UINT16);
+					std::vector<Vec4i> attribArr;
+					surface_model.GetAttributeArray<Vec4i>(attribArr, ATTR_JOINTS.rawAttributeIx);
+
+					for (auto a : attribArr) {
+						//RawNode raw_node = state.scene->GetNode(rawSurface.jointIds[a.x]);
+						real_t bone_idx = 0; //state.skeleton->find_bone(_convert_name(raw_node.name));
+						bone_indices.push_back(bone_idx);
+						//raw_node = state.scene->GetNode(rawSurface.jointIds[a.y]);
+						//bone_idx = state.skeleton->find_bone(_convert_name(raw_node.name));
+						bone_indices.push_back(bone_idx);
+						//raw_node = state.scene->GetNode(rawSurface.jointIds[a.z]);
+						//bone_idx = state.skeleton->find_bone(_convert_name(raw_node.name));
+						bone_indices.push_back(bone_idx);
+						//raw_node = state.scene->GetNode(rawSurface.jointIds[a.w]);
+						//bone_idx = state.skeleton->find_bone(_convert_name(raw_node.name));
+						bone_indices.push_back(bone_idx);
+					}
+					arrays[ArrayMesh::ARRAY_BONES] = bone_indices;
+				}
+				PoolRealArray bone_weights = PoolRealArray();
+				if ((surface_model.GetVertexAttributes() & RAW_VERTEX_ATTRIBUTE_JOINT_WEIGHTS) != 0) {
+					const AttributeDefinition<Vec4f> ATTR_WEIGHTS(
+							"WEIGHTS_0",
+							&RawVertex::jointWeights,
+							GLT_VEC3F,
+							draco::GeometryAttribute::GENERIC,
+							draco::DT_UINT16);
+					std::vector<Vec4f> attribArr;
+					surface_model.GetAttributeArray<Vec4f>(attribArr, ATTR_WEIGHTS.rawAttributeIx);
+
+					for (auto a : attribArr) {
+						bone_weights.push_back(0.0f);
+						bone_weights.push_back(0.0f);
+						bone_weights.push_back(0.0f);
+						bone_weights.push_back(0.0f);
+					}
+					arrays[ArrayMesh::ARRAY_WEIGHTS] = bone_weights;
+				}
+				PoolIntArray idxs = PoolIntArray();
+				for (int i = 0; i < surface_model.GetTriangleCount(); i++) {
+					idxs.push_back(surface_model.GetTriangle(i).verts[2]);
+					idxs.push_back(surface_model.GetTriangle(i).verts[1]);
+					idxs.push_back(surface_model.GetTriangle(i).verts[0]);
+				}
+				arrays[ArrayMesh::ARRAY_INDEX] = idxs;
+				int32_t idx = arr_mesh->get_surface_count();
+				arr_mesh->add_surface_from_arrays(Mesh::PRIMITIVE_TRIANGLES, arrays);
+				arr_mesh->surface_set_name(idx, name);
+
+				// TODO(Ernest) Cache code
+				Ref<Material> material = _generate_material_from_index(state, surface_model.GetMaterial(0), surface_model.GetMaterial(0).type);
+				arr_mesh->surface_set_material(idx, material);
+				if (mi) {
+					mi->set_mesh(arr_mesh);
+				}
+				mesh_cache[name] = arr_mesh;
+			}
+		}
+	}
+
 	godot::Ref<godot::Animation> _import_animation(const String path, const int64_t flags, const int64_t bake_fps);
 
 	static void _register_methods();

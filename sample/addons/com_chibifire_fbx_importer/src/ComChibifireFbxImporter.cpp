@@ -322,6 +322,19 @@ Node *ComChibifireFbxImporter::_import_scene(const String path, const int64_t fl
 
 	_generate_node(state, raw_root_node, root, root, bone_names);
 	Dictionary mesh_cache;
+	_generate_material(material_models, root, mesh_cache, state);
+
+	//assign skeletons to nodes
+	for (auto &ms : state.mesh_skeletons) {
+		NodePath skeleton_path = ms.first->get_path_to(ms.second);
+		//Todo(Ernest) Restore skeleton path
+		//ms.first->set_skeleton_path(skeleton_path);
+	}
+
+	return root;
+}
+
+void ComChibifireFbxImporter::_generate_material(std::vector<RawModel> material_models, Spatial *root, Dictionary &mesh_cache, ImportState state) {
 	for (const auto &surface_model : material_models) {
 		assert(surface_model.GetSurfaceCount() == 1);
 		for (size_t i = 0; i < surface_model.GetSurfaceCount(); i++) {
@@ -496,14 +509,6 @@ Node *ComChibifireFbxImporter::_import_scene(const String path, const int64_t fl
 			mesh_cache[name] = arr_mesh;
 		}
 	}
-	//assign skeletons to nodes
-	for (auto &ms : state.mesh_skeletons) {
-		NodePath skeleton_path = ms.first->get_path_to(ms.second);
-		//Todo(Ernest) Restore skeleton path
-		//ms.first->set_skeleton_path(skeleton_path);
-	}
-
-	return root;
 }
 
 godot::Ref<godot::Animation> ComChibifireFbxImporter::_import_animation(const String path, const int64_t flags, const int64_t bake_fps) {
@@ -519,7 +524,6 @@ void ComChibifireFbxImporter::_register_methods() {
 
 void ComChibifireFbxImporter::_generate_bone_groups(ImportState &p_state, const RawNode &p_node, std::map<String, int> &p_ownership, std::map<String, Transform> &p_bind_xforms) {
 	Transform mesh_offset = _get_global_node_transform(p_state, p_node);
-
 	for (uint32_t l = 0; l < p_state.scene->GetSurfaceCount(); l++) {
 		const RawSurface &surface = p_state.scene->GetSurface(l);
 		int owned_by = -1;
@@ -549,7 +553,6 @@ void ComChibifireFbxImporter::_generate_bone_groups(ImportState &p_state, const 
 			xform.basis.set_row(0, Vector3(m.GetColumn(0).x, m.GetColumn(0).y, m.GetColumn(0).z));
 			xform.basis.set_row(1, Vector3(m.GetColumn(1).x, m.GetColumn(1).y, m.GetColumn(1).z));
 			xform.basis.set_row(2, Vector3(m.GetColumn(2).x, m.GetColumn(2).y, m.GetColumn(2).z));
-			xform.basis.transpose();
 			xform.origin = Vector3(m.GetColumn(3).x, m.GetColumn(3).y, m.GetColumn(3).z);
 			p_bind_xforms[name] = mesh_offset * xform;
 		}
