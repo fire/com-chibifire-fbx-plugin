@@ -743,7 +743,7 @@ void ComChibifireFbxImporter::_fill_node_relationships(ImportState &p_state, con
 	}
 	Transform pose = _get_transform(p_node->rotation, p_node->scale, p_node->translation);
 
-	if (!(ownership.find(name) != ownership.end())) {
+	if (ownership.find(name) == ownership.end()) {
 		//not a bone, it's a hole
 		std::vector<ComChibifireFbxImporter::SkeletonHole> holes = p_holes;
 		ComChibifireFbxImporter::SkeletonHole hole{
